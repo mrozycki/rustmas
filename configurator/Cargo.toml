@@ -1,0 +1,7 @@
+[package]
+name = "rustmas-configurator"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+rustmas-light-client = { path = "../light-client" }
