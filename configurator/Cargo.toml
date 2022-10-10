@@ -5,6 +5,7 @@ edition = "2021"
 
 [dependencies]
 rustmas-light-client = { path = "../light-client" }
+opencv = "0.70"
 
 csv = "1.1.6"
 clap = { version = "4.0.8", features = ["derive"] }
