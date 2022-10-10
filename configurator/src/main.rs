@@ -38,7 +38,10 @@ fn find_light(_: Picture) -> (usize, usize) {
     (21, 37)
 }
 
-fn capture_perspective(light_client: &dyn LightClient, lights_count: usize) -> Vec<(usize, usize)> {
+async fn capture_perspective(
+    light_client: &dyn LightClient,
+    lights_count: usize,
+) -> Vec<(usize, usize)> {
     let mut coords = Vec::new();
 
     let pb = ProgressBar::new(lights_count as u64)
@@ -57,7 +60,7 @@ fn capture_perspective(light_client: &dyn LightClient, lights_count: usize) -> V
 
     for i in (0..lights_count).progress_with(pb) {
         let frame = generate_single_light_frame(i, lights_count);
-        if let Err(e) = light_client.display_frame(&frame) {
+        if let Err(_) = light_client.display_frame(&frame).await {
             eprintln!("Warning: failed to light up light #{}, skipping", i);
             continue;
         }
@@ -89,7 +92,8 @@ fn save_positions<P: AsRef<Path>>(
     Ok(())
 }
 
-fn main() -> Result<(), Box<dyn Error>> {
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn Error>> {
     let args = Arguments::parse();
 
     let all_white = client::Frame::new(args.lights_count, client::Color::white());
@@ -97,19 +101,19 @@ fn main() -> Result<(), Box<dyn Error>> {
     let mut stdin = io::stdin();
     let light_client = client::MockLightClient::new();
 
-    light_client.display_frame(&all_white)?;
+    light_client.display_frame(&all_white).await?;
     println!("Position camera to capture lights from the front");
     print!("Press return to continue...");
     io::stdout().flush()?;
     stdin.read(&mut [0u8])?;
-    let front = capture_perspective(&light_client, args.lights_count);
+    let front = capture_perspective(&light_client, args.lights_count).await;
 
-    light_client.display_frame(&all_white)?;
+    light_client.display_frame(&all_white).await?;
     println!("Position camera to capture lights from the right-hand side");
     print!("Press return to continue...");
     io::stdout().flush()?;
     stdin.read(&mut [0u8])?;
-    let side = capture_perspective(&light_client, args.lights_count);
+    let side = capture_perspective(&light_client, args.lights_count).await;
 
     let light_positions = merge_perspectives(front, side);
     save_positions(args.output, &light_positions)?;

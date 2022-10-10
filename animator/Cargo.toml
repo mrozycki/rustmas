@@ -1,12 +1,9 @@
 [package]
-name = "rustmas-configurator"
+name = "rustmas-animator"
 version = "0.1.0"
 edition = "2021"
 
 [dependencies]
 rustmas-light-client = { path = "../light-client" }
 
-csv = "1.1.6"
-clap = { version = "4.0.8", features = ["derive"] }
-indicatif = "0.17.1"
 tokio = { version = "1", features = ["full"] }

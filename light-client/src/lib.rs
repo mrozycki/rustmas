@@ -1,11 +1,16 @@
 use core::fmt;
-use std::cell::{Ref, RefCell};
+use std::{
+    sync::{Mutex, MutexGuard},
+    time::Duration,
+};
+
+use async_trait::async_trait;
 
 #[derive(Clone, Copy)]
 pub struct Color {
-    r: u8,
-    g: u8,
-    b: u8,
+    pub r: u8,
+    pub g: u8,
+    pub b: u8,
 }
 
 impl Color {
@@ -49,6 +54,10 @@ impl Frame {
         self.pixels[index] = color;
         self
     }
+
+    pub fn pixels_iter(&self) -> impl Iterator<Item = &Color> {
+        self.pixels.iter()
+    }
 }
 
 impl From<Vec<Color>> for Frame {
@@ -70,29 +79,68 @@ impl fmt::Display for LightClientError {
 
 impl std::error::Error for LightClientError {}
 
+#[async_trait]
 pub trait LightClient {
-    fn display_frame(&self, frame: &Frame) -> Result<(), LightClientError>;
+    async fn display_frame(&self, frame: &Frame) -> Result<(), LightClientError>;
 }
 
 pub struct MockLightClient {
-    frames: RefCell<Vec<Frame>>,
+    frames: Mutex<Vec<Frame>>,
 }
 
 impl MockLightClient {
     pub fn new() -> Self {
         Self {
-            frames: RefCell::new(Vec::new()),
+            frames: Mutex::new(Vec::new()),
         }
     }
 
-    pub fn get_frames(&self) -> Ref<Vec<Frame>> {
-        self.frames.borrow()
+    pub fn get_frames(&self) -> MutexGuard<Vec<Frame>> {
+        self.frames.lock().unwrap()
     }
 }
 
+#[async_trait]
 impl LightClient for MockLightClient {
-    fn display_frame(&self, frame: &Frame) -> Result<(), LightClientError> {
-        self.frames.borrow_mut().push(frame.clone());
+    async fn display_frame(&self, frame: &Frame) -> Result<(), LightClientError> {
+        self.frames.lock().unwrap().push(frame.clone());
         Ok(())
+    }
+}
+
+#[derive(Clone)]
+pub struct RemoteLightClient {
+    url: String,
+    http_client: reqwest::Client,
+}
+
+impl RemoteLightClient {
+    pub fn new(url: &str) -> Self {
+        Self {
+            url: url.to_owned(),
+            http_client: reqwest::Client::builder()
+                .http1_title_case_headers()
+                .tcp_keepalive(Duration::from_secs(10))
+                .build()
+                .unwrap(),
+        }
+    }
+}
+
+#[async_trait]
+impl LightClient for RemoteLightClient {
+    async fn display_frame(&self, frame: &Frame) -> Result<(), LightClientError> {
+        let pixels = frame
+            .pixels_iter()
+            .flat_map(|pixel| vec![&pixel.r, &pixel.g, &pixel.b]);
+        let request: Vec<_> = "data=".as_bytes().iter().chain(pixels).cloned().collect();
+
+        match self.http_client.post(&self.url).body(request).send().await {
+            Ok(_) => Ok(()),
+            Err(err) => {
+                eprintln!("{:?}", err);
+                Err(LightClientError::Unlikely)
+            }
+        }
     }
 }
