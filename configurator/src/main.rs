@@ -1,69 +1,49 @@
+mod cv;
+
 use std::{
     error::Error,
     fmt::Write,
     io::{self, Read, Write as IoWrite},
     path::Path,
-    thread,
-    time::Duration,
 };
 
 use clap::Parser;
+use cv::Camera;
 use indicatif::{ProgressBar, ProgressFinish, ProgressIterator, ProgressState, ProgressStyle};
 
 use client::LightClient;
 use rustmas_light_client as client;
 
-type Picture = Vec<u8>;
-
-use opencv::{core, highgui, imgproc, prelude::*, videoio, Result};
+use opencv::{core, highgui, imgproc};
 
 fn opencv_example() -> Result<(), Box<dyn Error>> {
-    opencv::opencv_branch_32! {
-        let mut cam = videoio::VideoCapture::new_default(0)?; // 0 is the default camera
-    }
-    opencv::not_opencv_branch_32! {
-        let mut cam = videoio::VideoCapture::new(0, videoio::CAP_ANY)?; // 0 is the default camera
-    }
-    let opened = videoio::VideoCapture::is_opened(&cam)?;
-    if !opened {
-        panic!("Unable to open default camera!");
-    }
+    let mut camera = Camera::new_default()?;
+
     let window = "video capture";
     highgui::start_window_thread()?;
     highgui::named_window(window, highgui::WINDOW_GUI_NORMAL)?;
     highgui::set_window_property(window, highgui::WND_PROP_AUTOSIZE, 1.0)?;
     highgui::set_window_property(window, highgui::WND_PROP_TOPMOST, 1.0)?;
+
     loop {
-        let mut frame = Mat::default();
-        cam.read(&mut frame)?;
+        let mut frame = camera.capture()?;
+        let (x, y) = cv::find_light(&frame)?;
 
-        if frame.size()?.width > 0 {
-            let mut hsv = Mat::default();
-            imgproc::cvt_color(&frame, &mut hsv, imgproc::COLOR_BGR2HSV, 0)?;
-            let lower = core::Scalar::from((0.0, 0.0, 255.0));
-            let upper = core::Scalar::from((5.0, 128.0, 255.0));
-            let mut mask = Mat::default();
-            _ = opencv::core::in_range(&hsv, &lower, &upper, &mut mask);
-            let mut max_loc = core::Point::default();
-            _ =opencv::core::min_max_loc(&mask, None, None, None, Some(&mut max_loc), &mask);
-            println!("{:?}", max_loc);
-            _ = imgproc::circle(
-                &mut frame,
-                max_loc,
-                20,
-                core::VecN::new(0.0, 0.0, 255.0, 255.0),
-                2,
-                imgproc::LINE_AA,
-                0,
-            );
+        _ = imgproc::circle(
+            &mut frame,
+            core::Point::new(x as i32, y as i32),
+            20,
+            core::VecN::new(0.0, 0.0, 255.0, 255.0),
+            2,
+            imgproc::LINE_AA,
+            0,
+        );
 
-            highgui::imshow(window, &frame)?;
-        }
+        highgui::imshow(window, &frame)?;
         if highgui::wait_key(10)? > 0 {
             break;
         }
     }
-    cam.release()?;
     highgui::set_window_property(window, highgui::WND_PROP_TOPMOST, 0.0)?;
     highgui::set_window_property(window, highgui::WND_PROP_VISIBLE, 0.0)?;
     highgui::destroy_all_windows()?;
@@ -84,20 +64,12 @@ fn generate_single_light_frame(index: usize, size: usize) -> client::Frame {
     client::Frame::new_black(size).with_pixel(index, client::Color::white())
 }
 
-fn take_picture() -> Picture {
-    thread::sleep(Duration::from_millis(1));
-    Vec::new()
-}
-
-fn find_light(_: Picture) -> (usize, usize) {
-    thread::sleep(Duration::from_millis(1));
-    (21, 37)
-}
-
 async fn capture_perspective(
     light_client: &dyn LightClient,
     lights_count: usize,
-) -> Vec<(usize, usize)> {
+) -> Result<Vec<(usize, usize)>, Box<dyn Error>> {
+    let mut camera = cv::Camera::new_default()?;
+
     let mut coords = Vec::new();
 
     let pb = ProgressBar::new(lights_count as u64)
@@ -121,11 +93,11 @@ async fn capture_perspective(
             continue;
         }
 
-        let picture = take_picture();
-        coords.push(find_light(picture));
+        let picture = camera.capture()?;
+        coords.push(cv::find_light(&picture)?);
     }
 
-    coords
+    Ok(coords)
 }
 
 fn merge_perspectives(
@@ -165,14 +137,14 @@ async fn main() -> Result<(), Box<dyn Error>> {
     print!("Press return to continue...");
     io::stdout().flush()?;
     stdin.read(&mut [0u8])?;
-    let front = capture_perspective(&light_client, args.lights_count).await;
+    let front = capture_perspective(&light_client, args.lights_count).await?;
 
     light_client.display_frame(&all_white).await?;
     println!("Position camera to capture lights from the right-hand side");
     print!("Press return to continue...");
     io::stdout().flush()?;
     stdin.read(&mut [0u8])?;
-    let side = capture_perspective(&light_client, args.lights_count).await;
+    let side = capture_perspective(&light_client, args.lights_count).await?;
 
     let light_positions = merge_perspectives(front, side);
     save_positions(args.output, &light_positions)?;
