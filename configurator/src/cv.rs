@@ -51,14 +51,17 @@ pub struct Camera {
 
 impl Camera {
     pub fn new_default() -> Result<Self, Box<dyn Error>> {
-        opencv::opencv_branch_32! {
-            let cam = videoio::VideoCapture::new_default(0)?; // 0 is the default camera
+        let cam = videoio::VideoCapture::new(0, videoio::CAP_ANY)?; // 0 is the default camera
+        if videoio::VideoCapture::is_opened(&cam)? {
+            Ok(Self { handle: cam })
+        } else {
+            Err(Box::new(CameraError()))
         }
-        opencv::not_opencv_branch_32! {
-            let cam = videoio::VideoCapture::new(0, videoio::CAP_ANY)?; // 0 is the default camera
-        }
-        let opened = videoio::VideoCapture::is_opened(&cam)?;
-        if opened {
+    }
+
+    pub fn new_from_file(path: &str) -> Result<Self, Box<dyn Error>> {
+        let cam = videoio::VideoCapture::from_file(path, videoio::CAP_ANY)?; // 0 is the default camera
+        if videoio::VideoCapture::is_opened(&cam)? {
             Ok(Self { handle: cam })
         } else {
             Err(Box::new(CameraError()))
