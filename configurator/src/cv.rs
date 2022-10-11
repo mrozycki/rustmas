@@ -1,8 +1,8 @@
-use std::error::Error;
 use std::fmt;
+use std::{error::Error, time::Duration};
 
 use opencv::{
-    core, imgproc,
+    core, highgui, imgproc,
     prelude::{Mat, MatTraitConstManual},
     videoio::VideoCaptureTraitConst,
     videoio::{self, VideoCaptureTrait},
@@ -19,11 +19,35 @@ impl fmt::Display for CameraError {
 
 impl Error for CameraError {}
 
+#[derive(Default)]
+pub struct Picture {
+    inner: Mat,
+}
+
+impl Picture {
+    pub fn mark(&mut self, x: usize, y: usize) -> Result<(), Box<dyn Error>> {
+        imgproc::circle(
+            &mut self.inner,
+            core::Point::new(x as i32, y as i32),
+            20,
+            core::VecN::new(0.0, 0.0, 255.0, 255.0),
+            2,
+            imgproc::LINE_AA,
+            0,
+        )?;
+        Ok(())
+    }
+}
+
+impl From<Mat> for Picture {
+    fn from(inner: Mat) -> Self {
+        Self { inner }
+    }
+}
+
 pub struct Camera {
     handle: videoio::VideoCapture,
 }
-
-pub type Picture = Mat;
 
 impl Camera {
     pub fn new_default() -> Result<Self, Box<dyn Error>> {
@@ -46,7 +70,7 @@ impl Camera {
         self.handle.read(&mut frame)?;
 
         if frame.size()?.width > 0 {
-            Ok(frame)
+            Ok(frame.into())
         } else {
             Err(Box::new(CameraError()))
         }
@@ -61,7 +85,7 @@ impl Drop for Camera {
 
 pub fn find_light(picture: &Picture) -> Result<(usize, usize), Box<dyn Error>> {
     let mut hsv = Mat::default();
-    imgproc::cvt_color(picture, &mut hsv, imgproc::COLOR_BGR2HSV, 0)?;
+    imgproc::cvt_color(&picture.inner, &mut hsv, imgproc::COLOR_BGR2HSV, 0)?;
 
     let lower = core::Scalar::from((0.0, 0.0, 255.0));
     let upper = core::Scalar::from((5.0, 128.0, 255.0));
@@ -72,4 +96,34 @@ pub fn find_light(picture: &Picture) -> Result<(usize, usize), Box<dyn Error>> {
     opencv::core::min_max_loc(&mask, None, None, None, Some(&mut max_loc), &mask)?;
 
     Ok((max_loc.x as usize, max_loc.y as usize))
+}
+
+pub struct Display {
+    window_name: String,
+}
+
+impl Display {
+    pub fn new(window_name: &str) -> Result<Self, Box<dyn Error>> {
+        highgui::named_window(window_name, highgui::WINDOW_AUTOSIZE)?;
+        highgui::set_window_property(window_name, highgui::WND_PROP_TOPMOST, 1.0)?;
+
+        Ok(Self {
+            window_name: window_name.to_owned(),
+        })
+    }
+
+    pub fn show(&self, picture: &Picture) -> Result<(), Box<dyn Error>> {
+        highgui::imshow(&self.window_name, &picture.inner)?;
+        Ok(())
+    }
+
+    pub fn wait_for(&self, duration: Duration) -> Result<i32, Box<dyn Error>> {
+        Ok(highgui::wait_key(duration.as_millis() as i32)?)
+    }
+}
+
+impl Drop for Display {
+    fn drop(&mut self) {
+        highgui::destroy_window(&self.window_name).unwrap();
+    }
 }

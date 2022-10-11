@@ -5,48 +5,30 @@ use std::{
     fmt::Write,
     io::{self, Read, Write as IoWrite},
     path::Path,
+    time::Duration,
 };
 
 use clap::Parser;
-use cv::Camera;
+use cv::{Camera, Display};
 use indicatif::{ProgressBar, ProgressFinish, ProgressIterator, ProgressState, ProgressStyle};
 
 use client::LightClient;
 use rustmas_light_client as client;
 
-use opencv::{core, highgui, imgproc};
-
 fn opencv_example() -> Result<(), Box<dyn Error>> {
     let mut camera = Camera::new_default()?;
-
-    let window = "video capture";
-    highgui::start_window_thread()?;
-    highgui::named_window(window, highgui::WINDOW_GUI_NORMAL)?;
-    highgui::set_window_property(window, highgui::WND_PROP_AUTOSIZE, 1.0)?;
-    highgui::set_window_property(window, highgui::WND_PROP_TOPMOST, 1.0)?;
+    let window = Display::new("video capture")?;
 
     loop {
         let mut frame = camera.capture()?;
         let (x, y) = cv::find_light(&frame)?;
+        frame.mark(x, y)?;
 
-        _ = imgproc::circle(
-            &mut frame,
-            core::Point::new(x as i32, y as i32),
-            20,
-            core::VecN::new(0.0, 0.0, 255.0, 255.0),
-            2,
-            imgproc::LINE_AA,
-            0,
-        );
-
-        highgui::imshow(window, &frame)?;
-        if highgui::wait_key(10)? > 0 {
+        window.show(&frame)?;
+        if window.wait_for(Duration::from_millis(10))? > 0 {
             break;
         }
     }
-    highgui::set_window_property(window, highgui::WND_PROP_TOPMOST, 0.0)?;
-    highgui::set_window_property(window, highgui::WND_PROP_VISIBLE, 0.0)?;
-    highgui::destroy_all_windows()?;
     Ok(())
 }
 #[derive(Parser, Debug)]
@@ -125,6 +107,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
     let args = Arguments::parse();
     if args.opencv_example {
         opencv_example()?;
+        return Ok(());
     }
 
     let all_white = client::Frame::new(args.lights_count, client::Color::white());
