@@ -1,5 +1,6 @@
 mod capture;
 mod cv;
+mod visualise;
 
 use std::{error::Error, time::Duration};
 
@@ -28,6 +29,9 @@ enum Commands {
     OpenCVExample {
         #[arg(short, long)]
         ip_camera: Option<String>,
+    },
+    Visualise {
+        input: String,
     },
 }
 #[tokio::main]
@@ -86,6 +90,14 @@ async fn main() -> Result<(), Box<dyn Error>> {
                 }
             }
             Ok(())
+        }
+        Commands::Visualise { input } => {
+            let mut file = csv::Reader::from_path(input)?;
+            let points = file
+                .deserialize()
+                .filter_map(|record: Result<(f32, f32, f32), _>| record.ok())
+                .collect();
+            visualise::visualise(points)
         }
     }
 }
