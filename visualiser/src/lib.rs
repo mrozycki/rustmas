@@ -187,11 +187,11 @@ impl VertexData {
 
     fn update_col_buffer(&self, colors: &Vec<glm::Vec3>) {
         unsafe {
-            gl::NamedBufferData(
+            gl::NamedBufferSubData(
                 self.col_buffer_name,
+                0,
                 (std::mem::size_of::<glm::Vec3>() * colors.len()) as isize,
                 colors.as_ptr() as *const c_void,
-                gl::DYNAMIC_DRAW,
             );
         }
     }
@@ -204,6 +204,21 @@ impl Drop for VertexData {
             gl::DeleteBuffers(1, &self.col_buffer_name);
             gl::DeleteVertexArrays(1, &self.vao_name);
         }
+    }
+}
+
+extern "system" fn error_callback(
+    _source: GLenum,
+    _gltype: GLenum,
+    _id: GLuint,
+    _severity: GLenum,
+    _length: GLsizei,
+    message: *const GLchar,
+    _user_param: *mut c_void,
+) {
+    unsafe {
+        let message = std::ffi::CStr::from_ptr(message);
+        eprintln!("Error received from OpenGL: {}", message.to_str().unwrap());
     }
 }
 
@@ -233,6 +248,12 @@ pub fn visualise(
     window.make_current();
 
     gl::load_with(|s| window.get_proc_address(s) as *const _);
+
+    unsafe {
+        gl::DebugMessageCallback(Some(error_callback), ptr::null());
+        gl::Enable(gl::DEBUG_OUTPUT);
+        gl::Enable(gl::DEBUG_OUTPUT_SYNCHRONOUS);
+    }
 
     let vs = Shader::load(gl::VERTEX_SHADER, include_str!("shaders/shader.vert"))?;
     let fs = Shader::load(gl::FRAGMENT_SHADER, include_str!("shaders/shader.frag"))?;
@@ -305,6 +326,7 @@ pub fn visualise(
         };
 
         unsafe {
+            gl::Flush();
             gl::ClearColor(0.3, 0.3, 0.3, 1.0);
             gl::Clear(gl::COLOR_BUFFER_BIT);
 

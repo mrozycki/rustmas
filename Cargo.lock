@@ -1074,7 +1074,10 @@ name = "rustmas-light-client"
 version = "0.1.0"
 dependencies = [
  "async-trait",
+ "csv",
  "reqwest",
+ "rustmas-visualiser",
+ "tokio",
 ]
 
 [[package]]

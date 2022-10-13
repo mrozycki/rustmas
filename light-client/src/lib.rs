@@ -1,6 +1,7 @@
 use core::fmt;
 use std::{
-    sync::{Mutex, MutexGuard},
+    error::Error,
+    sync::{mpsc, Mutex, MutexGuard},
     time::Duration,
 };
 
@@ -142,5 +143,46 @@ impl LightClient for RemoteLightClient {
                 Err(LightClientError::Unlikely)
             }
         }
+    }
+}
+
+pub struct VisualiserLightClient {
+    _join_handle: tokio::task::JoinHandle<()>,
+    light_tx: Mutex<mpsc::Sender<Vec<(f32, f32, f32)>>>,
+}
+
+impl VisualiserLightClient {
+    pub fn new(input_path: &str) -> Result<Self, Box<dyn Error>> {
+        let mut file = csv::ReaderBuilder::new()
+            .has_headers(false)
+            .from_path(input_path)?;
+        let points: Vec<_> = file
+            .deserialize()
+            .filter_map(|record: Result<(f32, f32, f32), _>| record.ok())
+            .collect();
+
+        let (tx, rx) = mpsc::channel();
+        Ok(Self {
+            _join_handle: tokio::spawn(async move {
+                rustmas_visualiser::visualise(points, rx).unwrap();
+            }),
+            light_tx: Mutex::new(tx),
+        })
+    }
+}
+
+#[async_trait]
+impl LightClient for VisualiserLightClient {
+    async fn display_frame(&self, frame: &Frame) -> Result<(), LightClientError> {
+        let pixels = frame
+            .pixels_iter()
+            .map(|Color { r, g, b }| (*r as f32 / 255.0, *g as f32 / 255.0, *b as f32 / 255.0))
+            .collect();
+
+        self.light_tx
+            .lock()
+            .map_err(|_| LightClientError::Unlikely)?
+            .send(pixels)
+            .map_err(|_| LightClientError::Unlikely)
     }
 }

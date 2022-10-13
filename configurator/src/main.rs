@@ -91,7 +91,9 @@ async fn main() -> Result<(), Box<dyn Error>> {
             Ok(())
         }
         Commands::Visualise { input } => {
-            let mut file = csv::Reader::from_path(input)?;
+            let mut file = csv::ReaderBuilder::new()
+                .has_headers(false)
+                .from_path(input)?;
             let points = file
                 .deserialize()
                 .filter_map(|record: Result<(f32, f32, f32), _>| record.ok())
