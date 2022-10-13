@@ -118,46 +118,80 @@ impl Drop for Program {
 }
 
 const POS_ATTRIB: u32 = 0;
+const COL_ATTRIB: u32 = 1;
 const VTX_BINDING_POS: u32 = 0;
+const VTX_BINDING_COL: u32 = 1;
 
 type Point = (f32, f32, f32);
 
 struct VertexData {
     vao_name: GLuint,
-    buffer_name: GLuint,
+    pos_buffer_name: GLuint,
+    col_buffer_name: GLuint,
 }
 
 impl VertexData {
     fn create() -> Self {
         unsafe {
             let mut vao: GLuint = 0;
-            let mut vbuffer: GLuint = 0;
+            let mut pos_buffer: GLuint = 0;
+            let mut col_buffer: GLuint = 0;
             gl::CreateVertexArrays(1, &mut vao);
-            gl::CreateBuffers(1, &mut vbuffer);
+            gl::CreateBuffers(1, &mut pos_buffer);
+            gl::CreateBuffers(1, &mut col_buffer);
             gl::EnableVertexArrayAttrib(vao, POS_ATTRIB);
+            gl::EnableVertexArrayAttrib(vao, COL_ATTRIB);
             gl::VertexArrayAttribFormat(vao, POS_ATTRIB, 3, gl::FLOAT, gl::FALSE, 0);
+            gl::VertexArrayAttribFormat(vao, COL_ATTRIB, 3, gl::FLOAT, gl::FALSE, 0);
             gl::VertexArrayVertexBuffer(
                 vao,
                 VTX_BINDING_POS,
-                vbuffer,
+                pos_buffer,
                 0,
-                std::mem::size_of::<Point>() as i32,
+                std::mem::size_of::<glm::Vec3>() as i32,
+            );
+            gl::VertexArrayVertexBuffer(
+                vao,
+                VTX_BINDING_COL,
+                col_buffer,
+                0,
+                std::mem::size_of::<glm::Vec3>() as i32,
             );
             gl::VertexArrayAttribBinding(vao, POS_ATTRIB, VTX_BINDING_POS);
+            gl::VertexArrayAttribBinding(vao, COL_ATTRIB, VTX_BINDING_COL);
             Self {
                 vao_name: vao,
-                buffer_name: vbuffer,
+                pos_buffer_name: pos_buffer,
+                col_buffer_name: col_buffer,
             }
         }
     }
 
-    fn load_buffer(&self, points: &Vec<Point>) {
+    fn load_buffer(&self, points: &Vec<glm::Vec3>) {
         unsafe {
             gl::NamedBufferData(
-                self.buffer_name,
-                (std::mem::size_of::<Point>() * points.len()) as isize,
+                self.pos_buffer_name,
+                (std::mem::size_of::<glm::Vec3>() * points.len()) as isize,
                 points.as_ptr() as *const c_void,
                 gl::STATIC_DRAW,
+            );
+
+            gl::NamedBufferData(
+                self.col_buffer_name,
+                (std::mem::size_of::<glm::Vec3>() * points.len()) as isize,
+                ptr::null(),
+                gl::DYNAMIC_DRAW,
+            );
+        }
+    }
+
+    fn update_col_buffer(&self, colors: &Vec<glm::Vec3>) {
+        unsafe {
+            gl::NamedBufferData(
+                self.col_buffer_name,
+                (std::mem::size_of::<glm::Vec3>() * colors.len()) as isize,
+                colors.as_ptr() as *const c_void,
+                gl::DYNAMIC_DRAW,
             );
         }
     }
@@ -166,13 +200,22 @@ impl VertexData {
 impl Drop for VertexData {
     fn drop(&mut self) {
         unsafe {
-            gl::DeleteBuffers(1, &self.buffer_name);
+            gl::DeleteBuffers(1, &self.pos_buffer_name);
+            gl::DeleteBuffers(1, &self.col_buffer_name);
             gl::DeleteVertexArrays(1, &self.vao_name);
         }
     }
 }
 
-pub fn visualise(points: Vec<Point>) -> Result<(), Box<dyn Error>> {
+pub fn visualise(
+    points: Vec<Point>,
+    colors_recv: std::sync::mpsc::Receiver<Vec<(f32, f32, f32)>>,
+) -> Result<(), Box<dyn Error>> {
+    let points = points
+        .into_iter()
+        .map(|(x, y, z)| glm::vec3(x, y, z))
+        .collect::<Vec<_>>();
+
     let mut glfw = glfw::init(glfw::FAIL_ON_ERRORS)?;
 
     glfw.window_hint(glfw::WindowHint::ClientApi(glfw::ClientApiHint::OpenGl));
@@ -251,6 +294,19 @@ pub fn visualise(points: Vec<Point>) -> Result<(), Box<dyn Error>> {
 
         let mvp = projection_matrix * view_matrix * model_matrix;
 
+        match colors_recv.try_recv() {
+            Ok(new_colors) => {
+                println!("Received new colors");
+                vdata.update_col_buffer(
+                    &new_colors
+                        .into_iter()
+                        .map(|(x, y, z)| glm::vec3(x, y, z))
+                        .collect(),
+                )
+            }
+            _ => (),
+        };
+
         unsafe {
             gl::ClearColor(0.3, 0.3, 0.3, 1.0);
             gl::Clear(gl::COLOR_BUFFER_BIT);
@@ -262,6 +318,5 @@ pub fn visualise(points: Vec<Point>) -> Result<(), Box<dyn Error>> {
 
         window.swap_buffers();
     }
-
     Ok(())
 }

@@ -97,7 +97,14 @@ async fn main() -> Result<(), Box<dyn Error>> {
                 .deserialize()
                 .filter_map(|record: Result<(f32, f32, f32), _>| record.ok())
                 .collect();
-            visualise::visualise(points)
+
+            let (tx, rx) = std::sync::mpsc::channel();
+            tx.send(vec![(0.0, 1.0, 0.0); 500]).unwrap();
+            tokio::spawn(async move {
+                visualise::visualise(points, rx).unwrap();
+            })
+            .await?;
+            Ok(())
         }
     }
 }

@@ -1,4 +1,6 @@
-#version 400 core
+#version 400
+
+in vec3 color;
 out vec4 out_color;
 
 const vec3 light_position = vec3(-5.0, -5.0, -5.0);
@@ -16,7 +18,7 @@ void main() {
 
     vec3 normal = normalize(position);
 
-    out_color = vec4(1.0, 0.0, 0.0, 1.0);
+    out_color = vec4(color, 1.0);
 
     vec3 light = normalize(light_position-position);
     vec3 view = normalize(camera_position-position);
