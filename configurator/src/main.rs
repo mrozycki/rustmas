@@ -1,6 +1,5 @@
 mod capture;
 mod cv;
-mod visualise;
 
 use std::{error::Error, time::Duration};
 
@@ -101,7 +100,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
             let (tx, rx) = std::sync::mpsc::channel();
             tx.send(vec![(0.0, 1.0, 0.0); 500]).unwrap();
             tokio::spawn(async move {
-                visualise::visualise(points, rx).unwrap();
+                rustmas_visualiser::visualise(points, rx).unwrap();
             })
             .await?;
             Ok(())

@@ -295,15 +295,12 @@ pub fn visualise(
         let mvp = projection_matrix * view_matrix * model_matrix;
 
         match colors_recv.try_recv() {
-            Ok(new_colors) => {
-                println!("Received new colors");
-                vdata.update_col_buffer(
-                    &new_colors
-                        .into_iter()
-                        .map(|(x, y, z)| glm::vec3(x, y, z))
-                        .collect(),
-                )
-            }
+            Ok(new_colors) => vdata.update_col_buffer(
+                &new_colors
+                    .into_iter()
+                    .map(|(x, y, z)| glm::vec3(x, y, z))
+                    .collect(),
+            ),
             _ => (),
         };
 

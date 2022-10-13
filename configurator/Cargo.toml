@@ -5,13 +5,10 @@ edition = "2021"
 
 [dependencies]
 rustmas-light-client = { path = "../light-client" }
+rustmas-visualiser = { path = "../visualiser" }
 opencv = "0.70"
 
 csv = "1.1.6"
 clap = { version = "4.0.8", features = ["derive"] }
 indicatif = "0.17.1"
 tokio = { version = "1", features = ["full"] }
-glfw = "0.45.0"
-gl = "0.14.0"
-nalgebra-glm = "0.17.0"
-imgui = "0.8.2"
