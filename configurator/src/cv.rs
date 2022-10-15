@@ -86,21 +86,6 @@ impl Drop for Camera {
     }
 }
 
-pub fn find_light(picture: &Picture) -> Result<(usize, usize), Box<dyn Error>> {
-    let mut hsv = Mat::default();
-    imgproc::cvt_color(&picture.inner, &mut hsv, imgproc::COLOR_BGR2HSV, 0)?;
-
-    let lower = core::Scalar::from((0.0, 0.0, 255.0));
-    let upper = core::Scalar::from((5.0, 128.0, 255.0));
-    let mut mask = Mat::default();
-    opencv::core::in_range(&hsv, &lower, &upper, &mut mask)?;
-
-    let mut max_loc = core::Point::default();
-    opencv::core::min_max_loc(&mask, None, None, None, Some(&mut max_loc), &mask)?;
-
-    Ok((max_loc.x as usize, max_loc.y as usize))
-}
-
 pub struct Display {
     window_name: String,
 }
@@ -129,4 +114,60 @@ impl Drop for Display {
     fn drop(&mut self) {
         highgui::destroy_window(&self.window_name).unwrap();
     }
+}
+
+pub fn find_light_from_diff(
+    base_picture: &Picture,
+    led_picture: &Picture,
+) -> Result<Option<(usize, usize)>, Box<dyn Error>> {
+    let mut base_gray = Mat::default();
+    imgproc::cvt_color(
+        &base_picture.inner,
+        &mut base_gray,
+        imgproc::COLOR_BGR2GRAY,
+        0,
+    )?;
+    let mut led_gray = Mat::default();
+    imgproc::cvt_color(
+        &led_picture.inner,
+        &mut led_gray,
+        imgproc::COLOR_BGR2GRAY,
+        0,
+    )?;
+    let mut diff = Mat::default();
+    core::absdiff(&base_gray, &led_gray, &mut diff)?;
+
+    // erode to remove the noise
+    let mut eroded = Mat::default();
+    let kernel = Mat::default();
+    let anchor = core::Point::new(-1, -1); // default in C++ implementation
+    let border_value = imgproc::morphology_default_border_value()?;
+    imgproc::erode(
+        &diff,
+        &mut eroded,
+        &kernel,
+        anchor,
+        1,
+        core::BORDER_CONSTANT,
+        border_value,
+    )?;
+
+    let mut max_loc = core::Point::default();
+    let mut max_val: f64 = 0.0;
+    opencv::core::min_max_loc(
+        &eroded,
+        None,
+        Some(&mut max_val),
+        None,
+        Some(&mut max_loc),
+        &Mat::default(),
+    )?;
+
+    println!("Max val: {}", max_val);
+    if max_val < 80.0 {
+        println!("Warning, low value detected: {}", max_val);
+        return Ok(None);
+    }
+
+    Ok(Some((max_loc.x as usize, max_loc.y as usize)))
 }
