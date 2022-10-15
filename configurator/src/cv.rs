@@ -1,6 +1,7 @@
 use std::fmt;
 use std::{error::Error, time::Duration};
 
+use log::debug;
 use opencv::{
     core, highgui, imgproc,
     prelude::{Mat, MatTraitConstManual},
@@ -168,9 +169,9 @@ pub fn find_light_from_diff(
         &Mat::default(),
     )?;
 
-    println!("Max val: {}", max_val);
+    debug!("Max val: {}", max_val);
     if max_val < 80.0 {
-        println!("Warning, low value detected: {}", max_val);
+        debug!("Low value detected, skipping: {}", max_val);
         return Ok(None);
     }
 

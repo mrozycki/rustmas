@@ -1,4 +1,5 @@
 use gl::types::*;
+use log::error;
 use nalgebra_glm as glm;
 
 use std::{
@@ -218,7 +219,7 @@ extern "system" fn error_callback(
 ) {
     unsafe {
         let message = std::ffi::CStr::from_ptr(message);
-        eprintln!("Error received from OpenGL: {}", message.to_str().unwrap());
+        error!(target: "OpenGL", "{}", message.to_str().unwrap());
     }
 }
 

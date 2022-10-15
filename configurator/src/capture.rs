@@ -8,6 +8,7 @@ use std::{
 
 use client::LightClient;
 use indicatif::{ProgressBar, ProgressFinish, ProgressIterator, ProgressState, ProgressStyle};
+use log::{info, warn};
 use rustmas_light_client as client;
 
 use crate::cv;
@@ -62,17 +63,18 @@ impl Capturer {
             .with_message("Locating lights")
             .with_finish(ProgressFinish::AndLeave);
 
+        info!("Locating lights");
         for i in (0..self.number_of_lights).progress_with(pb) {
             let all_lights_off = self.all_lights_off();
             if let Err(_) = self.light_client.display_frame(&all_lights_off).await {
-                eprintln!("Warning: failed to clear the lights, stopping");
+                warn!("Failed to clear the lights, stopping");
                 break;
             }
             let base_picture = self.camera.capture()?;
 
             let frame = self.single_light_on(i);
             if let Err(_) = self.light_client.display_frame(&frame).await {
-                eprintln!("Warning: failed to light up light #{}, skipping", i);
+                warn!("Failed to light up light #{}, skipping", i);
                 continue;
             }
             let led_picture = self.camera.capture()?;
@@ -80,6 +82,7 @@ impl Capturer {
             coords.push(cv::find_light_from_diff(&base_picture, &led_picture)?);
         }
 
+        info!("Preparing output reference image");
         self.light_client
             .display_frame(&self.all_lights_on())
             .await?;
@@ -97,6 +100,7 @@ impl Capturer {
     }
 
     pub async fn wait_for_perspective(&mut self, prompt: &str) -> Result<(), Box<dyn Error>> {
+        info!("Waiting for camera positioning");
         let mut stdin = io::stdin();
         self.light_client
             .display_frame(&self.all_lights_on())

@@ -1,12 +1,14 @@
 mod capture;
 mod cv;
 
-use std::error::Error;
+use std::{error::Error, fs::File};
 
 use capture::Capturer;
 use clap::{arg, Parser, Subcommand};
 use cv::Camera;
+use log::{info, LevelFilter};
 use rustmas_light_client as light_client;
+use simplelog::{ColorChoice, CombinedLogger, Config, TermLogger, TerminalMode, WriteLogger};
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
@@ -40,16 +42,24 @@ enum Commands {
     },
 }
 
-fn capturer_from_options(lights_endpoint: Option<String>, ip_camera: Option<String>, number_of_lights: usize) -> Result<Capturer, Box<dyn Error>> {
+fn capturer_from_options(
+    lights_endpoint: Option<String>,
+    ip_camera: Option<String>,
+    number_of_lights: usize,
+) -> Result<Capturer, Box<dyn Error>> {
     let camera = if let Some(path) = ip_camera {
+        info!("Using camera from file: {}", path);
         Camera::new_from_file(&path)?
     } else {
+        info!("Using default camera");
         Camera::new_default()?
     };
 
     let light_client: Box<dyn light_client::LightClient> = if let Some(endpoint) = lights_endpoint {
+        info!("Using remote light client at endpoint: {}", endpoint);
         Box::new(light_client::RemoteLightClient::new(&endpoint))
     } else {
+        info!("Using mock light client");
         Box::new(light_client::MockLightClient::new())
     };
 
@@ -58,6 +68,20 @@ fn capturer_from_options(lights_endpoint: Option<String>, ip_camera: Option<Stri
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
+    CombinedLogger::init(vec![
+        TermLogger::new(
+            LevelFilter::Warn,
+            Config::default(),
+            TerminalMode::Mixed,
+            ColorChoice::Auto,
+        ),
+        WriteLogger::new(
+            LevelFilter::Debug,
+            Config::default(),
+            File::create("configurator.log")?,
+        ),
+    ])?;
+
     let cli = Cli::parse();
 
     match cli.command {
@@ -65,7 +89,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
             output,
             number_of_lights,
             ip_camera,
-            lights_endpoint
+            lights_endpoint,
         } => {
             let mut capturer = capturer_from_options(lights_endpoint, ip_camera, number_of_lights)?;
 
@@ -87,7 +111,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
         Commands::OpenCVExample {
             ip_camera,
             number_of_lights,
-            lights_endpoint
+            lights_endpoint,
         } => {
             let mut capturer = capturer_from_options(lights_endpoint, ip_camera, number_of_lights)?;
 
