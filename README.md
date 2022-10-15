@@ -4,6 +4,10 @@ Rustmas
 Utilities for putting smart Christmas lights on your Christmas tree,
 written in Rust, inspired by [Matt Parker's xmastree](https://github.com/standupmaths/xmastree2020).
 
+The interface for controlling lights is provided by [pico-w-neopixel-server](https://github.com/krzmaz/pico-w-neopixel-server/),
+which is meant to be installed on a RaspberryPi Pico W. You can use local visualiser
+for testing purposes.
+
 Local development setup
 -----------------------
 
