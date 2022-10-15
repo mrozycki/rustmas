@@ -139,7 +139,7 @@ impl Capturer {
             std::thread::sleep(Duration::from_millis(200));
             let base_picture = self.camera.capture()?;
             self.light_client
-                .display_frame(&self.all_lights_on())
+                .display_frame(&self.single_light_on(i))
                 .await?;
             std::thread::sleep(Duration::from_millis(200));
             let mut led_picture = self.camera.capture()?;
