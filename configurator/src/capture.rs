@@ -3,6 +3,7 @@ use std::{
     fmt::Write,
     io::{self, Read, Write as IoWrite},
     path::Path,
+    time::Duration,
 };
 
 use client::LightClient;
@@ -30,15 +31,21 @@ impl Capturer {
         }
     }
 
-    fn generate_all_white_frame(&self) -> client::Frame {
+    fn all_lights_off(&self) -> client::Frame {
+        client::Frame::new(self.number_of_lights, client::Color::black())
+    }
+
+    fn all_lights_on(&self) -> client::Frame {
         client::Frame::new(self.number_of_lights, client::Color::white())
     }
 
-    fn generate_single_light_frame(&self, index: usize) -> client::Frame {
+    fn single_light_on(&self, index: usize) -> client::Frame {
         client::Frame::new_black(self.number_of_lights).with_pixel(index, client::Color::white())
     }
 
-    pub async fn capture_perspective(&mut self) -> Result<Vec<(usize, usize)>, Box<dyn Error>> {
+    pub async fn capture_perspective(
+        &mut self,
+    ) -> Result<Vec<Option<(usize, usize)>>, Box<dyn Error>> {
         let mut coords = Vec::new();
 
         let pb = ProgressBar::new(self.number_of_lights as u64)
@@ -56,15 +63,35 @@ impl Capturer {
             .with_finish(ProgressFinish::AndLeave);
 
         for i in (0..self.number_of_lights).progress_with(pb) {
-            let frame = self.generate_single_light_frame(i);
+            let all_lights_off = self.all_lights_off();
+            if let Err(_) = self.light_client.display_frame(&all_lights_off).await {
+                eprintln!("Warning: failed to clear the lights, stopping");
+                break;
+            }
+            let base_picture = self.camera.capture()?;
+
+            let frame = self.single_light_on(i);
             if let Err(_) = self.light_client.display_frame(&frame).await {
                 eprintln!("Warning: failed to light up light #{}, skipping", i);
                 continue;
             }
+            let led_picture = self.camera.capture()?;
 
-            let picture = self.camera.capture()?;
-            coords.push(cv::find_light(&picture)?);
+            coords.push(cv::find_light_from_diff(&base_picture, &led_picture)?);
         }
+
+        self.light_client
+            .display_frame(&self.all_lights_on())
+            .await?;
+        let window = cv::Display::new("results")?;
+        let mut base_picture = self.camera.capture()?;
+        for point in &coords {
+            if point.is_some() {
+                base_picture.mark(point.unwrap().0, point.unwrap().1)?;
+            }
+        }
+        window.show(&base_picture)?;
+        window.wait_for(Duration::from_millis(10))?; // apparently needed to show the frame
 
         Ok(coords)
     }
@@ -72,7 +99,7 @@ impl Capturer {
     pub async fn wait_for_perspective(&mut self, prompt: &str) -> Result<(), Box<dyn Error>> {
         let mut stdin = io::stdin();
         self.light_client
-            .display_frame(&self.generate_all_white_frame())
+            .display_frame(&self.all_lights_on())
             .await?;
         println!("{}", prompt);
         print!("Press return to continue...");
@@ -82,8 +109,8 @@ impl Capturer {
     }
 
     pub fn merge_perspectives(
-        front: Vec<(usize, usize)>,
-        side: Vec<(usize, usize)>,
+        front: Vec<Option<(usize, usize)>>,
+        side: Vec<Option<(usize, usize)>>,
     ) -> Vec<(f64, f64, f64)> {
         vec![(0.0, 1.0, 0.0); front.len()]
     }
@@ -98,6 +125,31 @@ impl Capturer {
             .map(|light| writer.serialize(light))
             .collect::<Result<Vec<_>, _>>()?;
 
+        Ok(())
+    }
+
+    pub async fn opencv_example(&mut self) -> Result<(), Box<dyn Error>> {
+        let window = cv::Display::new("video capture")?;
+        for i in 0..self.number_of_lights {
+            self.wait_for_perspective(format!("Press enter to configure led #{}", i + 1).as_str())
+                .await?;
+            self.light_client
+                .display_frame(&self.all_lights_off())
+                .await?;
+            std::thread::sleep(Duration::from_millis(200));
+            let base_picture = self.camera.capture()?;
+            self.light_client
+                .display_frame(&self.all_lights_on())
+                .await?;
+            std::thread::sleep(Duration::from_millis(200));
+            let mut led_picture = self.camera.capture()?;
+            let maybe_coords = cv::find_light_from_diff(&base_picture, &led_picture)?;
+            if maybe_coords.is_some() {
+                led_picture.mark(maybe_coords.unwrap().0, maybe_coords.unwrap().1)?;
+            }
+            window.show(&led_picture)?;
+            window.wait_for(Duration::from_millis(10))?; // apparently needed to show the frame
+        }
         Ok(())
     }
 }

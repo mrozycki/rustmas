@@ -1,11 +1,11 @@
 mod capture;
 mod cv;
 
-use std::{error::Error, time::Duration};
+use std::error::Error;
 
 use capture::Capturer;
 use clap::{arg, Parser, Subcommand};
-use cv::{Camera, Display};
+use cv::Camera;
 use rustmas_light_client as light_client;
 
 #[derive(Parser, Debug)]
@@ -28,11 +28,14 @@ enum Commands {
     OpenCVExample {
         #[arg(short, long)]
         ip_camera: Option<String>,
+        #[arg(short, long, default_value_t = 500)]
+        lights_count: usize,
     },
     Visualise {
         input: String,
     },
 }
+
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
     let cli = Cli::parse();
@@ -70,24 +73,24 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
             Ok(())
         }
-        Commands::OpenCVExample { ip_camera } => {
-            let mut camera = if let Some(path) = ip_camera {
+        Commands::OpenCVExample {
+            ip_camera,
+            lights_count,
+        } => {
+            let camera = if let Some(path) = ip_camera {
                 Camera::new_from_file(&path)?
             } else {
                 Camera::new_default()?
             };
-            let window = Display::new("video capture")?;
 
-            loop {
-                let mut frame = camera.capture()?;
-                let (x, y) = cv::find_light(&frame)?;
-                frame.mark(x, y)?;
+            let mut capturer = Capturer::new(
+                Box::new(light_client::MockLightClient::new()),
+                camera,
+                lights_count,
+            );
 
-                window.show(&frame)?;
-                if window.wait_for(Duration::from_millis(10))? > 0 {
-                    break;
-                }
-            }
+            capturer.opencv_example().await?;
+
             Ok(())
         }
         Commands::Visualise { input } => {
