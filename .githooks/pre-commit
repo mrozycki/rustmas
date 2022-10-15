@@ -1,0 +1,12 @@
+#!/bin/sh
+echo Checking formatting...
+cargo fmt --check -- -l
+
+if [ $? != 0 ]
+then
+    echo The above files are not formatted properly. Run \`cargo fmt\` to fix them.
+    echo For local commits you can run \`git commit --no-verify\` to skip this check.
+    exit 1
+else
+    echo Formatting correct
+fi

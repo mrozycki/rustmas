@@ -10,9 +10,9 @@ use opencv::{
 };
 
 #[derive(Debug)]
-pub enum CameraError{
+pub enum CameraError {
     InitializeError,
-    CaptureError
+    CaptureError,
 }
 
 impl fmt::Display for CameraError {
