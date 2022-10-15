@@ -20,20 +20,40 @@ enum Commands {
     Capture {
         #[arg(short, long, default_value = "lights.csv")]
         output: String,
-        #[arg(short, long, default_value_t = 500)]
-        lights_count: usize,
+        #[arg(short, long)]
+        lights_endpoint: Option<String>,
         #[arg(short, long)]
         ip_camera: Option<String>,
+        #[arg(short, long, default_value_t = 500)]
+        number_of_lights: usize,
     },
     OpenCVExample {
         #[arg(short, long)]
+        lights_endpoint: Option<String>,
+        #[arg(short, long)]
         ip_camera: Option<String>,
         #[arg(short, long, default_value_t = 500)]
-        lights_count: usize,
+        number_of_lights: usize,
     },
     Visualise {
         input: String,
     },
+}
+
+fn capturer_from_options(lights_endpoint: Option<String>, ip_camera: Option<String>, number_of_lights: usize) -> Result<Capturer, Box<dyn Error>> {
+    let camera = if let Some(path) = ip_camera {
+        Camera::new_from_file(&path)?
+    } else {
+        Camera::new_default()?
+    };
+
+    let light_client: Box<dyn light_client::LightClient> = if let Some(endpoint) = lights_endpoint {
+        Box::new(light_client::RemoteLightClient::new(&endpoint))
+    } else {
+        Box::new(light_client::MockLightClient::new())
+    };
+
+    Ok(Capturer::new(light_client, camera, number_of_lights))
 }
 
 #[tokio::main]
@@ -43,20 +63,11 @@ async fn main() -> Result<(), Box<dyn Error>> {
     match cli.command {
         Commands::Capture {
             output,
-            lights_count,
+            number_of_lights,
             ip_camera,
+            lights_endpoint
         } => {
-            let camera = if let Some(path) = ip_camera {
-                Camera::new_from_file(&path)?
-            } else {
-                Camera::new_default()?
-            };
-
-            let mut capturer = Capturer::new(
-                Box::new(light_client::MockLightClient::new()),
-                camera,
-                lights_count,
-            );
+            let mut capturer = capturer_from_options(lights_endpoint, ip_camera, number_of_lights)?;
 
             capturer
                 .wait_for_perspective("Position camera to capture lights from the front")
@@ -75,19 +86,10 @@ async fn main() -> Result<(), Box<dyn Error>> {
         }
         Commands::OpenCVExample {
             ip_camera,
-            lights_count,
+            number_of_lights,
+            lights_endpoint
         } => {
-            let camera = if let Some(path) = ip_camera {
-                Camera::new_from_file(&path)?
-            } else {
-                Camera::new_default()?
-            };
-
-            let mut capturer = Capturer::new(
-                Box::new(light_client::MockLightClient::new()),
-                camera,
-                lights_count,
-            );
+            let mut capturer = capturer_from_options(lights_endpoint, ip_camera, number_of_lights)?;
 
             capturer.opencv_example().await?;
 

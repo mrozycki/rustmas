@@ -151,13 +151,13 @@ pub struct Frame {
 }
 
 impl Frame {
-    pub fn new(light_count: usize, color: Color) -> Self {
+    pub fn new(number_of_lights: usize, color: Color) -> Self {
         Self {
-            pixels: vec![color; light_count],
+            pixels: vec![color; number_of_lights],
         }
     }
-    pub fn new_black(light_count: usize) -> Self {
-        Self::new(light_count, Color::black())
+    pub fn new_black(number_of_lights: usize) -> Self {
+        Self::new(number_of_lights, Color::black())
     }
 
     pub fn set_pixel(&mut self, index: usize, color: Color) {
