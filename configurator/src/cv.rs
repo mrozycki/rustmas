@@ -9,7 +9,10 @@ use opencv::{
 };
 
 #[derive(Debug)]
-pub struct CameraError();
+pub enum CameraError{
+    InitializeError,
+    CaptureError
+}
 
 impl fmt::Display for CameraError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -51,20 +54,22 @@ pub struct Camera {
 
 impl Camera {
     pub fn new_default() -> Result<Self, Box<dyn Error>> {
-        let cam = videoio::VideoCapture::new(0, videoio::CAP_ANY)?; // 0 is the default camera
+        let mut cam = videoio::VideoCapture::new(0, videoio::CAP_ANY)?; // 0 is the default camera
+        cam.set(videoio::CAP_PROP_BUFFERSIZE, 1.0)?;
         if videoio::VideoCapture::is_opened(&cam)? {
             Ok(Self { handle: cam })
         } else {
-            Err(Box::new(CameraError()))
+            Err(Box::new(CameraError::InitializeError))
         }
     }
 
     pub fn new_from_file(path: &str) -> Result<Self, Box<dyn Error>> {
-        let cam = videoio::VideoCapture::from_file(path, videoio::CAP_ANY)?; // 0 is the default camera
+        let mut cam = videoio::VideoCapture::from_file(path, videoio::CAP_ANY)?; // 0 is the default camera
+        cam.set(videoio::CAP_PROP_BUFFERSIZE, 1.0)?;
         if videoio::VideoCapture::is_opened(&cam)? {
             Ok(Self { handle: cam })
         } else {
-            Err(Box::new(CameraError()))
+            Err(Box::new(CameraError::InitializeError))
         }
     }
 
@@ -75,7 +80,7 @@ impl Camera {
         if frame.size()?.width > 0 {
             Ok(frame.into())
         } else {
-            Err(Box::new(CameraError()))
+            Err(Box::new(CameraError::CaptureError))
         }
     }
 }
