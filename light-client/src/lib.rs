@@ -266,13 +266,10 @@ pub struct VisualiserLightClient {
 }
 
 impl VisualiserLightClient {
-    pub fn new(input_path: &str) -> Result<Self, Box<dyn Error>> {
-        let mut file = csv::ReaderBuilder::new()
-            .has_headers(false)
-            .from_path(input_path)?;
-        let points: Vec<_> = file
-            .deserialize()
-            .filter_map(|record: Result<(f32, f32, f32), _>| record.ok())
+    pub fn new(points: Vec<(f64, f64, f64)>) -> Result<Self, Box<dyn Error>> {
+        let points = points
+            .into_iter()
+            .map(|(x, y, z)| (x as f32, y as f32, z as f32))
             .collect();
 
         let (tx, rx) = mpsc::channel();

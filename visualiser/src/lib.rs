@@ -242,7 +242,7 @@ pub fn visualise(
     glfw.window_hint(glfw::WindowHint::OpenGlDebugContext(true));
 
     let (mut window, events) = glfw
-        .create_window(1024, 768, "Rustmas Visualiser", glfw::WindowMode::Windowed)
+        .create_window(2560, 1440, "Rustmas Visualiser", glfw::WindowMode::Windowed)
         .ok_or(OpenGlError::CreateWindowError)?;
 
     window.set_key_polling(true);
@@ -269,7 +269,7 @@ pub fn visualise(
     let mvp_location = unsafe {
         gl::BindVertexArray(vdata.vao_name);
         gl::UseProgram(program.name);
-        gl::PointSize(10.0);
+        gl::PointSize(30.0);
 
         let c_str = CString::new("mvp".as_bytes())?;
         gl::GetUniformLocation(program.name, c_str.as_ptr())
