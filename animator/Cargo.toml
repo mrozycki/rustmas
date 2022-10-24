@@ -7,3 +7,5 @@ edition = "2021"
 rustmas-light-client = { path = "../light-client" }
 
 tokio = { version = "1", features = ["full"] }
+csv = "1.1.6"
+clap = "4.0.18"
