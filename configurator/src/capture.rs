@@ -3,6 +3,7 @@ use std::{
     fmt::Write,
     io::{self, Read, Write as IoWrite},
     path::Path,
+    thread,
     time::Duration,
 };
 
@@ -51,7 +52,7 @@ impl Capturer {
     }
 
     fn all_lights_on(&self) -> client::Frame {
-        client::Frame::new(self.number_of_lights, client::Color::white())
+        client::Frame::new(self.number_of_lights, client::Color::gray(50))
     }
 
     fn single_light_on(&self, index: usize) -> client::Frame {
@@ -84,6 +85,7 @@ impl Capturer {
                 warn!("Failed to clear the lights, stopping");
                 break;
             }
+            thread::sleep(Duration::from_millis(30));
             let base_picture = self.camera.capture()?;
 
             let frame = self.single_light_on(i);
@@ -91,6 +93,7 @@ impl Capturer {
                 warn!("Failed to light up light #{}, skipping", i);
                 continue;
             }
+            thread::sleep(Duration::from_millis(30));
             let led_picture = self.camera.capture()?;
 
             coords.push(cv::find_light_from_diff(&base_picture, &led_picture)?);
@@ -100,6 +103,7 @@ impl Capturer {
         self.light_client
             .display_frame(&self.all_lights_on())
             .await?;
+        thread::sleep(Duration::from_millis(30));
         let window = cv::Display::new("results")?;
         let mut base_picture = self.camera.capture()?;
         for point in &coords {
