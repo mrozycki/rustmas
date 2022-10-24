@@ -8,10 +8,24 @@ use std::{
 
 use client::LightClient;
 use indicatif::{ProgressBar, ProgressFinish, ProgressIterator, ProgressState, ProgressStyle};
+use itertools::Itertools;
 use log::{info, warn};
 use rustmas_light_client as client;
 
 use crate::cv;
+
+trait UnzipOption<T, U> {
+    fn unzip_option(self) -> (Option<T>, Option<U>);
+}
+
+impl<T, U> UnzipOption<T, U> for Option<(T, U)> {
+    fn unzip_option(self) -> (Option<T>, Option<U>) {
+        match self {
+            Some((a, b)) => (Some(a), Some(b)),
+            None => (None, None),
+        }
+    }
+}
 
 pub struct Capturer {
     light_client: Box<dyn LightClient>,
@@ -112,20 +126,102 @@ impl Capturer {
         Ok(())
     }
 
+    fn normalize(raw_points: Vec<Option<(usize, usize)>>) -> Vec<Option<(f64, f64)>> {
+        let (xs, ys): (Vec<_>, Vec<_>) = raw_points.iter().cloned().filter_map(|x| x).unzip();
+
+        let (x_min, x_span) = match xs.iter().minmax() {
+            itertools::MinMaxResult::MinMax(min, max) => (*min, *max - *min),
+            _ => return Vec::new(),
+        };
+        let (y_min, y_span) = match ys.iter().minmax() {
+            itertools::MinMaxResult::MinMax(min, max) => (*min, *max - *min),
+            _ => return Vec::new(),
+        };
+
+        let scaling_factor = 2.0 / Ord::max(x_span, y_span) as f64;
+
+        raw_points
+            .into_iter()
+            .map(|a| {
+                a.map(|(x, y)| {
+                    (
+                        (x as isize - x_min as isize - x_span as isize / 2) as f64 * scaling_factor,
+                        (y as isize - y_min as isize - y_span as isize / 2) as f64 * scaling_factor,
+                    )
+                })
+            })
+            .collect()
+    }
+
+    fn merge_point(
+        front: Option<(f64, f64)>,
+        right: Option<(f64, f64)>,
+        back: Option<(f64, f64)>,
+        left: Option<(f64, f64)>,
+    ) -> Option<(f64, f64, f64)> {
+        let (x_positive, y_negative_front) = front.unzip_option();
+        let (z_positive, y_negative_right) = right.unzip_option();
+        let (x_negative, y_negative_back) = back.unzip_option();
+        let (z_negative, y_negative_left) = left.unzip_option();
+
+        let yns = vec![
+            y_negative_front,
+            y_negative_right,
+            y_negative_back,
+            y_negative_left,
+        ]
+        .into_iter()
+        .filter_map(|a| a)
+        .collect_vec();
+        if yns.len() == 0 {
+            return None;
+        }
+        let y = -yns.iter().sum::<f64>() / yns.len() as f64;
+
+        let x = match (x_positive, x_negative) {
+            (Some(xp), Some(xn)) => (xp - xn) / 2.0,
+            (Some(xp), None) => xp,
+            (None, Some(xn)) => -xn,
+            (None, None) => return None,
+        };
+
+        let z = match (z_positive, z_negative) {
+            (Some(zp), Some(zn)) => (zp - zn) / 2.0,
+            (Some(zp), None) => zp,
+            (None, Some(zn)) => -zn,
+            (None, None) => return None,
+        };
+
+        Some((x, y, z))
+    }
+
     pub fn merge_perspectives(
         front: Vec<Option<(usize, usize)>>,
-        side: Vec<Option<(usize, usize)>>,
-    ) -> Vec<(f64, f64, f64)> {
-        vec![(0.0, 1.0, 0.0); front.len()]
+        right: Vec<Option<(usize, usize)>>,
+        back: Vec<Option<(usize, usize)>>,
+        left: Vec<Option<(usize, usize)>>,
+    ) -> Vec<Option<(f64, f64, f64)>> {
+        let front = Self::normalize(front);
+        let right = Self::normalize(right);
+        let back = Self::normalize(back);
+        let left = Self::normalize(left);
+
+        front
+            .into_iter()
+            .zip(back.into_iter())
+            .zip(left.into_iter().zip(right.into_iter()))
+            .map(|((front, back), (left, right))| Self::merge_point(front, right, back, left))
+            .collect()
     }
 
     pub fn save_positions<P: AsRef<Path>>(
         path: P,
-        positions: &Vec<(f64, f64, f64)>,
+        positions: &Vec<Option<(f64, f64, f64)>>,
     ) -> Result<(), Box<dyn Error>> {
         let mut writer = csv::Writer::from_path(path)?;
         positions
             .iter()
+            .map(|p| p.unwrap_or((-1.0, -1.0, -1.0)))
             .map(|light| writer.serialize(light))
             .collect::<Result<Vec<_>, _>>()?;
 

@@ -6,7 +6,7 @@ use std::{error::Error, fs::File};
 use capture::Capturer;
 use clap::{arg, Parser, Subcommand};
 use cv::Camera;
-use log::{info, LevelFilter};
+use log::{debug, info, LevelFilter};
 use rustmas_light_client as light_client;
 use simplelog::{ColorChoice, CombinedLogger, Config, TermLogger, TerminalMode, WriteLogger};
 
@@ -97,13 +97,28 @@ async fn main() -> Result<(), Box<dyn Error>> {
                 .wait_for_perspective("Position camera to capture lights from the front")
                 .await?;
             let front = capturer.capture_perspective().await?;
+            debug!("Captured positions from the front: {:?}", front);
 
             capturer
                 .wait_for_perspective("Position camera to capture lights from the right-hand side")
                 .await?;
-            let side = capturer.capture_perspective().await?;
+            let right = capturer.capture_perspective().await?;
+            debug!("Captured positions from the right: {:?}", right);
 
-            let light_positions = Capturer::merge_perspectives(front, side);
+            capturer
+                .wait_for_perspective("Position camera to capture lights from the back")
+                .await?;
+            let back = capturer.capture_perspective().await?;
+            debug!("Captured positions from the back: {:?}", back);
+
+            capturer
+                .wait_for_perspective("Position camera to capture lights from the left-hand side")
+                .await?;
+            let left = capturer.capture_perspective().await?;
+            debug!("Captured positions from the left: {:?}", left);
+
+            let light_positions = Capturer::merge_perspectives(front, right, back, left);
+            debug!("Mapped 3D light positions: {:?}", light_positions);
             Capturer::save_positions(output, &light_positions)?;
 
             Ok(())
