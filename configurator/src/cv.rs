@@ -1,13 +1,16 @@
-use std::fmt;
+use std::sync::{Arc, Mutex};
 use std::{error::Error, time::Duration};
+use std::{fmt, thread};
 
 use log::debug;
+use opencv::videoio::VideoCapture;
 use opencv::{
     core, highgui, imgproc,
     prelude::{Mat, MatTraitConstManual},
     videoio::VideoCaptureTraitConst,
     videoio::{self, VideoCaptureTrait},
 };
+use tokio::task::JoinHandle;
 
 #[derive(Debug)]
 pub enum CameraError {
@@ -50,33 +53,45 @@ impl From<Mat> for Picture {
 }
 
 pub struct Camera {
-    handle: videoio::VideoCapture,
+    camera_handle: Arc<Mutex<videoio::VideoCapture>>,
+    _grabber_thread_join: JoinHandle<()>,
 }
 
 impl Camera {
-    pub fn new_default() -> Result<Self, Box<dyn Error>> {
-        let mut cam = videoio::VideoCapture::new(0, videoio::CAP_ANY)?; // 0 is the default camera
-        cam.set(videoio::CAP_PROP_BUFFERSIZE, 1.0)?;
-        if videoio::VideoCapture::is_opened(&cam)? {
-            Ok(Self { handle: cam })
-        } else {
-            Err(Box::new(CameraError::InitializeError))
+    pub fn new_from_video_capture(mut capture: VideoCapture) -> Result<Self, Box<dyn Error>> {
+        capture.set(videoio::CAP_PROP_BUFFERSIZE, 1.0)?;
+
+        if !videoio::VideoCapture::is_opened(&capture)? {
+            return Err(Box::new(CameraError::InitializeError));
         }
+        let camera_handle = Arc::new(Mutex::new(capture));
+        let camera_handle_clone = camera_handle.clone();
+        let _grabber_thread_join = tokio::spawn(async move {
+            loop {
+                let _ = camera_handle_clone.lock().unwrap().grab();
+                thread::sleep(Duration::from_millis(30));
+            }
+        });
+        Ok(Self {
+            camera_handle,
+            _grabber_thread_join,
+        })
+    }
+    pub fn new_default() -> Result<Self, Box<dyn Error>> {
+        let cam = videoio::VideoCapture::new(0, videoio::CAP_ANY)?; // 0 is the default camera
+        Self::new_from_video_capture(cam)
     }
 
     pub fn new_from_file(path: &str) -> Result<Self, Box<dyn Error>> {
-        let mut cam = videoio::VideoCapture::from_file(path, videoio::CAP_ANY)?; // 0 is the default camera
-        cam.set(videoio::CAP_PROP_BUFFERSIZE, 1.0)?;
-        if videoio::VideoCapture::is_opened(&cam)? {
-            Ok(Self { handle: cam })
-        } else {
-            Err(Box::new(CameraError::InitializeError))
-        }
+        let cam = videoio::VideoCapture::from_file(path, videoio::CAP_ANY)?; // 0 is the default camera
+        Self::new_from_video_capture(cam)
     }
 
     pub fn capture(&mut self) -> Result<Picture, Box<dyn Error>> {
         let mut frame = Mat::default();
-        self.handle.read(&mut frame)?;
+        let mut camera_handle = self.camera_handle.lock().unwrap();
+        camera_handle.grab()?;
+        camera_handle.read(&mut frame)?;
 
         if frame.size()?.width > 0 {
             Ok(frame.into())
@@ -88,7 +103,7 @@ impl Camera {
 
 impl Drop for Camera {
     fn drop(&mut self) {
-        self.handle.release().unwrap();
+        self.camera_handle.lock().unwrap().release().unwrap();
     }
 }
 
