@@ -28,6 +28,8 @@ enum Commands {
         ip_camera: Option<String>,
         #[arg(short, long, default_value_t = 500)]
         number_of_lights: usize,
+        #[arg(short, long, default_value_t = false)]
+        save_pictures: bool,
     },
     OpenCVExample {
         #[arg(short, long)]
@@ -90,31 +92,32 @@ async fn main() -> Result<(), Box<dyn Error>> {
             number_of_lights,
             ip_camera,
             lights_endpoint,
+            save_pictures,
         } => {
             let mut capturer = capturer_from_options(lights_endpoint, ip_camera, number_of_lights)?;
 
             capturer
                 .wait_for_perspective("Position camera to capture lights from the front")
                 .await?;
-            let front = capturer.capture_perspective().await?;
+            let front = capturer.capture_perspective(save_pictures).await?;
             debug!("Captured positions from the front: {:?}", front);
 
             capturer
                 .wait_for_perspective("Position camera to capture lights from the right-hand side")
                 .await?;
-            let right = capturer.capture_perspective().await?;
+            let right = capturer.capture_perspective(save_pictures).await?;
             debug!("Captured positions from the right: {:?}", right);
 
             capturer
                 .wait_for_perspective("Position camera to capture lights from the back")
                 .await?;
-            let back = capturer.capture_perspective().await?;
+            let back = capturer.capture_perspective(save_pictures).await?;
             debug!("Captured positions from the back: {:?}", back);
 
             capturer
                 .wait_for_perspective("Position camera to capture lights from the left-hand side")
                 .await?;
-            let left = capturer.capture_perspective().await?;
+            let left = capturer.capture_perspective(save_pictures).await?;
             debug!("Captured positions from the left: {:?}", left);
 
             let light_positions = Capturer::merge_perspectives(front, right, back, left);

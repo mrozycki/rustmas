@@ -61,8 +61,14 @@ impl Capturer {
 
     pub async fn capture_perspective(
         &mut self,
+        save_pictures: bool,
     ) -> Result<Vec<Option<(usize, usize)>>, Box<dyn Error>> {
         let mut coords = Vec::new();
+        let timestamp = chrono::offset::Local::now().format("%FT%X");
+        let dir = format!("captures/{}", timestamp);
+        if save_pictures {
+            std::fs::create_dir_all(dir.as_str())?;
+        }
 
         let pb = ProgressBar::new(self.number_of_lights as u64)
             .with_style(
@@ -94,9 +100,16 @@ impl Capturer {
                 continue;
             }
             thread::sleep(Duration::from_millis(30));
-            let led_picture = self.camera.capture()?;
-
-            coords.push(cv::find_light_from_diff(&base_picture, &led_picture)?);
+            let mut led_picture = self.camera.capture()?;
+            let found_coords = cv::find_light_from_diff(&base_picture, &led_picture)?;
+            if save_pictures {
+                if let Some((x, y)) = found_coords {
+                    led_picture.mark(x, y)?;
+                }
+                let filename = format!("{}/{:03}.jpg", dir, i);
+                led_picture.save_to_file(filename.as_str())?;
+            }
+            coords.push(found_coords);
         }
 
         info!("Preparing output reference image");
@@ -105,13 +118,14 @@ impl Capturer {
             .await?;
         thread::sleep(Duration::from_millis(30));
         let window = cv::Display::new("results")?;
-        let mut base_picture = self.camera.capture()?;
+        let mut all_lights_picture = self.camera.capture()?;
         for point in &coords {
             if point.is_some() {
-                base_picture.mark(point.unwrap().0, point.unwrap().1)?;
+                all_lights_picture.mark(point.unwrap().0, point.unwrap().1)?;
             }
         }
-        window.show(&base_picture)?;
+        all_lights_picture.save_to_file(format!("{}/reference.jpg", dir).as_str())?;
+        window.show(&all_lights_picture)?;
         window.wait_for(Duration::from_millis(10))?; // apparently needed to show the frame
 
         Ok(coords)

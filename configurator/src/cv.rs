@@ -3,12 +3,10 @@ use std::{error::Error, time::Duration};
 use std::{fmt, thread};
 
 use log::debug;
-use opencv::videoio::VideoCapture;
 use opencv::{
     core, highgui, imgproc,
     prelude::{Mat, MatTraitConstManual},
-    videoio::VideoCaptureTraitConst,
-    videoio::{self, VideoCaptureTrait},
+    videoio::{self, VideoCapture, VideoCaptureTrait, VideoCaptureTraitConst},
 };
 use tokio::task::JoinHandle;
 
@@ -42,6 +40,12 @@ impl Picture {
             imgproc::LINE_AA,
             0,
         )?;
+        Ok(())
+    }
+
+    pub fn save_to_file(&self, filename: &str) -> Result<(), Box<dyn Error>> {
+        debug!("Writing file: {}", filename);
+        opencv::imgcodecs::imwrite(filename, &self.inner, &opencv::core::Vector::default())?;
         Ok(())
     }
 }
