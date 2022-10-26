@@ -252,8 +252,7 @@ pub fn visualise(
         )
         .ok_or(OpenGlError::CreateWindowError)?;
 
-    window.set_key_polling(true);
-    window.set_framebuffer_size_polling(true);
+    window.set_all_polling(true);
     window.make_current();
 
     gl::load_with(|s| window.get_proc_address(s) as *const _);
@@ -297,6 +296,7 @@ pub fn visualise(
     };
 
     let camera_pos = glm::vec3(10.0, 0.0, 0.0);
+    let mut rotating = false;
 
     while !window.should_close() {
         glfw.poll_events();
@@ -304,26 +304,6 @@ pub fn visualise(
             match event {
                 glfw::WindowEvent::Key(Key::Escape, _, Action::Press, _) => {
                     window.set_should_close(true)
-                }
-                glfw::WindowEvent::Key(Key::W, _, Action::Press, _) => {
-                    model_matrix = glm::scale(&model_matrix, &glm::vec3(1.1, 1.1, 1.1));
-                }
-                glfw::WindowEvent::Key(Key::S, _, Action::Press, _) => {
-                    model_matrix = glm::scale(&model_matrix, &glm::vec3(0.9, 0.9, 0.9));
-                }
-                glfw::WindowEvent::Key(Key::A, _, Action::Press, _) => {
-                    model_matrix = glm::rotate(
-                        &model_matrix,
-                        -10.0_f32.to_radians(),
-                        &glm::vec3(0.0, 1.0, 0.0),
-                    );
-                }
-                glfw::WindowEvent::Key(Key::D, _, Action::Press, _) => {
-                    model_matrix = glm::rotate(
-                        &model_matrix,
-                        10.0_f32.to_radians(),
-                        &glm::vec3(0.0, 1.0, 0.0),
-                    );
                 }
                 glfw::WindowEvent::FramebufferSize(width, height) => {
                     unsafe {
@@ -336,6 +316,36 @@ pub fn visualise(
                         0.1,
                         100.0,
                     );
+                }
+                glfw::WindowEvent::CursorPos(x, _) => {
+                    let (width, height) = window.get_size();
+                    let (width, height) = (width as f64, height as f64);
+                    if rotating {
+                        model_matrix = glm::rotate(
+                            &model_matrix,
+                            ((x - width / 2.0) / 5.0).to_radians() as f32,
+                            &glm::vec3(0.0, 1.0, 0.0),
+                        );
+                        window.set_cursor_pos(width / 2.0, height / 2.0);
+                    }
+                }
+                glfw::WindowEvent::MouseButton(glfw::MouseButtonRight, glfw::Action::Press, _) => {
+                    rotating = true;
+                    let (width, height) = window.get_size();
+                    window.set_cursor_pos(width as f64 / 2.0, height as f64 / 2.0);
+                    window.set_cursor_mode(glfw::CursorMode::Hidden);
+                }
+                glfw::WindowEvent::MouseButton(
+                    glfw::MouseButtonRight,
+                    glfw::Action::Release,
+                    _,
+                ) => {
+                    rotating = false;
+                    window.set_cursor_mode(glfw::CursorMode::Normal);
+                }
+                glfw::WindowEvent::Scroll(_, y) => {
+                    let scale = 1.0 + 0.1 * y as f32;
+                    model_matrix = glm::scale(&model_matrix, &glm::vec3(scale, scale, scale));
                 }
                 _ => {}
             }
