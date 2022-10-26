@@ -241,11 +241,19 @@ pub fn visualise(
     ));
     glfw.window_hint(glfw::WindowHint::OpenGlDebugContext(true));
 
+    let initial_window_width = 2560;
+    let initial_window_height = 1440;
     let (mut window, events) = glfw
-        .create_window(2560, 1440, "Rustmas Visualiser", glfw::WindowMode::Windowed)
+        .create_window(
+            initial_window_width,
+            initial_window_height,
+            "Rustmas Visualiser",
+            glfw::WindowMode::Windowed,
+        )
         .ok_or(OpenGlError::CreateWindowError)?;
 
     window.set_key_polling(true);
+    window.set_framebuffer_size_polling(true);
     window.make_current();
 
     gl::load_with(|s| window.get_proc_address(s) as *const _);
@@ -263,19 +271,32 @@ pub fn visualise(
     let vdata = VertexData::create();
     vdata.load_buffer(&points);
 
-    let projection_matrix = glm::perspective(1024.0 / 768.0, 45.0_f32.to_radians(), 0.1, 100.0);
+    let mut projection_matrix = glm::perspective(
+        initial_window_width as f32 / initial_window_height as f32,
+        45.0_f32.to_radians(),
+        0.1,
+        100.0,
+    );
     let mut model_matrix = glm::identity::<_, 4>();
 
-    let mvp_location = unsafe {
+    unsafe {
         gl::BindVertexArray(vdata.vao_name);
         gl::UseProgram(program.name);
         gl::PointSize(30.0);
+        gl::Viewport(
+            0,
+            0,
+            initial_window_width as i32,
+            initial_window_height as i32,
+        );
+    }
 
+    let mvp_location = unsafe {
         let c_str = CString::new("mvp".as_bytes())?;
         gl::GetUniformLocation(program.name, c_str.as_ptr())
     };
 
-    let camera_pos = glm::vec3(2.0, 0.0, 0.0);
+    let camera_pos = glm::vec3(10.0, 0.0, 0.0);
 
     while !window.should_close() {
         glfw.poll_events();
@@ -302,6 +323,18 @@ pub fn visualise(
                         &model_matrix,
                         10.0_f32.to_radians(),
                         &glm::vec3(0.0, 1.0, 0.0),
+                    );
+                }
+                glfw::WindowEvent::FramebufferSize(width, height) => {
+                    unsafe {
+                        gl::Viewport(0, 0, width, height);
+                        gl::PointSize(width.min(height) as f32 * 0.02);
+                    }
+                    projection_matrix = glm::perspective(
+                        width as f32 / height as f32,
+                        45.0_f32.to_radians(),
+                        0.1,
+                        100.0,
                     );
                 }
                 _ => {}
