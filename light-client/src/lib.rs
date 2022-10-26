@@ -174,9 +174,14 @@ impl Frame {
     }
 }
 
-impl From<Vec<Color>> for Frame {
-    fn from(pixels: Vec<Color>) -> Self {
-        Self { pixels }
+impl<T> From<T> for Frame
+where
+    T: Iterator<Item = Color>,
+{
+    fn from(iter: T) -> Self {
+        Self {
+            pixels: iter.collect(),
+        }
     }
 }
 
