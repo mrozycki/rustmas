@@ -295,8 +295,12 @@ pub fn visualise(
         gl::GetUniformLocation(program.name, c_str.as_ptr())
     };
 
-    let camera_pos = glm::vec3(10.0, 0.0, 0.0);
     let mut rotating = false;
+    let radius = 10.0f32;
+    let mut polar_angle = 0.0f32;
+    let mut azimuth_angle = 0.0f32;
+
+    let mut camera_pos = glm::vec3(radius, 0.0, 0.0);
 
     while !window.should_close() {
         glfw.poll_events();
@@ -317,16 +321,22 @@ pub fn visualise(
                         100.0,
                     );
                 }
-                glfw::WindowEvent::CursorPos(x, _) => {
+                glfw::WindowEvent::CursorPos(x, y) => {
                     let (width, height) = window.get_size();
                     let (width, height) = (width as f64, height as f64);
                     if rotating {
-                        model_matrix = glm::rotate(
-                            &model_matrix,
-                            ((x - width / 2.0) / 5.0).to_radians() as f32,
-                            &glm::vec3(0.0, 1.0, 0.0),
-                        );
+                        azimuth_angle += ((x - width / 2.0) / 100.0) as f32;
+                        polar_angle += ((y - height / 2.0) / 100.0) as f32;
+                        polar_angle = polar_angle
+                            .min(std::f32::consts::FRAC_PI_2 - 0.01)
+                            .max(-std::f32::consts::FRAC_PI_2 + 0.01);
+
                         window.set_cursor_pos(width / 2.0, height / 2.0);
+                        camera_pos = glm::vec3(
+                            radius * polar_angle.cos() * azimuth_angle.cos(),
+                            radius * polar_angle.sin(),
+                            radius * polar_angle.cos() * azimuth_angle.sin(),
+                        );
                     }
                 }
                 glfw::WindowEvent::MouseButton(glfw::MouseButtonRight, glfw::Action::Press, _) => {
