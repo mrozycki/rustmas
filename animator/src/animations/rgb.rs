@@ -6,7 +6,7 @@ pub struct Rgb {
 }
 
 impl Rgb {
-    pub fn new(points: Vec<(f64, f64, f64)>) -> Self {
+    pub fn new(points: &Vec<(f64, f64, f64)>) -> Self {
         Self {
             points_count: points.len(),
         }

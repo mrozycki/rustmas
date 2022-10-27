@@ -6,12 +6,9 @@ pub struct RainbowWaterfall {
 }
 
 impl RainbowWaterfall {
-    pub fn new(points: Vec<(f64, f64, f64)>) -> Self {
+    pub fn new(points: &Vec<(f64, f64, f64)>) -> Self {
         Self {
-            points_height: points
-                .into_iter()
-                .map(|(_, h, _)| (h + 1.0) / 2.0)
-                .collect(),
+            points_height: points.iter().map(|(_, h, _)| (h + 1.0) / 2.0).collect(),
         }
     }
 }
