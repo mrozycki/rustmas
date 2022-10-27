@@ -6,10 +6,10 @@ pub struct RainbowSphere {
 }
 
 impl RainbowSphere {
-    pub fn new(points: Vec<(f64, f64, f64)>) -> Self {
+    pub fn new(points: &Vec<(f64, f64, f64)>) -> Self {
         Self {
             points_radius: points
-                .into_iter()
+                .iter()
                 .map(|(x, y, z)| (x.powi(2) + y.powi(2) + z.powi(2)).sqrt())
                 .collect(),
         }

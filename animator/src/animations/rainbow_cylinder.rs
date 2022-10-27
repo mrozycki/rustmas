@@ -6,13 +6,9 @@ pub struct RainbowCylinder {
 }
 
 impl RainbowCylinder {
-    pub fn new(points: Vec<(f64, f64, f64)>) -> Self {
+    pub fn new(points: &Vec<(f64, f64, f64)>) -> Self {
         Self {
-            points_alpha: points
-                .into_iter()
-                .map(to_polar)
-                .map(|(_, a, _)| a)
-                .collect(),
+            points_alpha: points.iter().map(to_polar).map(|(_, a, _)| a).collect(),
         }
     }
 }
@@ -26,6 +22,6 @@ impl Animation for RainbowCylinder {
     }
 }
 
-fn to_polar((x, y, z): (f64, f64, f64)) -> (f64, f64, f64) {
-    ((x.powi(2) + z.powi(2)).sqrt(), (x / z).atan(), y)
+fn to_polar((x, y, z): &(f64, f64, f64)) -> (f64, f64, f64) {
+    ((x.powi(2) + z.powi(2)).sqrt(), (x / z).atan(), *y)
 }
