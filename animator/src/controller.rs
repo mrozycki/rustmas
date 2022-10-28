@@ -18,6 +18,7 @@ impl Controller {
     ) -> Box<dyn Animation + Sync + Send> {
         match name {
             "barber_pole" => Box::new(animations::BarberPole::new(points)),
+            "check" => Box::new(animations::Check::new(points)),
             "rainbow_cable" => Box::new(animations::RainbowCable::new(points)),
             "rainbow_cylinder" => Box::new(animations::RainbowCylinder::new(points)),
             "rainbow_sphere" => Box::new(animations::RainbowSphere::new(points)),
