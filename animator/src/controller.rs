@@ -17,6 +17,7 @@ impl Controller {
         points: &Vec<(f64, f64, f64)>,
     ) -> Box<dyn Animation + Sync + Send> {
         match name {
+            "rainbow_cable" => Box::new(animations::RainbowCable::new(points)),
             "rainbow_cylinder" => Box::new(animations::RainbowCylinder::new(points)),
             "rainbow_sphere" => Box::new(animations::RainbowSphere::new(points)),
             "rainbow_waterfall" => Box::new(animations::RainbowWaterfall::new(points)),
