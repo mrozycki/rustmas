@@ -6,6 +6,7 @@ use std::{
 };
 
 use async_trait::async_trait;
+use log::{error, info};
 
 #[derive(Clone, Copy)]
 #[cfg_attr(test, derive(PartialEq, Debug))]
@@ -280,7 +281,10 @@ impl VisualiserLightClient {
         let (tx, rx) = mpsc::channel();
         Ok(Self {
             _join_handle: tokio::spawn(async move {
-                rustmas_visualiser::visualise(points, rx).unwrap();
+                match rustmas_visualiser::visualise(points, rx) {
+                    Ok(_) => info!("Visualiser completed without errors"),
+                    Err(e) => error!("Visualiser returned an error: {}", e),
+                }
             }),
             light_tx: Mutex::new(tx),
         })

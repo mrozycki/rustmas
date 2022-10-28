@@ -1,11 +1,13 @@
 mod animations;
 mod controller;
 
-use std::error::Error;
+use std::{error::Error, fs::File};
 
 use clap::Parser;
 use client::LightClient;
+use log::{info, LevelFilter};
 use rustmas_light_client as client;
+use simplelog::{ColorChoice, CombinedLogger, Config, TermLogger, TerminalMode, WriteLogger};
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
@@ -29,12 +31,34 @@ fn load_points(path: &str) -> Result<Vec<(f64, f64, f64)>, Box<dyn std::error::E
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
+    CombinedLogger::init(vec![
+        TermLogger::new(
+            LevelFilter::Info,
+            Config::default(),
+            TerminalMode::Mixed,
+            ColorChoice::Auto,
+        ),
+        WriteLogger::new(
+            LevelFilter::Debug,
+            Config::default(),
+            File::create("animator.log")?,
+        ),
+    ])?;
+
     let cli = Cli::parse();
 
     let points = load_points(&cli.positions_file)?;
+    info!("Loaded {} points from {}", points.len(), cli.positions_file);
+
     let client: Box<dyn LightClient + Send + Sync> = match cli.lights_endpoint {
-        Some(path) => Box::new(client::RemoteLightClient::new(&path)),
-        None => Box::new(client::VisualiserLightClient::new(points.clone())?),
+        Some(path) => {
+            info!("Using remote light client with endpoint {}", path);
+            Box::new(client::RemoteLightClient::new(&path))
+        }
+        None => {
+            info!("Using local visualiser");
+            Box::new(client::VisualiserLightClient::new(points.clone())?)
+        }
     };
 
     let controller = controller::Controller::new(points, client)?;

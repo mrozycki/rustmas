@@ -1189,7 +1189,9 @@ version = "0.1.0"
 dependencies = [
  "clap",
  "csv",
+ "log",
  "rustmas-light-client",
+ "simplelog",
  "tokio",
 ]
 

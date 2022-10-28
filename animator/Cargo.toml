@@ -9,3 +9,6 @@ rustmas-light-client = { path = "../light-client" }
 tokio = { version = "1", features = ["full"] }
 csv = "1.1.6"
 clap = "4.0.18"
+
+log = "0.4.17"
+simplelog = "0.12.0"

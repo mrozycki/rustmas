@@ -1,5 +1,5 @@
 use gl::types::*;
-use log::error;
+use log::{error, info};
 use nalgebra_glm as glm;
 
 use std::{
@@ -227,6 +227,8 @@ pub fn visualise(
     points: Vec<Point>,
     colors_recv: std::sync::mpsc::Receiver<Vec<(f32, f32, f32)>>,
 ) -> Result<(), Box<dyn Error>> {
+    info!("Starting OpenGL visualiser");
+
     let points = points
         .into_iter()
         .map(|(x, y, z)| glm::vec3(x, y, z))

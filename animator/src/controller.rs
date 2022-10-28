@@ -1,5 +1,6 @@
 use std::{error::Error, sync::mpsc, time::Duration};
 
+use log::{error, info, warn};
 use rustmas_light_client::LightClientError;
 use tokio::task::JoinHandle;
 
@@ -40,11 +41,17 @@ impl Controller {
                 animation = match rx.try_recv() {
                     Ok(name) => Self::new_animation(name.as_str(), &points),
                     Err(mpsc::TryRecvError::Empty) => animation,
-                    _ => return,
+                    _ => {
+                        info!("Animation channel closed, exiting");
+                        return;
+                    }
                 };
 
                 match client.display_frame(&animation.frame(t)).await {
-                    Err(LightClientError::ConnectionLost) => return,
+                    Err(LightClientError::ConnectionLost) => {
+                        warn!("Lost connection to light client, exiting");
+                        return;
+                    }
                     _ => (),
                 };
 
@@ -58,9 +65,14 @@ impl Controller {
     }
 
     pub fn switch_animation(&self, name: &str) -> Result<(), Box<dyn Error>> {
-        self.tx.send(name.to_owned())?;
-
-        Ok(())
+        info!("Trying to switch animation to \"{}\"", name);
+        match self.tx.send(name.to_owned()) {
+            Ok(_) => Ok(()),
+            Err(e) => {
+                error!("Failed to switch animation, reason: {}", e);
+                Err(Box::new(e))
+            }
+        }
     }
 
     pub async fn join(self) -> Result<(), Box<dyn Error>> {
