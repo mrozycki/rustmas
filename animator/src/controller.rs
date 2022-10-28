@@ -12,25 +12,6 @@ pub struct Controller {
 }
 
 impl Controller {
-    fn new_animation(
-        name: &str,
-        points: &Vec<(f64, f64, f64)>,
-    ) -> Box<dyn Animation + Sync + Send> {
-        match name {
-            "barber_pole" => Box::new(animations::BarberPole::new(points)),
-            "blank" => Box::new(animations::Blank::new(points)),
-            "check" => Box::new(animations::Check::new(points)),
-            "rainbow_cable" => Box::new(animations::RainbowCable::new(points)),
-            "rainbow_cylinder" => Box::new(animations::RainbowCylinder::new(points)),
-            "rainbow_sphere" => Box::new(animations::RainbowSphere::new(points)),
-            "rainbow_spiral" => Box::new(animations::RainbowSpiral::new(points)),
-            "rainbow_waterfall" => Box::new(animations::RainbowWaterfall::new(points)),
-            "sweep" => Box::new(animations::Sweep::new(points)),
-            "rgb" => Box::new(animations::Rgb::new(points)),
-            _ => panic!("Unknown animation pattern \"{}\"", name),
-        }
-    }
-
     pub fn new(
         points: Vec<(f64, f64, f64)>,
         client: Box<dyn rustmas_light_client::LightClient + Sync + Send>,
@@ -39,12 +20,12 @@ impl Controller {
 
         let join_handle = tokio::spawn(async move {
             let mut animation: Box<dyn Animation + Sync + Send> =
-                Box::new(super::animations::Blank::new(&points));
+                animations::make_animation("blank", &points);
             let mut t = 0.0;
 
             loop {
                 animation = match rx.try_recv() {
-                    Ok(name) => Self::new_animation(name.as_str(), &points),
+                    Ok(name) => animations::make_animation(name.as_str(), &points),
                     Err(mpsc::TryRecvError::Empty) => animation,
                     _ => {
                         info!("Animation channel closed, exiting");
