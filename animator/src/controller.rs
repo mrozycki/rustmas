@@ -17,9 +17,11 @@ impl Controller {
         points: &Vec<(f64, f64, f64)>,
     ) -> Box<dyn Animation + Sync + Send> {
         match name {
+            "barber_pole" => Box::new(animations::BarberPole::new(points)),
             "rainbow_cable" => Box::new(animations::RainbowCable::new(points)),
             "rainbow_cylinder" => Box::new(animations::RainbowCylinder::new(points)),
             "rainbow_sphere" => Box::new(animations::RainbowSphere::new(points)),
+            "rainbow_spiral" => Box::new(animations::RainbowSpiral::new(points)),
             "rainbow_waterfall" => Box::new(animations::RainbowWaterfall::new(points)),
             "sweep" => Box::new(animations::Sweep::new(points)),
             "rgb" => Box::new(animations::Rgb::new(points)),
