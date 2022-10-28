@@ -18,6 +18,7 @@ impl Controller {
     ) -> Box<dyn Animation + Sync + Send> {
         match name {
             "barber_pole" => Box::new(animations::BarberPole::new(points)),
+            "blank" => Box::new(animations::Blank::new(points)),
             "check" => Box::new(animations::Check::new(points)),
             "rainbow_cable" => Box::new(animations::RainbowCable::new(points)),
             "rainbow_cylinder" => Box::new(animations::RainbowCylinder::new(points)),
@@ -38,7 +39,7 @@ impl Controller {
 
         let join_handle = tokio::spawn(async move {
             let mut animation: Box<dyn Animation + Sync + Send> =
-                Box::new(super::animations::RainbowWaterfall::new(&points));
+                Box::new(super::animations::Blank::new(&points));
             let mut t = 0.0;
 
             loop {
