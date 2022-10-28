@@ -1,5 +1,6 @@
 mod animation;
 mod barber_pole;
+mod blank;
 mod check;
 mod rainbow_cable;
 mod rainbow_cylinder;
@@ -12,6 +13,7 @@ mod utils;
 
 pub use animation::Animation;
 pub use barber_pole::BarberPole;
+pub use blank::Blank;
 pub use check::Check;
 pub use rainbow_cable::RainbowCable;
 pub use rainbow_cylinder::RainbowCylinder;
