@@ -263,6 +263,8 @@ pub fn visualise(
         gl::DebugMessageCallback(Some(error_callback), ptr::null());
         gl::Enable(gl::DEBUG_OUTPUT);
         gl::Enable(gl::DEBUG_OUTPUT_SYNCHRONOUS);
+
+        gl::Enable(gl::DEPTH_TEST);
     }
 
     let vs = Shader::load(gl::VERTEX_SHADER, include_str!("shaders/shader.vert"))?;
@@ -384,7 +386,7 @@ pub fn visualise(
         unsafe {
             gl::Flush();
             gl::ClearColor(0.3, 0.3, 0.3, 1.0);
-            gl::Clear(gl::COLOR_BUFFER_BIT);
+            gl::Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT);
 
             gl::UniformMatrix4fv(mvp_location, 1, gl::FALSE, mvp.as_ptr());
 
