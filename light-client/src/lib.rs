@@ -7,6 +7,7 @@ use std::{
 
 use async_trait::async_trait;
 use log::{error, info};
+use reqwest::header::CONNECTION;
 
 #[derive(Clone, Copy)]
 #[cfg_attr(test, derive(PartialEq, Debug))]
@@ -257,7 +258,14 @@ impl LightClient for RemoteLightClient {
             .cloned()
             .collect();
 
-        match self.http_client.post(&self.url).body(pixels).send().await {
+        match self
+            .http_client
+            .post(&self.url)
+            .header(CONNECTION, "keep-alive")
+            .body(pixels)
+            .send()
+            .await
+        {
             Ok(_) => Ok(()),
             Err(err) => {
                 eprintln!("{:?}", err);
