@@ -17,7 +17,7 @@ impl Animation for RainbowCable {
     fn frame(&self, time: f64) -> client::Frame {
         (0..self.points_count)
             .into_iter()
-            .map(|i| client::Color::hsv(i as f64 / 100.0 + time, 1.0, 0.5))
+            .map(|i| client::Color::hsv(i as f64 / self.points_count as f64 * 4.0 + time, 1.0, 0.5))
             .into()
     }
 }
