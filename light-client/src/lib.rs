@@ -251,12 +251,13 @@ impl RemoteLightClient {
 #[async_trait]
 impl LightClient for RemoteLightClient {
     async fn display_frame(&self, frame: &Frame) -> Result<(), LightClientError> {
-        let pixels = frame
+        let pixels: Vec<_> = frame
             .pixels_iter()
-            .flat_map(|pixel| vec![&pixel.r, &pixel.g, &pixel.b]);
-        let request: Vec<_> = "data=".as_bytes().iter().chain(pixels).cloned().collect();
+            .flat_map(|pixel| vec![&pixel.r, &pixel.g, &pixel.b])
+            .cloned()
+            .collect();
 
-        match self.http_client.post(&self.url).body(request).send().await {
+        match self.http_client.post(&self.url).body(pixels).send().await {
             Ok(_) => Ok(()),
             Err(err) => {
                 eprintln!("{:?}", err);
