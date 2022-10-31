@@ -14,7 +14,7 @@ impl RainbowWaterfall {
 }
 
 impl Animation for RainbowWaterfall {
-    fn frame(&self, time: f64) -> client::Frame {
+    fn frame(&mut self, time: f64) -> client::Frame {
         self.points_height
             .iter()
             .map(|h| client::Color::hsv(h + time, 1.0, 0.5))

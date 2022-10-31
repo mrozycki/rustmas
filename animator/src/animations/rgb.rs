@@ -14,7 +14,7 @@ impl Rgb {
 }
 
 impl Animation for Rgb {
-    fn frame(&self, time: f64) -> client::Frame {
+    fn frame(&mut self, time: f64) -> client::Frame {
         (0..self.points_count)
             .into_iter()
             .map(|x| match (x + ((time * 3.0).abs() as usize)) % 3 {

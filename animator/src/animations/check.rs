@@ -15,7 +15,7 @@ impl Check {
 }
 
 impl Animation for Check {
-    fn frame(&self, time: f64) -> client::Frame {
+    fn frame(&mut self, time: f64) -> client::Frame {
         let index = ((time * 8.0) % self.points_count as f64) as usize;
         debug!("Checking light #{}", index);
         client::Frame::new_black(self.points_count).with_pixel(index, client::Color::white())

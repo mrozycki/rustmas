@@ -14,7 +14,7 @@ impl Sweep {
 }
 
 impl Animation for Sweep {
-    fn frame(&self, time: f64) -> client::Frame {
+    fn frame(&mut self, time: f64) -> client::Frame {
         self.points_height
             .iter()
             .map(|h| {

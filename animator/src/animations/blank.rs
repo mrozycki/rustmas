@@ -14,7 +14,7 @@ impl Blank {
 }
 
 impl Animation for Blank {
-    fn frame(&self, _: f64) -> client::Frame {
+    fn frame(&mut self, _: f64) -> client::Frame {
         self.frame.clone()
     }
 }

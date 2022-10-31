@@ -1,7 +1,7 @@
 use rustmas_light_client as client;
 
 pub trait Animation {
-    fn frame(&self, time: f64) -> client::Frame;
+    fn frame(&mut self, time: f64) -> client::Frame;
 }
 
 pub fn make_animation(

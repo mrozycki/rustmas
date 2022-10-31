@@ -19,7 +19,7 @@ impl RainbowCylinder {
 }
 
 impl Animation for RainbowCylinder {
-    fn frame(&self, time: f64) -> client::Frame {
+    fn frame(&mut self, time: f64) -> client::Frame {
         self.points_alpha
             .iter()
             .map(|a| client::Color::hsv(time + a / (2.0 * std::f64::consts::PI), 1.0, 1.0))
