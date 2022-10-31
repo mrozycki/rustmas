@@ -3,6 +3,10 @@ name = "rustmas-animator"
 version = "0.1.0"
 edition = "2021"
 
+[[bin]]
+name = "animator-cli"
+path = "src/cli.rs"
+
 [dependencies]
 rustmas-light-client = { path = "../light-client" }
 

@@ -37,7 +37,7 @@ impl RandomSweep {
 impl Animation for RandomSweep {
     fn frame(&mut self, time: f64) -> client::Frame {
         let time = time % 2.0 - 1.0;
-        if self.last_time > 0.0 && time < 0.0 {
+        if self.heights.len() == 0 || (self.last_time > 0.0 && time < 0.0) {
             self.generate_new_sweep();
         }
 
