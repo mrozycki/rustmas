@@ -7,6 +7,7 @@ mod rainbow_cylinder;
 mod rainbow_sphere;
 mod rainbow_spiral;
 mod rainbow_waterfall;
+mod random_sweep;
 mod rgb;
 mod sweep;
 mod utils;
