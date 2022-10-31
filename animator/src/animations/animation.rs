@@ -17,6 +17,7 @@ pub fn make_animation(
         "rainbow_sphere" => Box::new(super::rainbow_sphere::RainbowSphere::new(points)),
         "rainbow_spiral" => Box::new(super::rainbow_spiral::RainbowSpiral::new(points)),
         "rainbow_waterfall" => Box::new(super::rainbow_waterfall::RainbowWaterfall::new(points)),
+        "random_sweep" => Box::new(super::random_sweep::RandomSweep::new(points)),
         "sweep" => Box::new(super::sweep::Sweep::new(points)),
         "rgb" => Box::new(super::rgb::Rgb::new(points)),
         _ => panic!("Unknown animation pattern \"{}\"", name),
