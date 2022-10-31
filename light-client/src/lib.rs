@@ -254,7 +254,7 @@ impl LightClient for RemoteLightClient {
     async fn display_frame(&self, frame: &Frame) -> Result<(), LightClientError> {
         let pixels: Vec<_> = frame
             .pixels_iter()
-            .flat_map(|pixel| vec![&pixel.r, &pixel.g, &pixel.b])
+            .flat_map(|pixel| vec![&pixel.g, &pixel.r, &pixel.b])
             .cloned()
             .collect();
 
