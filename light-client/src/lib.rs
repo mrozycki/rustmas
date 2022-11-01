@@ -268,7 +268,7 @@ impl LightClient for RemoteLightClient {
         {
             Ok(_) => Ok(()),
             Err(err) => {
-                eprintln!("{:?}", err);
+                error!("Failed to send a frame to remote lights client: {}", err);
                 Err(LightClientError::ConnectionLost)
             }
         }
