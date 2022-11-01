@@ -191,6 +191,7 @@ where
 pub enum LightClientError {
     Unlikely,
     ConnectionLost,
+    ProcessExited,
 }
 
 impl fmt::Display for LightClientError {
@@ -312,7 +313,7 @@ impl LightClient for VisualiserLightClient {
             .lock()
             .map_err(|_| LightClientError::Unlikely)?
             .send(pixels)
-            .map_err(|_| LightClientError::ConnectionLost)
+            .map_err(|_| LightClientError::ProcessExited)
     }
 }
 

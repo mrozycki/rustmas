@@ -22,9 +22,12 @@ impl Controller {
         let (tx, rx) = mpsc::channel::<String>();
 
         let join_handle = tokio::spawn(async move {
+            const FRAME_STEP: f64 = 1.0 / 30.0;
+
             let mut animation: Box<dyn Animation + Sync + Send> =
                 animations::make_animation("blank", &points);
             let mut t = 0.0;
+            let mut delay = FRAME_STEP;
 
             loop {
                 animation = match rx.try_recv() {
@@ -37,16 +40,25 @@ impl Controller {
                 };
 
                 match client.display_frame(&animation.frame(t)).await {
+                    Ok(_) => {
+                        t += FRAME_STEP;
+                        delay = FRAME_STEP; // restore default delay
+                    }
                     Err(LightClientError::ConnectionLost) => {
-                        warn!("Lost connection to light client, exiting");
+                        delay = (delay * 2.0).min(5.0);
+                        warn!(
+                            "Lost connection to light client, will retry in {} seconds",
+                            delay
+                        );
+                    }
+                    Err(LightClientError::ProcessExited) => {
+                        warn!("Light client exited, exiting");
                         return;
                     }
                     _ => (),
                 };
 
-                let frame_step = 1.0 / 30.0;
-                tokio::time::sleep(Duration::from_secs_f64(frame_step)).await;
-                t += frame_step;
+                tokio::time::sleep(Duration::from_secs_f64(delay)).await;
             }
         });
 
