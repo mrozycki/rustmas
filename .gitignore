@@ -5,3 +5,5 @@
 *.log
 
 .env
+
+webui/dist
