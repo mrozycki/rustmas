@@ -6,3 +6,5 @@ members = [
     "visualiser",
     "webapi",
 ]
+
+resolver = "2"
