@@ -59,8 +59,27 @@ impl Capturer {
         client::Frame::new_black(self.number_of_lights).with_pixel(index, client::Color::white())
     }
 
+    pub fn read_coordinates_from_file(
+        path: &str,
+    ) -> Result<Vec<Option<(f64, f64)>>, Box<dyn Error>> {
+        let mut reader = csv::Reader::from_path(path)?;
+        let coords = reader
+            .records()
+            .map(|r| -> Result<Option<(f64, f64)>, Box<dyn Error>> {
+                let r = r?;
+                Ok(match (&r[0], &r[1]) {
+                    ("", "") => None,
+                    (x_str, y_str) => Some((x_str.parse::<f64>()?, y_str.parse::<f64>()?)),
+                })
+            })
+            .collect::<Result<Vec<_>, Box<dyn Error>>>()?;
+
+        Ok(coords)
+    }
+
     pub async fn capture_perspective(
         &mut self,
+        perspective_name: &str,
         save_pictures: bool,
     ) -> Result<Vec<Option<(f64, f64)>>, Box<dyn Error>> {
         let mut coords = Vec::new();
@@ -124,7 +143,7 @@ impl Capturer {
         all_lights_picture.save_to_file(format!("{}/reference.jpg", dir).as_str())?;
 
         let coords = Self::normalize(coords);
-        Self::save_2d_coordinates(format!("{}/coords.csv", dir).as_str(), &coords)?;
+        Self::save_2d_coordinates(format!("{dir}/{perspective_name}.csv").as_str(), &coords)?;
         Ok(coords)
     }
 
@@ -244,10 +263,8 @@ impl Capturer {
         let mut writer = csv::Writer::from_path(path)?;
         coordinates
             .iter()
-            .map(|light| match light {
-                Some((x, y)) => (Some(x), Some(y)),
-                None => (None, None),
-            })
+            .cloned()
+            .map(UnzipOption::unzip_option)
             .map(|light| writer.serialize(light))
             .collect::<Result<Vec<_>, _>>()?;
         Ok(())
