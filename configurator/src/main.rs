@@ -30,6 +30,14 @@ enum Commands {
         number_of_lights: usize,
         #[arg(short, long, default_value_t = false)]
         save_pictures: bool,
+        #[arg(long = "left")]
+        left_coordinates: Option<String>,
+        #[arg(long = "right")]
+        right_coordinates: Option<String>,
+        #[arg(long = "front")]
+        front_coordinates: Option<String>,
+        #[arg(long = "back")]
+        back_coordinates: Option<String>,
     },
     OpenCVExample {
         #[arg(short, long)]
@@ -68,6 +76,31 @@ fn capturer_from_options(
     Ok(Capturer::new(light_client, camera, number_of_lights))
 }
 
+async fn capture_or_read_coordinates(
+    capturer: &mut Capturer,
+    side: &str,
+    save_pictures: bool,
+    coordinates_path: Option<String>,
+) -> Result<Vec<Option<(f64, f64)>>, Box<dyn Error>> {
+    if coordinates_path.is_none() {
+        capturer
+            .wait_for_perspective(
+                format!("Position camera to capture lights from the {side}").as_str(),
+            )
+            .await?;
+        let coords = capturer.capture_perspective("front", save_pictures).await?;
+        debug!("Captured positions from the {side}: {:?}", coords);
+        Ok(coords)
+    } else {
+        debug!(
+            "Reading {} side positions from {}",
+            side,
+            coordinates_path.as_ref().unwrap()
+        );
+        Capturer::read_coordinates_from_file(&coordinates_path.unwrap())
+    }
+}
+
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
     CombinedLogger::init(vec![
@@ -93,32 +126,32 @@ async fn main() -> Result<(), Box<dyn Error>> {
             ip_camera,
             lights_endpoint,
             save_pictures,
+            left_coordinates,
+            right_coordinates,
+            front_coordinates,
+            back_coordinates,
         } => {
             let mut capturer = capturer_from_options(lights_endpoint, ip_camera, number_of_lights)?;
-
-            capturer
-                .wait_for_perspective("Position camera to capture lights from the front")
-                .await?;
-            let front = capturer.capture_perspective(save_pictures).await?;
-            debug!("Captured positions from the front: {:?}", front);
-
-            capturer
-                .wait_for_perspective("Position camera to capture lights from the right-hand side")
-                .await?;
-            let right = capturer.capture_perspective(save_pictures).await?;
-            debug!("Captured positions from the right: {:?}", right);
-
-            capturer
-                .wait_for_perspective("Position camera to capture lights from the back")
-                .await?;
-            let back = capturer.capture_perspective(save_pictures).await?;
-            debug!("Captured positions from the back: {:?}", back);
-
-            capturer
-                .wait_for_perspective("Position camera to capture lights from the left-hand side")
-                .await?;
-            let left = capturer.capture_perspective(save_pictures).await?;
-            debug!("Captured positions from the left: {:?}", left);
+            let front = capture_or_read_coordinates(
+                &mut capturer,
+                "front",
+                save_pictures,
+                front_coordinates,
+            )
+            .await?;
+            let right = capture_or_read_coordinates(
+                &mut capturer,
+                "right",
+                save_pictures,
+                right_coordinates,
+            )
+            .await?;
+            let back =
+                capture_or_read_coordinates(&mut capturer, "back", save_pictures, back_coordinates)
+                    .await?;
+            let left =
+                capture_or_read_coordinates(&mut capturer, "left", save_pictures, left_coordinates)
+                    .await?;
 
             let light_positions = Capturer::merge_perspectives(front, right, back, left);
             debug!("Mapped 3D light positions: {:?}", light_positions);
