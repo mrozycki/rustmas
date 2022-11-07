@@ -6,7 +6,7 @@ use serde_json::json;
 use simplelog::{ColorChoice, CombinedLogger, Config, TermLogger, TerminalMode, WriteLogger};
 use std::{env, error::Error, fs::File, sync::Mutex};
 
-use actix_web::{post, web, App, HttpResponse, HttpServer};
+use actix_web::{get, post, web, App, HttpResponse, HttpServer};
 
 #[derive(Deserialize)]
 struct SwitchForm {
@@ -24,6 +24,22 @@ async fn switch(form: web::Json<SwitchForm>, app_state: web::Data<AppState>) -> 
         Ok(_) => HttpResponse::Ok().json(json!({"success": true})),
         Err(_) => HttpResponse::InternalServerError().json(json!({"success": false})),
     }
+}
+
+#[get("/list")]
+async fn list() -> HttpResponse {
+    HttpResponse::Ok().json(json!({
+        "animations": [
+            { "id": "rainbow_waterfall", "name": "Rainbow Waterfall" },
+            { "id": "rainbow_cylinder", "name": "Rainbow Cylinder" },
+            { "id": "rainbow_sphere", "name": "Rainbow Sphere" },
+            { "id": "rainbow_spiral", "name": "Rainbow Spiral" },
+            { "id": "rainbow_cable", "name": "Rainbow Cable" },
+            { "id": "barber_pole", "name": "Barber Pole" },
+            { "id": "random_sweep", "name": "Random Sweep" },
+            { "id": "blank", "name": "Blank" },
+        ]
+    }))
 }
 
 struct AppState {
@@ -62,6 +78,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
         App::new()
             .wrap(cors)
             .service(switch)
+            .service(list)
             .app_data(app_state.clone())
     })
     .bind(("0.0.0.0", 8081))?

@@ -1928,6 +1928,7 @@ dependencies = [
  "gloo-net",
  "serde",
  "serde_json",
+ "wasm-bindgen",
  "wasm-bindgen-futures",
  "yew",
 ]

@@ -1,28 +1,22 @@
 use std::error::Error;
 
 use gloo_net::http::Request;
+use serde::Deserialize;
 use serde_json::json;
 use yew::prelude::*;
 
 enum Msg {
+    LoadedAnimations(Vec<Animation>),
     SwitchAnimation(String),
 }
 
-#[derive(Clone)]
+#[derive(Clone, Deserialize)]
 struct Animation {
     id: String,
     name: String,
 }
 
-impl Animation {
-    fn new(id: &str, name: &str) -> Self {
-        Self {
-            id: id.to_owned(),
-            name: name.to_owned(),
-        }
-    }
-}
-
+#[derive(Default, Deserialize)]
 struct AnimationSelector {
     animations: Vec<Animation>,
 }
@@ -31,19 +25,24 @@ impl Component for AnimationSelector {
     type Message = Msg;
     type Properties = ();
 
-    fn create(_ctx: &Context<Self>) -> Self {
-        Self {
-            animations: vec![
-                Animation::new("rainbow_waterfall", "Rainbow Waterfall"),
-                Animation::new("rainbow_cylinder", "Rainbow Cylinder"),
-                Animation::new("rainbow_sphere", "Rainbow Sphere"),
-                Animation::new("rainbow_spiral", "Rainbow Spiral"),
-                Animation::new("rainbow_cable", "Rainbow Cable"),
-                Animation::new("barber_pole", "Barber Pole"),
-                Animation::new("random_sweep", "Random Sweep"),
-                Animation::new("blank", "Blank"),
-            ],
-        }
+    fn create(ctx: &Context<Self>) -> Self {
+        let link = ctx.link().clone();
+        wasm_bindgen_futures::spawn_local(async move {
+            let response = Request::get("http://localhost:8081/list").send().await;
+            let animations = match response {
+                Ok(response) => {
+                    response
+                        .json::<AnimationSelector>()
+                        .await
+                        .unwrap_or_default()
+                        .animations
+                }
+                Err(_) => vec![],
+            };
+            link.send_message(Msg::LoadedAnimations(animations));
+        });
+
+        Default::default()
     }
 
     fn update(&mut self, _ctx: &Context<Self>, msg: Self::Message) -> bool {
@@ -58,6 +57,10 @@ impl Component for AnimationSelector {
                         .await;
                 });
                 false
+            }
+            Msg::LoadedAnimations(animations) => {
+                self.animations = animations;
+                true
             }
         }
     }
