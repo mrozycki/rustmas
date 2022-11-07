@@ -1,33 +1,29 @@
-use actix_files::NamedFile;
+use actix_cors::Cors;
 use dotenvy::dotenv;
 use log::LevelFilter;
 use serde::Deserialize;
+use serde_json::json;
 use simplelog::{ColorChoice, CombinedLogger, Config, TermLogger, TerminalMode, WriteLogger};
 use std::{env, error::Error, fs::File, sync::Mutex};
 
-use actix_web::{get, post, web, App, HttpResponse, HttpServer, Responder};
+use actix_web::{post, web, App, HttpResponse, HttpServer};
 
 #[derive(Deserialize)]
 struct SwitchForm {
-    animation_name: String,
+    animation: String,
 }
 
 #[post("/switch")]
-async fn switch(form: web::Form<SwitchForm>, app_state: web::Data<AppState>) -> impl Responder {
+async fn switch(form: web::Json<SwitchForm>, app_state: web::Data<AppState>) -> HttpResponse {
     match app_state
         .animation_controller
         .lock()
         .unwrap()
-        .switch_animation(&form.animation_name)
+        .switch_animation(&form.animation)
     {
-        Ok(_) => HttpResponse::Ok(),
-        Err(_) => HttpResponse::InternalServerError(),
+        Ok(_) => HttpResponse::Ok().json(json!({"success": true})),
+        Err(_) => HttpResponse::InternalServerError().json(json!({"success": false})),
     }
-}
-
-#[get("/")]
-async fn index() -> std::io::Result<NamedFile> {
-    Ok(NamedFile::open("webapi/index.html")?)
 }
 
 struct AppState {
@@ -62,12 +58,13 @@ async fn main() -> Result<(), Box<dyn Error>> {
     });
 
     HttpServer::new(move || {
+        let cors = Cors::permissive();
         App::new()
+            .wrap(cors)
             .service(switch)
-            .service(index)
             .app_data(app_state.clone())
     })
-    .bind(("0.0.0.0", 8080))?
+    .bind(("0.0.0.0", 8081))?
     .run()
     .await?;
 

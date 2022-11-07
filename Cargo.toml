@@ -5,6 +5,7 @@ members = [
     "animator",
     "visualiser",
     "webapi",
+    "webui",
 ]
 
 resolver = "2"
