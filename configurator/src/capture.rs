@@ -62,13 +62,11 @@ impl Capturer {
     pub async fn capture_perspective(
         &mut self,
         save_pictures: bool,
-    ) -> Result<Vec<Option<(usize, usize)>>, Box<dyn Error>> {
+    ) -> Result<Vec<Option<(f64, f64)>>, Box<dyn Error>> {
         let mut coords = Vec::new();
         let timestamp = chrono::offset::Local::now().format("%FT%X");
         let dir = format!("captures/{}", timestamp);
-        if save_pictures {
-            std::fs::create_dir_all(dir.as_str())?;
-        }
+        std::fs::create_dir_all(dir.as_str())?;
 
         let pb = ProgressBar::new(self.number_of_lights as u64)
             .with_style(
@@ -125,6 +123,8 @@ impl Capturer {
         }
         all_lights_picture.save_to_file(format!("{}/reference.jpg", dir).as_str())?;
 
+        let coords = Self::normalize(coords);
+        Self::save_2d_coordinates(format!("{}/coords.csv", dir).as_str(), &coords)?;
         Ok(coords)
     }
 
@@ -211,16 +211,11 @@ impl Capturer {
     }
 
     pub fn merge_perspectives(
-        front: Vec<Option<(usize, usize)>>,
-        right: Vec<Option<(usize, usize)>>,
-        back: Vec<Option<(usize, usize)>>,
-        left: Vec<Option<(usize, usize)>>,
+        front: Vec<Option<(f64, f64)>>,
+        right: Vec<Option<(f64, f64)>>,
+        back: Vec<Option<(f64, f64)>>,
+        left: Vec<Option<(f64, f64)>>,
     ) -> Vec<Option<(f64, f64, f64)>> {
-        let front = Self::normalize(front);
-        let right = Self::normalize(right);
-        let back = Self::normalize(back);
-        let left = Self::normalize(left);
-
         front
             .into_iter()
             .zip(back.into_iter())
@@ -229,17 +224,32 @@ impl Capturer {
             .collect()
     }
 
-    pub fn save_positions<P: AsRef<Path>>(
+    pub fn save_3d_coordinates<P: AsRef<Path>>(
         path: P,
-        positions: &Vec<Option<(f64, f64, f64)>>,
+        coordinates: &Vec<Option<(f64, f64, f64)>>,
     ) -> Result<(), Box<dyn Error>> {
         let mut writer = csv::Writer::from_path(path)?;
-        positions
+        coordinates
             .iter()
             .map(|p| p.unwrap_or((-1.0, -1.0, -1.0)))
             .map(|light| writer.serialize(light))
             .collect::<Result<Vec<_>, _>>()?;
+        Ok(())
+    }
 
+    fn save_2d_coordinates<P: AsRef<Path>>(
+        path: P,
+        coordinates: &Vec<Option<(f64, f64)>>,
+    ) -> Result<(), Box<dyn Error>> {
+        let mut writer = csv::Writer::from_path(path)?;
+        coordinates
+            .iter()
+            .map(|light| match light {
+                Some((x, y)) => (Some(x), Some(y)),
+                None => (None, None),
+            })
+            .map(|light| writer.serialize(light))
+            .collect::<Result<Vec<_>, _>>()?;
         Ok(())
     }
 
