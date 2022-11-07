@@ -117,7 +117,6 @@ impl Capturer {
             .display_frame(&self.all_lights_on())
             .await?;
         thread::sleep(Duration::from_millis(30));
-        let window = cv::Display::new("results")?;
         let mut all_lights_picture = self.camera.capture()?;
         for point in &coords {
             if point.is_some() {
@@ -125,8 +124,6 @@ impl Capturer {
             }
         }
         all_lights_picture.save_to_file(format!("{}/reference.jpg", dir).as_str())?;
-        window.show(&all_lights_picture)?;
-        window.wait_for(Duration::from_millis(10))?; // apparently needed to show the frame
 
         Ok(coords)
     }
