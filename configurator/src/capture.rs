@@ -269,29 +269,4 @@ impl Capturer {
             .collect::<Result<Vec<_>, _>>()?;
         Ok(())
     }
-
-    pub async fn opencv_example(&mut self) -> Result<(), Box<dyn Error>> {
-        let window = cv::Display::new("video capture")?;
-        for i in 0..self.number_of_lights {
-            self.wait_for_perspective(format!("Press enter to configure led #{}", i + 1).as_str())
-                .await?;
-            self.light_client
-                .display_frame(&self.all_lights_off())
-                .await?;
-            std::thread::sleep(Duration::from_millis(200));
-            let base_picture = self.camera.capture()?;
-            self.light_client
-                .display_frame(&self.single_light_on(i))
-                .await?;
-            std::thread::sleep(Duration::from_millis(200));
-            let mut led_picture = self.camera.capture()?;
-            let maybe_coords = cv::find_light_from_diff(&base_picture, &led_picture)?;
-            if maybe_coords.is_some() {
-                led_picture.mark(maybe_coords.unwrap().0, maybe_coords.unwrap().1)?;
-            }
-            window.show(&led_picture)?;
-            window.wait_for(Duration::from_millis(10))?; // apparently needed to show the frame
-        }
-        Ok(())
-    }
 }

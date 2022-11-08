@@ -115,6 +115,7 @@ pub struct Display {
     window_name: String,
 }
 
+#[allow(unused)]
 impl Display {
     pub fn new(window_name: &str) -> Result<Self, Box<dyn Error>> {
         highgui::named_window(window_name, highgui::WINDOW_AUTOSIZE)?;

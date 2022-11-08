@@ -1879,7 +1879,6 @@ dependencies = [
  "log",
  "opencv",
  "rustmas-light-client",
- "rustmas-visualiser",
  "simplelog",
  "tokio",
 ]
