@@ -39,17 +39,6 @@ enum Commands {
         #[arg(long = "back")]
         back_coordinates: Option<String>,
     },
-    OpenCVExample {
-        #[arg(short, long)]
-        lights_endpoint: Option<String>,
-        #[arg(short, long)]
-        ip_camera: Option<String>,
-        #[arg(short, long, default_value_t = 500)]
-        number_of_lights: usize,
-    },
-    Visualise {
-        input: String,
-    },
 }
 
 fn capturer_from_options(
@@ -158,42 +147,6 @@ async fn main() -> Result<(), Box<dyn Error>> {
             Capturer::save_3d_coordinates(output, &light_positions)?;
 
             Ok(())
-        }
-        Commands::OpenCVExample {
-            ip_camera,
-            number_of_lights,
-            lights_endpoint,
-        } => {
-            let mut capturer = capturer_from_options(lights_endpoint, ip_camera, number_of_lights)?;
-
-            capturer.opencv_example().await?;
-
-            Ok(())
-        }
-        #[allow(unused_variables)]
-        Commands::Visualise { input } => {
-            #[cfg(not(feature = "visualiser"))]
-            panic!("Visualiser is not enabled in this build");
-
-            #[cfg(feature = "visualiser")]
-            {
-                let mut file = csv::ReaderBuilder::new()
-                    .has_headers(false)
-                    .from_path(input)?;
-                let points = file
-                    .deserialize()
-                    .filter_map(|record: Result<(f32, f32, f32), _>| record.ok())
-                    .collect();
-
-                let (tx, rx) = std::sync::mpsc::channel();
-                tx.send(vec![(0.0, 1.0, 0.0); 500]).unwrap();
-
-                tokio::spawn(async move {
-                    rustmas_visualiser::visualise(points, rx).unwrap();
-                })
-                .await?;
-                Ok(())
-            }
         }
     }
 }
