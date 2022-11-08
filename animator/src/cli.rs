@@ -38,7 +38,13 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
     builder = match cli.lights_endpoint {
         Some(path) => builder.remote_lights(&path)?,
-        None => builder.visualiser_lights()?,
+        None => {
+            #[cfg(not(feature = "visualiser"))]
+            panic!("Visualiser feature is disabled, please provide a light client endpoint");
+
+            #[cfg(feature = "visualiser")]
+            builder.visualiser_lights()?
+        }
     };
 
     let controller = builder.build()?;

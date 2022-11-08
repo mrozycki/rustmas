@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-rustmas-animator = { path = "../animator" }
+rustmas-animator = { path = "../animator", default-features = false }
 
 actix-cors = "0.6.4"
 actix-web = "4"

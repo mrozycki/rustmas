@@ -1,12 +1,15 @@
 use core::fmt;
+#[cfg(feature = "visualiser")]
+use std::{error::Error, sync::mpsc};
 use std::{
-    error::Error,
-    sync::{mpsc, Mutex, MutexGuard},
+    sync::{Mutex, MutexGuard},
     time::Duration,
 };
 
 use async_trait::async_trait;
-use log::{error, info};
+use log::error;
+#[cfg(feature = "visualiser")]
+use log::info;
 use reqwest::header::CONNECTION;
 
 #[derive(Clone, Copy)]
@@ -276,11 +279,13 @@ impl LightClient for RemoteLightClient {
     }
 }
 
+#[cfg(feature = "visualiser")]
 pub struct VisualiserLightClient {
     _join_handle: tokio::task::JoinHandle<()>,
     light_tx: Mutex<mpsc::Sender<Vec<(f32, f32, f32)>>>,
 }
 
+#[cfg(feature = "visualiser")]
 impl VisualiserLightClient {
     pub fn new(points: Vec<(f64, f64, f64)>) -> Result<Self, Box<dyn Error>> {
         let points = points
@@ -302,6 +307,7 @@ impl VisualiserLightClient {
 }
 
 #[async_trait]
+#[cfg(feature = "visualiser")]
 impl LightClient for VisualiserLightClient {
     async fn display_frame(&self, frame: &Frame) -> Result<(), LightClientError> {
         let pixels = frame

@@ -115,6 +115,7 @@ impl ControllerBuilder {
         Ok(self)
     }
 
+    #[cfg(feature = "visualiser")]
     pub fn visualiser_lights(mut self) -> Result<Self, Box<dyn Error>> {
         info!("Using local visualiser");
         self.client = Some(Box::new(client::VisualiserLightClient::new(
