@@ -42,7 +42,7 @@ impl Color {
     /// above 1, they will be truncated to 1.
     pub fn hsv(hue: f64, saturation: f64, value: f64) -> Self {
         let h = if hue < 0.0 {
-            1.0 - hue.fract()
+            1.0 + hue.fract()
         } else {
             hue.fract()
         };
@@ -58,7 +58,7 @@ impl Color {
             2 => (0f64, c, x),
             3 => (0f64, x, c),
             4 => (x, 0f64, c),
-            _ => (c, 0f64, c),
+            _ => (c, 0f64, x),
         };
 
         Self {
@@ -335,7 +335,8 @@ mod tests {
             Color::rgb(255, 255, 255),
             "white"
         );
-        assert_eq!(Color::hsv(0.0, 1.0, 1.0), Color::rgb(255, 0, 0), "red");
+        assert_eq!(Color::hsv(0.0, 1.0, 1.0), Color::rgb(255, 0, 0), "red 0");
+        assert_eq!(Color::hsv(1.0, 1.0, 1.0), Color::rgb(255, 0, 0), "red 1");
         assert_eq!(
             Color::hsv(1.0 / 3.0, 1.0, 1.0),
             Color::rgb(0, 255, 0),
@@ -360,6 +361,16 @@ mod tests {
             Color::hsv(5.0 / 6.0, 1.0, 1.0),
             Color::rgb(255, 0, 255),
             "magenta"
+        );
+        assert_eq!(
+            Color::hsv(-0.2, 1.0, 1.0),
+            Color::hsv(0.8, 1.0, 1.0),
+            "negative hue"
+        );
+        assert_eq!(
+            Color::hsv(1.8, 1.0, 1.0),
+            Color::hsv(0.8, 1.0, 1.0),
+            "hue above 1"
         );
     }
 

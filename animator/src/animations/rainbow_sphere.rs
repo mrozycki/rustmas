@@ -20,7 +20,7 @@ impl Animation for RainbowSphere {
     fn frame(&mut self, time: f64) -> client::Frame {
         self.points_radius
             .iter()
-            .map(|r| client::Color::hsv(r + time, 1.0, 1.0))
+            .map(|r| client::Color::hsv(r - time, 1.0, 1.0))
             .into()
     }
 }
