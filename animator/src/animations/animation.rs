@@ -1,7 +1,18 @@
+use std::error::Error;
+
 use rustmas_light_client as client;
+use serde_json::json;
 
 pub trait Animation {
     fn frame(&mut self, time: f64) -> client::Frame;
+
+    fn parameter_schema(&self) -> serde_json::Value {
+        json!({})
+    }
+
+    fn set_parameters(&mut self, _parameters: serde_json::Value) -> Result<(), Box<dyn Error>> {
+        Ok(())
+    }
 }
 
 pub fn make_animation(

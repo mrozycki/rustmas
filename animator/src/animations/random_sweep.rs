@@ -1,12 +1,20 @@
 use super::{utils, Animation};
 use nalgebra::Vector3;
 use rustmas_light_client as client;
+use serde::Deserialize;
+use serde_json::json;
+
+#[derive(Deserialize)]
+struct Parameters {
+    tail_length: f64,
+}
 
 pub struct RandomSweep {
     points: Vec<Vector3<f64>>,
     heights: Vec<f64>,
     color: client::Color,
     last_time: f64,
+    parameters: Parameters,
 }
 
 impl RandomSweep {
@@ -19,6 +27,7 @@ impl RandomSweep {
             heights: Vec::new(),
             color: client::Color::black(),
             last_time: 1.0,
+            parameters: Parameters { tail_length: 0.5 },
         }
     }
 
@@ -45,12 +54,29 @@ impl Animation for RandomSweep {
         self.heights
             .iter()
             .map(|h| {
-                if *h > time && *h < time + 0.5 {
-                    self.color.dim((h - time) / 2.0)
+                if *h > time && *h < time + self.parameters.tail_length {
+                    self.color.dim((h - time) / self.parameters.tail_length)
                 } else {
                     client::Color::black()
                 }
             })
             .into()
+    }
+
+    fn parameter_schema(&self) -> serde_json::Value {
+        json!({
+            "tail_length": {
+                "type": "number",
+                "min": 0
+            }
+        })
+    }
+
+    fn set_parameters(
+        &mut self,
+        parameters: serde_json::Value,
+    ) -> Result<(), Box<dyn std::error::Error>> {
+        self.parameters = serde_json::from_value(parameters)?;
+        Ok(())
     }
 }
