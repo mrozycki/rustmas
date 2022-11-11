@@ -1,34 +1,24 @@
+mod api;
+
 use std::error::Error;
 
-use gloo_net::http::Request;
 use gloo_utils::document;
-use serde::Deserialize;
 use serde_json::json;
 use wasm_bindgen::JsCast;
 use web_sys::HtmlTextAreaElement;
 use yew::prelude::*;
 
 enum Msg {
-    LoadedAnimations(Vec<Animation>),
+    LoadedAnimations(Vec<api::Animation>),
     SwitchAnimation(String),
     LoadedParameterSchema(String),
     SendParams,
 }
 
-#[derive(Clone, Deserialize)]
-struct Animation {
-    id: String,
-    name: String,
-}
-
-#[derive(Default, Deserialize)]
-struct LoadedAnimations {
-    animations: Vec<Animation>,
-}
-
 #[derive(Default)]
 struct AnimationSelector {
-    animations: Vec<Animation>,
+    api: api::Gateway,
+    animations: Vec<api::Animation>,
     parameter_schema: String,
 }
 
@@ -37,54 +27,37 @@ impl Component for AnimationSelector {
     type Properties = ();
 
     fn create(ctx: &Context<Self>) -> Self {
-        let link = ctx.link().clone();
-        wasm_bindgen_futures::spawn_local(async move {
-            let response = Request::get("http://localhost:8081/list").send().await;
-            let animations = match response {
-                Ok(response) => {
-                    response
-                        .json::<LoadedAnimations>()
-                        .await
-                        .unwrap_or_default()
-                        .animations
-                }
-                Err(_) => vec![],
-            };
-            link.send_message(Msg::LoadedAnimations(animations));
-            let params = Request::get("http://localhost:8081/params")
-                .send()
-                .await
-                .unwrap()
-                .json::<serde_json::Value>()
-                .await
-                .unwrap()
-                .to_string();
-            link.send_message(Msg::LoadedParameterSchema(params));
-        });
+        let api = api::Gateway::new("http://localhost:8081");
 
-        Default::default()
+        {
+            let api = api.clone();
+            let link = ctx.link().clone();
+            wasm_bindgen_futures::spawn_local(async move {
+                link.send_message(Msg::LoadedAnimations(
+                    api.list_animations().await.unwrap_or_default(),
+                ));
+                link.send_message(Msg::LoadedParameterSchema(
+                    api.get_params().await.unwrap_or(json!({})).to_string(),
+                ));
+            });
+        }
+
+        Self {
+            api,
+            ..Default::default()
+        }
     }
 
     fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
         match msg {
             Msg::SwitchAnimation(name) => {
                 let link = ctx.link().clone();
+                let api = self.api.clone();
                 wasm_bindgen_futures::spawn_local(async move {
-                    let _ = Request::post("http://localhost:8081/switch")
-                        .header("Content-Type", "application/json")
-                        .json(&json!({ "animation": name }))
-                        .expect("Could not build that request.")
-                        .send()
-                        .await;
-                    let params = Request::get("http://localhost:8081/params")
-                        .send()
-                        .await
-                        .unwrap()
-                        .json::<serde_json::Value>()
-                        .await
-                        .unwrap()
-                        .to_string();
-                    link.send_message(Msg::LoadedParameterSchema(params));
+                    let _ = api.switch_animation(name).await;
+                    link.send_message(Msg::LoadedParameterSchema(
+                        api.get_params().await.unwrap_or(json!({})).to_string(),
+                    ));
                 });
                 false
             }
@@ -97,18 +70,17 @@ impl Component for AnimationSelector {
                 true
             }
             Msg::SendParams => {
+                let api = self.api.clone();
                 wasm_bindgen_futures::spawn_local(async move {
-                    let _ = Request::post("http://localhost:8081/params")
-                        .header("Content-Type", "application/json")
-                        .body(
-                            document()
+                    let _ = api
+                        .set_params(
+                            &document()
                                 .get_element_by_id("params")
                                 .unwrap()
                                 .dyn_into::<HtmlTextAreaElement>()
                                 .unwrap()
                                 .value(),
                         )
-                        .send()
                         .await;
                 });
                 false
