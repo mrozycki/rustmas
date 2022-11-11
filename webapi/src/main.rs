@@ -20,6 +20,36 @@ async fn switch(form: web::Json<SwitchForm>, app_state: web::Data<AppState>) -> 
         .lock()
         .unwrap()
         .switch_animation(&form.animation)
+        .await
+    {
+        Ok(_) => HttpResponse::Ok().json(json!({"success": true})),
+        Err(_) => HttpResponse::InternalServerError().json(json!({"success": false})),
+    }
+}
+
+#[get("/params")]
+async fn get_params(app_state: web::Data<AppState>) -> HttpResponse {
+    HttpResponse::Ok().json(
+        app_state
+            .animation_controller
+            .lock()
+            .unwrap()
+            .parameter_schema()
+            .await,
+    )
+}
+
+#[post("/params")]
+async fn post_params(
+    params: web::Json<serde_json::Value>,
+    app_state: web::Data<AppState>,
+) -> HttpResponse {
+    match app_state
+        .animation_controller
+        .lock()
+        .unwrap()
+        .set_parameters(params.0)
+        .await
     {
         Ok(_) => HttpResponse::Ok().json(json!({"success": true})),
         Err(_) => HttpResponse::InternalServerError().json(json!({"success": false})),
@@ -36,6 +66,7 @@ async fn list() -> HttpResponse {
             { "id": "rainbow_spiral", "name": "Rainbow Spiral" },
             { "id": "rainbow_cable", "name": "Rainbow Cable" },
             { "id": "barber_pole", "name": "Barber Pole" },
+            { "id": "sweep", "name": "Test Sweep" },
             { "id": "random_sweep", "name": "Random Sweep" },
             { "id": "blank", "name": "Blank" },
         ]
@@ -79,6 +110,8 @@ async fn main() -> Result<(), Box<dyn Error>> {
             .wrap(cors)
             .service(switch)
             .service(list)
+            .service(get_params)
+            .service(post_params)
             .app_data(app_state.clone())
     })
     .bind(("0.0.0.0", 8081))?

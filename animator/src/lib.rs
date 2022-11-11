@@ -1,17 +1,20 @@
 mod animations;
 
-use std::{error::Error, sync::mpsc, time::Duration};
+use std::sync::Arc;
+use std::{error::Error, time::Duration};
 
-use log::{error, info, warn};
+use log::{info, warn};
 use rustmas_light_client as client;
 use rustmas_light_client::LightClientError;
+use tokio::sync::Mutex;
 use tokio::task::JoinHandle;
 
 use animations::Animation;
 
 pub struct Controller {
     join_handle: JoinHandle<()>,
-    tx: mpsc::Sender<String>,
+    points: Vec<(f64, f64, f64)>,
+    animation: Arc<Mutex<Box<dyn Animation + Sync + Send>>>,
 }
 
 impl Controller {
@@ -19,27 +22,20 @@ impl Controller {
         points: Vec<(f64, f64, f64)>,
         client: Box<dyn rustmas_light_client::LightClient + Sync + Send>,
     ) -> Result<Self, Box<dyn Error>> {
-        let (tx, rx) = mpsc::channel::<String>();
+        let animation = Arc::new(Mutex::new(animations::make_animation("blank", &points)));
 
+        let animation_clone = animation.clone();
         let join_handle = tokio::spawn(async move {
             const FRAME_STEP: f64 = 1.0 / 30.0;
 
-            let mut animation: Box<dyn Animation + Sync + Send> =
-                animations::make_animation("blank", &points);
             let mut t = 0.0;
             let mut delay = FRAME_STEP;
 
             loop {
-                animation = match rx.try_recv() {
-                    Ok(name) => animations::make_animation(name.as_str(), &points),
-                    Err(mpsc::TryRecvError::Empty) => animation,
-                    _ => {
-                        info!("Animation channel closed, exiting");
-                        return;
-                    }
-                };
-
-                match client.display_frame(&animation.frame(t)).await {
+                match client
+                    .display_frame(&animation_clone.lock().await.frame(t))
+                    .await
+                {
                     Ok(_) => {
                         t += FRAME_STEP;
                         delay = FRAME_STEP; // restore default delay
@@ -62,7 +58,11 @@ impl Controller {
             }
         });
 
-        Ok(Self { join_handle, tx })
+        Ok(Self {
+            join_handle,
+            points,
+            animation,
+        })
     }
 
     pub fn builder() -> ControllerBuilder {
@@ -72,15 +72,21 @@ impl Controller {
         }
     }
 
-    pub fn switch_animation(&self, name: &str) -> Result<(), Box<dyn Error>> {
+    pub async fn switch_animation(&self, name: &str) -> Result<(), Box<dyn Error>> {
         info!("Trying to switch animation to \"{}\"", name);
-        match self.tx.send(name.to_owned()) {
-            Ok(_) => Ok(()),
-            Err(e) => {
-                error!("Failed to switch animation, reason: {}", e);
-                Err(Box::new(e))
-            }
-        }
+        *self.animation.lock().await = animations::make_animation(name, &self.points);
+        Ok(())
+    }
+
+    pub async fn parameter_schema(&self) -> serde_json::Value {
+        self.animation.lock().await.parameter_schema()
+    }
+
+    pub async fn set_parameters(
+        &mut self,
+        parameters: serde_json::Value,
+    ) -> Result<(), Box<dyn Error>> {
+        self.animation.lock().await.set_parameters(parameters)
     }
 
     pub async fn join(self) -> Result<(), Box<dyn Error>> {
