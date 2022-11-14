@@ -71,7 +71,7 @@ impl Animation for RandomSweep {
                 description: Some("Length of the sweep tail".to_owned()),
                 value: ParameterValue::Number {
                     min: Some(0.0),
-                    max: None,
+                    max: Some(1.0),
                 },
             }],
         }

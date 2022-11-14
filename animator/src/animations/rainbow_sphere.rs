@@ -59,7 +59,7 @@ impl Animation for RainbowSphere {
                 Parameter {
                     id: "x".to_owned(),
                     name: "Center X".to_owned(),
-                    description: Some("x coordinate of the center of the sphere".to_owned()),
+                    description: Some("Position of the center in the left-right axis".to_owned()),
                     value: ParameterValue::Number {
                         min: Some(-1.0),
                         max: Some(1.0),
@@ -68,7 +68,7 @@ impl Animation for RainbowSphere {
                 Parameter {
                     id: "y".to_owned(),
                     name: "Center Y".to_owned(),
-                    description: Some("y coordinate of the center of the sphere".to_owned()),
+                    description: Some("Position of the center in the bottom-top axis".to_owned()),
                     value: ParameterValue::Number {
                         min: Some(-1.0),
                         max: Some(1.0),
@@ -77,7 +77,7 @@ impl Animation for RainbowSphere {
                 Parameter {
                     id: "z".to_owned(),
                     name: "Center Z".to_owned(),
-                    description: Some("z coordinate of the center of the sphere".to_owned()),
+                    description: Some("Position of the center in the front-back axis".to_owned()),
                     value: ParameterValue::Number {
                         min: Some(-1.0),
                         max: Some(1.0),
