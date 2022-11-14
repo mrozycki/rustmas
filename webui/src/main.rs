@@ -1,25 +1,25 @@
 mod api;
+mod controls;
 
 use std::error::Error;
 
-use gloo_utils::document;
-use serde_json::json;
-use wasm_bindgen::JsCast;
-use web_sys::HtmlTextAreaElement;
+use api::Gateway;
+use rustmas_animation_model::schema::ParametersSchema;
 use yew::prelude::*;
+
+use crate::controls::ParameterControlList;
 
 enum Msg {
     LoadedAnimations(Vec<api::Animation>),
     SwitchAnimation(String),
-    LoadedParameterSchema(String),
-    SendParams,
+    LoadedParameterSchema(Option<ParametersSchema>),
 }
 
 #[derive(Default)]
 struct AnimationSelector {
     api: api::Gateway,
     animations: Vec<api::Animation>,
-    parameter_schema: String,
+    parameter_schema: Option<ParametersSchema>,
 }
 
 impl Component for AnimationSelector {
@@ -37,7 +37,7 @@ impl Component for AnimationSelector {
                     api.list_animations().await.unwrap_or_default(),
                 ));
                 link.send_message(Msg::LoadedParameterSchema(
-                    api.get_params().await.unwrap_or(json!({})).to_string(),
+                    api.get_param_schema().await.ok(),
                 ));
             });
         }
@@ -56,7 +56,7 @@ impl Component for AnimationSelector {
                 wasm_bindgen_futures::spawn_local(async move {
                     let _ = api.switch_animation(name).await;
                     link.send_message(Msg::LoadedParameterSchema(
-                        api.get_params().await.unwrap_or(json!({})).to_string(),
+                        api.get_param_schema().await.ok(),
                     ));
                 });
                 false
@@ -69,22 +69,6 @@ impl Component for AnimationSelector {
                 self.parameter_schema = parameter_schema;
                 true
             }
-            Msg::SendParams => {
-                let api = self.api.clone();
-                wasm_bindgen_futures::spawn_local(async move {
-                    let _ = api
-                        .set_params(
-                            &document()
-                                .get_element_by_id("params")
-                                .unwrap()
-                                .dyn_into::<HtmlTextAreaElement>()
-                                .unwrap()
-                                .value(),
-                        )
-                        .await;
-                });
-                false
-            }
         }
     }
 
@@ -92,6 +76,7 @@ impl Component for AnimationSelector {
         let link = ctx.link();
         let animations = self.animations.clone();
         html! {
+            <ContextProvider<Gateway> context={self.api.clone()}>
             <div>
                 <ul style="list-style-type: none;"> {
                     animations.into_iter().map(|animation| html! {
@@ -99,12 +84,13 @@ impl Component for AnimationSelector {
                     }).collect::<Html>()
                 } </ul>
                 <hr />
-                <div>
-                    <pre>{ &self.parameter_schema }</pre>
-                    <textarea cols="80" rows="24" id="params" />
-                    <input type="submit" value="Send" onclick={link.callback(move |_| Msg::SendParams)} />
-                </div>
+                {if let Some(schema) = &self.parameter_schema {
+                    html! {
+                        <ParameterControlList schema={schema.clone()} />
+                    }
+                } else { html!{} }}
             </div>
+            </ContextProvider<Gateway>>
         }
     }
 }

@@ -1,8 +1,9 @@
 use gloo_net::http::Request;
+use rustmas_animation_model::schema::ParametersSchema;
 use serde::Deserialize;
 use serde_json::json;
 
-#[derive(Clone)]
+#[derive(Clone, PartialEq)]
 pub struct Gateway {
     endpoint: String,
 }
@@ -59,19 +60,19 @@ impl Gateway {
         Ok(())
     }
 
-    pub async fn get_params(&self) -> Result<serde_json::Value> {
+    pub async fn get_param_schema(&self) -> Result<ParametersSchema> {
         Ok(Request::get(&self.url("params"))
             .send()
             .await
             .map_err(|e| GatewayError::RequestError {
                 reason: e.to_string(),
             })?
-            .json::<serde_json::Value>()
+            .json::<ParametersSchema>()
             .await
             .map_err(|_| GatewayError::InvalidResponse)?)
     }
 
-    pub async fn set_params(&self, params: &String) -> Result<()> {
+    pub async fn set_params(&self, params: &serde_json::Value) -> Result<()> {
         let _ = Request::post(&self.url("params"))
             .json(params)
             .map_err(|e| GatewayError::RequestError {

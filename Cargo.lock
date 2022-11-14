@@ -1939,6 +1939,7 @@ version = "0.1.0"
 dependencies = [
  "gloo-net",
  "gloo-utils",
+ "rustmas-animation-model",
  "serde",
  "serde_json",
  "wasm-bindgen",
