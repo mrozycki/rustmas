@@ -1,13 +1,14 @@
 use std::error::Error;
 
 use rustmas_light_client as client;
-use serde_json::json;
+
+use rustmas_animation_model::schema::ParametersSchema;
 
 pub trait Animation {
     fn frame(&mut self, time: f64) -> client::Frame;
 
-    fn parameter_schema(&self) -> serde_json::Value {
-        json!({})
+    fn parameter_schema(&self) -> ParametersSchema {
+        Default::default()
     }
 
     fn set_parameters(&mut self, _parameters: serde_json::Value) -> Result<(), Box<dyn Error>> {

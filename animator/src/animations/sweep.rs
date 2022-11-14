@@ -1,7 +1,7 @@
 use super::Animation;
+use rustmas_animation_model::schema::{EnumOption, Parameter, ParameterValue, ParametersSchema};
 use rustmas_light_client as client;
 use serde::Deserialize;
-use serde_json::json;
 
 #[derive(Deserialize)]
 enum Direction {
@@ -62,26 +62,65 @@ impl Animation for Sweep {
             .into()
     }
 
-    fn parameter_schema(&self) -> serde_json::Value {
-        json!({
-            "direction": {
-                "type": "enum",
-                "values": [
-                    "BottomToTop",
-                    "TopToBottom",
-                    "BackToFront",
-                    "FrontToBack",
-                    "LeftToRight",
-                    "RightToLeft",
-                ]
-            },
-            "band_size": {
-                "type": "number"
-            },
-            "color": {
-                "type": "color"
-            }
-        })
+    fn parameter_schema(&self) -> ParametersSchema {
+        ParametersSchema {
+            parameters: vec![
+                Parameter {
+                    id: "direction".to_owned(),
+                    name: "Direction".to_owned(),
+                    description: Some("Direction of the sweep".to_owned()),
+                    value: ParameterValue::Enum {
+                        values: vec![
+                            EnumOption {
+                                name: "Bottom to top".to_owned(),
+                                description: None,
+                                value: "BottomToTop".to_owned(),
+                            },
+                            EnumOption {
+                                name: "Top to bottom".to_owned(),
+                                description: None,
+                                value: "TopToBottom".to_owned(),
+                            },
+                            EnumOption {
+                                name: "Back to front".to_owned(),
+                                description: None,
+                                value: "BackToFront".to_owned(),
+                            },
+                            EnumOption {
+                                name: "Front to back".to_owned(),
+                                description: None,
+                                value: "FrontToBack".to_owned(),
+                            },
+                            EnumOption {
+                                name: "Left to right".to_owned(),
+                                description: None,
+                                value: "LeftToRight".to_owned(),
+                            },
+                            EnumOption {
+                                name: "Right to left".to_owned(),
+                                description: None,
+                                value: "RightToLeft".to_owned(),
+                            },
+                        ],
+                    },
+                },
+                Parameter {
+                    id: "band_size".to_owned(),
+                    name: "Band size".to_owned(),
+                    description: Some("Thickness of the sweep band".to_owned()),
+                    value: ParameterValue::Number {
+                        min: Some(0.0),
+                        max: None,
+                    },
+                },
+                Parameter {
+                    id: "color".to_owned(),
+                    name: "Color".to_owned(),
+                    description: Some("Color of the sweep band".to_owned()),
+                    value: ParameterValue::Color,
+                },
+            ],
+        }
     }
 
     fn set_parameters(
