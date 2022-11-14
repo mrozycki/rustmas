@@ -79,7 +79,8 @@ impl Controller {
     }
 
     pub async fn parameter_schema(&self) -> serde_json::Value {
-        self.animation.lock().await.parameter_schema()
+        // unwrap is safe, since ParametersSchema is serializable
+        serde_json::to_value(self.animation.lock().await.parameter_schema()).unwrap()
     }
 
     pub async fn set_parameters(

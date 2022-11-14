@@ -1854,6 +1854,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "rustmas-animation-model"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "rustmas-animator"
 version = "0.1.0"
 dependencies = [
@@ -1862,6 +1870,7 @@ dependencies = [
  "log",
  "nalgebra",
  "rand",
+ "rustmas-animation-model",
  "rustmas-light-client",
  "serde",
  "serde_json",

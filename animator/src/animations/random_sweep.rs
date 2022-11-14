@@ -1,8 +1,8 @@
 use super::{utils, Animation};
 use nalgebra::Vector3;
+use rustmas_animation_model::schema::{Parameter, ParameterValue, ParametersSchema};
 use rustmas_light_client as client;
 use serde::Deserialize;
-use serde_json::json;
 
 #[derive(Deserialize)]
 struct Parameters {
@@ -63,13 +63,18 @@ impl Animation for RandomSweep {
             .into()
     }
 
-    fn parameter_schema(&self) -> serde_json::Value {
-        json!({
-            "tail_length": {
-                "type": "number",
-                "min": 0
-            }
-        })
+    fn parameter_schema(&self) -> ParametersSchema {
+        ParametersSchema {
+            parameters: vec![Parameter {
+                id: "tail_length".to_owned(),
+                name: "Tail length".to_owned(),
+                description: Some("Length of the sweep tail".to_owned()),
+                value: ParameterValue::Number {
+                    min: Some(0.0),
+                    max: None,
+                },
+            }],
+        }
     }
 
     fn set_parameters(

@@ -1,7 +1,7 @@
 use super::{utils, Animation};
+use rustmas_animation_model::schema::{Parameter, ParameterValue, ParametersSchema};
 use rustmas_light_client as client;
 use serde::Deserialize;
-use serde_json::json;
 
 #[derive(Deserialize)]
 struct Parameters {
@@ -40,15 +40,23 @@ impl Animation for BarberPole {
             .into()
     }
 
-    fn parameter_schema(&self) -> serde_json::Value {
-        json!({
-            "color_a": {
-                "type": "color"
-            },
-            "color_b": {
-                "type": "color"
-            },
-        })
+    fn parameter_schema(&self) -> ParametersSchema {
+        ParametersSchema {
+            parameters: vec![
+                Parameter {
+                    id: "color_a".to_owned(),
+                    name: "First color".to_owned(),
+                    description: None,
+                    value: ParameterValue::Color,
+                },
+                Parameter {
+                    id: "color_b".to_owned(),
+                    name: "Second color".to_owned(),
+                    description: None,
+                    value: ParameterValue::Color,
+                },
+            ],
+        }
     }
 
     fn set_parameters(
