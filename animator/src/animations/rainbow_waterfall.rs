@@ -37,7 +37,7 @@ impl Animation for RainbowWaterfall {
                 id: "cycles".to_owned(),
                     name: "Number of cycles".to_owned(),
                     description: Some("Number of color cycles that will be present on the tree at the same time. Does not have to be a whole number".to_owned()),
-                    value: ParameterValue::Number { min: Some(0.0), max: None },
+                    value: ParameterValue::Number { min: Some(0.0), max: Some(10.0) },
                 },
             ]
         }

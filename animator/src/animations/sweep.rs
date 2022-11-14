@@ -110,7 +110,7 @@ impl Animation for Sweep {
                     description: Some("Thickness of the sweep band".to_owned()),
                     value: ParameterValue::Number {
                         min: Some(0.0),
-                        max: None,
+                        max: Some(2.0),
                     },
                 },
                 Parameter {
