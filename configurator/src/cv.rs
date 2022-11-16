@@ -1,6 +1,6 @@
+use std::fmt;
 use std::sync::{Arc, Mutex};
 use std::{error::Error, time::Duration};
-use std::{fmt, thread};
 
 use log::debug;
 use opencv::{
@@ -73,7 +73,7 @@ impl Camera {
         let _grabber_thread_join = tokio::spawn(async move {
             loop {
                 let _ = camera_handle_clone.lock().unwrap().grab();
-                thread::sleep(Duration::from_millis(30));
+                tokio::time::sleep(Duration::from_millis(30)).await;
             }
         });
         Ok(Self {
