@@ -12,6 +12,7 @@ use indicatif::{ProgressBar, ProgressFinish, ProgressIterator, ProgressState, Pr
 use itertools::Itertools;
 use log::{info, warn};
 use rustmas_light_client as client;
+use serde::{Deserialize, Serialize};
 
 use crate::cv;
 
@@ -25,6 +26,17 @@ impl<T, U> UnzipOption<T, U> for Option<(T, U)> {
             Some((a, b)) => (Some(a), Some(b)),
             None => (None, None),
         }
+    }
+}
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct WithConfidence<T> {
+    pub inner: T,
+    pub confidence: f64,
+}
+
+impl<T> WithConfidence<T> {
+    pub fn confident(&self) -> bool {
+        return self.confidence > 0.3;
     }
 }
 
@@ -61,19 +73,12 @@ impl Capturer {
 
     pub fn read_coordinates_from_file(
         path: &str,
-    ) -> Result<Vec<Option<(f64, f64)>>, Box<dyn Error>> {
-        let mut reader = csv::Reader::from_path(path)?;
-        let coords = reader
-            .records()
-            .map(|r| -> Result<Option<(f64, f64)>, Box<dyn Error>> {
-                let r = r?;
-                Ok(match (&r[0], &r[1]) {
-                    ("", "") => None,
-                    (x_str, y_str) => Some((x_str.parse::<f64>()?, y_str.parse::<f64>()?)),
-                })
-            })
-            .collect::<Result<Vec<_>, Box<dyn Error>>>()?;
-
+    ) -> Result<Vec<WithConfidence<(f64, f64)>>, Box<dyn Error>> {
+        let mut reader = csv::ReaderBuilder::new()
+            .has_headers(false)
+            .from_path(path)?;
+        let coords = reader.deserialize().filter_map(|a| a.ok()).collect_vec();
+        println!("{:?}", coords);
         Ok(coords)
     }
 
@@ -81,7 +86,7 @@ impl Capturer {
         &mut self,
         perspective_name: &str,
         save_pictures: bool,
-    ) -> Result<Vec<Option<(f64, f64)>>, Box<dyn Error>> {
+    ) -> Result<Vec<WithConfidence<(f64, f64)>>, Box<dyn Error>> {
         let mut coords = Vec::new();
         let timestamp = chrono::offset::Local::now().format("%FT%X");
         let dir = format!("captures/{}", timestamp);
@@ -120,8 +125,8 @@ impl Capturer {
             let mut led_picture = self.camera.capture()?;
             let found_coords = cv::find_light_from_diff(&base_picture, &led_picture)?;
             if save_pictures {
-                if let Some((x, y)) = found_coords {
-                    led_picture.mark(x, y)?;
+                if found_coords.confident() {
+                    led_picture.mark(found_coords.inner.0, found_coords.inner.1)?;
                 }
                 let filename = format!("{}/{:03}.jpg", dir, i);
                 led_picture.save_to_file(filename.as_str())?;
@@ -136,8 +141,8 @@ impl Capturer {
         thread::sleep(Duration::from_millis(30));
         let mut all_lights_picture = self.camera.capture()?;
         for point in &coords {
-            if point.is_some() {
-                all_lights_picture.mark(point.unwrap().0, point.unwrap().1)?;
+            if point.confident() {
+                all_lights_picture.mark(point.inner.0, point.inner.1)?;
             }
         }
         all_lights_picture.save_to_file(format!("{}/reference.jpg", dir).as_str())?;
@@ -160,8 +165,14 @@ impl Capturer {
         Ok(())
     }
 
-    fn normalize(raw_points: Vec<Option<(usize, usize)>>) -> Vec<Option<(f64, f64)>> {
-        let (xs, ys): (Vec<_>, Vec<_>) = raw_points.iter().cloned().filter_map(|x| x).unzip();
+    fn normalize(
+        raw_points: Vec<WithConfidence<(usize, usize)>>,
+    ) -> Vec<WithConfidence<(f64, f64)>> {
+        let (xs, ys): (Vec<_>, Vec<_>) = raw_points
+            .iter()
+            .cloned()
+            .filter_map(|x| if x.confident() { Some(x.inner) } else { None })
+            .unzip();
 
         let (x_min, x_span) = match xs.iter().minmax() {
             itertools::MinMaxResult::MinMax(min, max) => (*min, *max - *min),
@@ -176,27 +187,44 @@ impl Capturer {
 
         raw_points
             .into_iter()
-            .map(|a| {
-                a.map(|(x, y)| {
-                    (
-                        (x as isize - x_min as isize - x_span as isize / 2) as f64 * scaling_factor,
-                        (y as isize - y_min as isize - y_span as isize / 2) as f64 * scaling_factor,
-                    )
-                })
+            .map(|a| WithConfidence::<(f64, f64)> {
+                inner: (
+                    (a.inner.0 as isize - x_min as isize - x_span as isize / 2) as f64
+                        * scaling_factor,
+                    (a.inner.1 as isize - y_min as isize - y_span as isize / 2) as f64
+                        * scaling_factor,
+                ),
+                confidence: a.confidence,
             })
             .collect()
     }
 
     fn merge_point(
-        front: Option<(f64, f64)>,
-        right: Option<(f64, f64)>,
-        back: Option<(f64, f64)>,
-        left: Option<(f64, f64)>,
+        front: WithConfidence<(f64, f64)>,
+        right: WithConfidence<(f64, f64)>,
+        back: WithConfidence<(f64, f64)>,
+        left: WithConfidence<(f64, f64)>,
     ) -> Option<(f64, f64, f64)> {
-        let (x_positive, y_negative_front) = front.unzip_option();
-        let (z_positive, y_negative_right) = right.unzip_option();
-        let (x_negative, y_negative_back) = back.unzip_option();
-        let (z_negative, y_negative_left) = left.unzip_option();
+        let (x_positive, y_negative_front) = if front.confident() {
+            (Some(front.inner.0), Some(front.inner.1))
+        } else {
+            (None, None)
+        };
+        let (z_positive, y_negative_right) = if right.confident() {
+            (Some(right.inner.0), Some(right.inner.1))
+        } else {
+            (None, None)
+        };
+        let (x_negative, y_negative_back) = if back.confident() {
+            (Some(back.inner.0), Some(back.inner.1))
+        } else {
+            (None, None)
+        };
+        let (z_negative, y_negative_left) = if left.confident() {
+            (Some(left.inner.0), Some(left.inner.1))
+        } else {
+            (None, None)
+        };
 
         let yns = vec![
             y_negative_front,
@@ -230,10 +258,10 @@ impl Capturer {
     }
 
     pub fn merge_perspectives(
-        front: Vec<Option<(f64, f64)>>,
-        right: Vec<Option<(f64, f64)>>,
-        back: Vec<Option<(f64, f64)>>,
-        left: Vec<Option<(f64, f64)>>,
+        front: Vec<WithConfidence<(f64, f64)>>,
+        right: Vec<WithConfidence<(f64, f64)>>,
+        back: Vec<WithConfidence<(f64, f64)>>,
+        left: Vec<WithConfidence<(f64, f64)>>,
     ) -> Vec<Option<(f64, f64, f64)>> {
         front
             .into_iter()
@@ -258,15 +286,13 @@ impl Capturer {
 
     fn save_2d_coordinates<P: AsRef<Path>>(
         path: P,
-        coordinates: &Vec<Option<(f64, f64)>>,
+        coordinates: &Vec<WithConfidence<(f64, f64)>>,
     ) -> Result<(), Box<dyn Error>> {
         let mut writer = csv::Writer::from_path(path)?;
-        coordinates
-            .iter()
-            .cloned()
-            .map(UnzipOption::unzip_option)
-            .map(|light| writer.serialize(light))
-            .collect::<Result<Vec<_>, _>>()?;
+
+        for coords in coordinates {
+            writer.serialize::<&WithConfidence<(f64, f64)>>(coords)?;
+        }
         Ok(())
     }
 }

@@ -3,7 +3,7 @@ mod cv;
 
 use std::{error::Error, fs::File};
 
-use capture::Capturer;
+use capture::{Capturer, WithConfidence};
 use clap::{arg, Parser, Subcommand};
 use cv::Camera;
 use log::{debug, info, LevelFilter};
@@ -70,14 +70,14 @@ async fn capture_or_read_coordinates(
     side: &str,
     save_pictures: bool,
     coordinates_path: Option<String>,
-) -> Result<Vec<Option<(f64, f64)>>, Box<dyn Error>> {
+) -> Result<Vec<WithConfidence<(f64, f64)>>, Box<dyn Error>> {
     if coordinates_path.is_none() {
         capturer
             .wait_for_perspective(
                 format!("Position camera to capture lights from the {side}").as_str(),
             )
             .await?;
-        let coords = capturer.capture_perspective("front", save_pictures).await?;
+        let coords = capturer.capture_perspective(side, save_pictures).await?;
         debug!("Captured positions from the {side}: {:?}", coords);
         Ok(coords)
     } else {
