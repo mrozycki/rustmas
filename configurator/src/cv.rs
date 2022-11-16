@@ -10,6 +10,8 @@ use opencv::{
 };
 use tokio::task::JoinHandle;
 
+use crate::capture::WithConfidence;
+
 #[derive(Debug)]
 pub enum CameraError {
     InitializeError,
@@ -145,7 +147,7 @@ impl Drop for Display {
 pub fn find_light_from_diff(
     base_picture: &Picture,
     led_picture: &Picture,
-) -> Result<Option<(usize, usize)>, Box<dyn Error>> {
+) -> Result<WithConfidence<(usize, usize)>, Box<dyn Error>> {
     let mut base_gray = Mat::default();
     imgproc::cvt_color(
         &base_picture.inner,
@@ -188,12 +190,16 @@ pub fn find_light_from_diff(
         Some(&mut max_loc),
         &Mat::default(),
     )?;
-
-    debug!("Max val: {}", max_val);
-    if max_val < 80.0 {
-        debug!("Low value detected, skipping: {}", max_val);
-        return Ok(None);
+    if max_loc.x < 0 || max_loc.y < 0 {
+        // OpenCV might return (-1,-1) if it can't find anything
+        return Ok(WithConfidence::<(usize, usize)> {
+            inner: (0, 0),
+            confidence: f64::NEG_INFINITY,
+        });
     }
 
-    Ok(Some((max_loc.x as usize, max_loc.y as usize)))
+    Ok(WithConfidence::<(usize, usize)> {
+        inner: (max_loc.x as usize, max_loc.y as usize),
+        confidence: max_val / 255.0,
+    })
 }
