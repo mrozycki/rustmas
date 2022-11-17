@@ -63,7 +63,7 @@ impl Component for ColorParameterControl {
 
             html! {
                 <>
-                    <input type="color" ref={self.node_ref.clone()} onchange={ctx.link().callback(|_| Msg::ValueChanged)} value={value}/>
+                    <input type="color" ref={self.node_ref.clone()} onchange={ctx.link().callback(|_| Msg::ValueChanged)} {value} list="warmWhites" />
                     <input name={id} type="hidden" ref={self.hidden_ref.clone()} value={value_hex}/>
                 </>
             }

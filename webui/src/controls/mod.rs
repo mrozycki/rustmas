@@ -84,6 +84,11 @@ impl Component for ParameterControlList {
     fn view(&self, ctx: &Context<Self>) -> yew::Html {
         html! {
             <div>
+                <datalist id="warmWhites">
+                    {(2200..=2800).step_by(100).map(lightfx::Color::kelvin).into_iter().map(|c| html! {
+                        <option value={c.to_hex_string()}></option>
+                    }).collect::<Html>()}
+                </datalist>
                 <form onsubmit={ctx.link().callback(|e| Self::Message::SubmitInfo(e))}>
                     {
                         ctx.props().schema.parameters.iter().cloned().map(|schema| {
