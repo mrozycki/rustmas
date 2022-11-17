@@ -1,9 +1,9 @@
 use super::Animation;
 use rustmas_animation_model::schema::{EnumOption, Parameter, ParameterValue, ParametersSchema};
 use rustmas_light_client as client;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
-#[derive(Deserialize)]
+#[derive(Serialize, Deserialize)]
 enum Direction {
     BottomToTop,
     TopToBottom,
@@ -13,7 +13,7 @@ enum Direction {
     RightToLeft,
 }
 
-#[derive(Deserialize)]
+#[derive(Serialize, Deserialize)]
 struct Parameters {
     direction: Direction,
     band_size: f64,
@@ -129,5 +129,9 @@ impl Animation for Sweep {
     ) -> Result<(), Box<dyn std::error::Error>> {
         self.parameters = serde_json::from_value(parameters)?;
         Ok(())
+    }
+
+    fn get_parameters(&self) -> Result<serde_json::Value, Box<dyn std::error::Error>> {
+        Ok(serde_json::to_value(&self.parameters)?)
     }
 }

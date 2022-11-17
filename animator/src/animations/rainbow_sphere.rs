@@ -1,9 +1,9 @@
 use super::Animation;
 use rustmas_animation_model::schema::{Parameter, ParameterValue, ParametersSchema};
 use rustmas_light_client as client;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
-#[derive(Deserialize)]
+#[derive(Serialize, Deserialize)]
 struct Parameters {
     x: f64,
     y: f64,
@@ -94,5 +94,9 @@ impl Animation for RainbowSphere {
         self.parameters = serde_json::from_value(parameters)?;
         self.reset();
         Ok(())
+    }
+
+    fn get_parameters(&self) -> Result<serde_json::Value, Box<dyn std::error::Error>> {
+        Ok(serde_json::to_value(&self.parameters)?)
     }
 }

@@ -11,9 +11,9 @@ use log::error;
 #[cfg(feature = "visualiser")]
 use log::info;
 use reqwest::header::CONNECTION;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Copy, Deserialize)]
+#[derive(Clone, Copy, Deserialize, Serialize)]
 #[cfg_attr(test, derive(PartialEq, Debug))]
 pub struct Color {
     pub r: u8,
