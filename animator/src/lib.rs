@@ -6,6 +6,7 @@ use std::{error::Error, time::Duration};
 use log::{info, warn};
 use rustmas_light_client as client;
 use rustmas_light_client::LightClientError;
+use serde_json::json;
 use tokio::sync::Mutex;
 use tokio::task::JoinHandle;
 
@@ -81,6 +82,14 @@ impl Controller {
     pub async fn parameter_schema(&self) -> serde_json::Value {
         // unwrap is safe, since ParametersSchema is serializable
         serde_json::to_value(self.animation.lock().await.parameter_schema()).unwrap()
+    }
+
+    pub async fn parameter_values(&self) -> serde_json::Value {
+        self.animation
+            .lock()
+            .await
+            .get_parameters()
+            .unwrap_or(json!({}))
     }
 
     pub async fn set_parameters(

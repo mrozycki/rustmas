@@ -29,14 +29,15 @@ async fn switch(form: web::Json<SwitchForm>, app_state: web::Data<AppState>) -> 
 
 #[get("/params")]
 async fn get_params(app_state: web::Data<AppState>) -> HttpResponse {
-    HttpResponse::Ok().json(
-        app_state
+    HttpResponse::Ok().json(json!({
+        "schema": app_state
             .animation_controller
             .lock()
             .unwrap()
             .parameter_schema()
             .await,
-    )
+        "values": app_state.animation_controller.lock().unwrap().parameter_values().await,
+    }))
 }
 
 #[post("/params")]

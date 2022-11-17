@@ -2,9 +2,9 @@ use super::{utils, Animation};
 use nalgebra::Vector3;
 use rustmas_animation_model::schema::{Parameter, ParameterValue, ParametersSchema};
 use rustmas_light_client as client;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
-#[derive(Deserialize)]
+#[derive(Serialize, Deserialize)]
 struct Parameters {
     tail_length: f64,
 }
@@ -83,5 +83,9 @@ impl Animation for RandomSweep {
     ) -> Result<(), Box<dyn std::error::Error>> {
         self.parameters = serde_json::from_value(parameters)?;
         Ok(())
+    }
+
+    fn get_parameters(&self) -> Result<serde_json::Value, Box<dyn std::error::Error>> {
+        Ok(serde_json::to_value(&self.parameters)?)
     }
 }

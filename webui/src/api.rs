@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use gloo_net::http::Request;
 use rustmas_animation_model::schema::ParametersSchema;
 use serde::Deserialize;
@@ -25,6 +27,11 @@ pub struct Animation {
 #[derive(Deserialize, Default)]
 struct ListAnimationsResponse {
     animations: Vec<Animation>,
+}
+#[derive(Deserialize, Default)]
+pub struct GetParamsResponse {
+    pub schema: ParametersSchema,
+    pub values: HashMap<String, serde_json::Value>,
 }
 
 impl Gateway {
@@ -60,14 +67,14 @@ impl Gateway {
         Ok(())
     }
 
-    pub async fn get_param_schema(&self) -> Result<ParametersSchema> {
+    pub async fn get_params(&self) -> Result<GetParamsResponse> {
         Ok(Request::get(&self.url("params"))
             .send()
             .await
             .map_err(|e| GatewayError::RequestError {
                 reason: e.to_string(),
             })?
-            .json::<ParametersSchema>()
+            .json::<GetParamsResponse>()
             .await
             .map_err(|_| GatewayError::InvalidResponse)?)
     }

@@ -3,8 +3,7 @@ mod controls;
 
 use std::error::Error;
 
-use api::Gateway;
-use rustmas_animation_model::schema::ParametersSchema;
+use api::{Gateway, GetParamsResponse};
 use yew::prelude::*;
 
 use crate::controls::ParameterControlList;
@@ -12,14 +11,14 @@ use crate::controls::ParameterControlList;
 enum Msg {
     LoadedAnimations(Vec<api::Animation>),
     SwitchAnimation(String),
-    LoadedParameterSchema(Option<ParametersSchema>),
+    LoadedParameters(Option<GetParamsResponse>),
 }
 
 #[derive(Default)]
 struct AnimationSelector {
     api: api::Gateway,
     animations: Vec<api::Animation>,
-    parameter_schema: Option<ParametersSchema>,
+    parameters: Option<GetParamsResponse>,
 }
 
 impl Component for AnimationSelector {
@@ -36,9 +35,7 @@ impl Component for AnimationSelector {
                 link.send_message(Msg::LoadedAnimations(
                     api.list_animations().await.unwrap_or_default(),
                 ));
-                link.send_message(Msg::LoadedParameterSchema(
-                    api.get_param_schema().await.ok(),
-                ));
+                link.send_message(Msg::LoadedParameters(api.get_params().await.ok()));
             });
         }
 
@@ -55,9 +52,7 @@ impl Component for AnimationSelector {
                 let api = self.api.clone();
                 wasm_bindgen_futures::spawn_local(async move {
                     let _ = api.switch_animation(name).await;
-                    link.send_message(Msg::LoadedParameterSchema(
-                        api.get_param_schema().await.ok(),
-                    ));
+                    link.send_message(Msg::LoadedParameters(api.get_params().await.ok()));
                 });
                 false
             }
@@ -65,8 +60,8 @@ impl Component for AnimationSelector {
                 self.animations = animations;
                 true
             }
-            Msg::LoadedParameterSchema(parameter_schema) => {
-                self.parameter_schema = parameter_schema;
+            Msg::LoadedParameters(parameters) => {
+                self.parameters = parameters;
                 true
             }
         }
@@ -84,9 +79,9 @@ impl Component for AnimationSelector {
                     }).collect::<Html>()
                 } </ul>
                 <hr />
-                {if let Some(schema) = &self.parameter_schema {
+                {if let Some(parameters) = &self.parameters {
                     html! {
-                        <ParameterControlList schema={schema.clone()} />
+                        <ParameterControlList schema={parameters.schema.clone()} values={parameters.values.clone()} />
                     }
                 } else { html!{} }}
             </div>
