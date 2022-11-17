@@ -1266,6 +1266,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "lightfx"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "link-cplusplus"
 version = "1.0.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1854,23 +1862,15 @@ dependencies = [
 ]
 
 [[package]]
-name = "rustmas-animation-model"
-version = "0.1.0"
-dependencies = [
- "serde",
- "serde_json",
-]
-
-[[package]]
 name = "rustmas-animator"
 version = "0.1.0"
 dependencies = [
  "clap",
  "csv",
+ "lightfx",
  "log",
  "nalgebra",
  "rand",
- "rustmas-animation-model",
  "rustmas-light-client",
  "serde",
  "serde_json",
@@ -1887,6 +1887,7 @@ dependencies = [
  "csv",
  "indicatif",
  "itertools",
+ "lightfx",
  "log",
  "opencv",
  "rustmas-light-client",
@@ -1900,6 +1901,7 @@ version = "0.1.0"
 dependencies = [
  "async-trait",
  "csv",
+ "lightfx",
  "log",
  "reqwest",
  "rustmas-visualiser",
@@ -1939,7 +1941,7 @@ version = "0.1.0"
 dependencies = [
  "gloo-net",
  "gloo-utils",
- "rustmas-animation-model",
+ "lightfx",
  "serde",
  "serde_json",
  "wasm-bindgen",

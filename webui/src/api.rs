@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use gloo_net::http::Request;
-use rustmas_animation_model::schema::ParametersSchema;
+use lightfx::schema::ParametersSchema;
 use serde::Deserialize;
 use serde_json::json;
 

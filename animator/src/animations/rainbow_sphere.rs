@@ -1,6 +1,5 @@
 use super::Animation;
-use rustmas_animation_model::schema::{Parameter, ParameterValue, ParametersSchema};
-use rustmas_light_client as client;
+use lightfx::schema::{Parameter, ParameterValue, ParametersSchema};
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize)]
@@ -46,10 +45,10 @@ impl RainbowSphere {
 }
 
 impl Animation for RainbowSphere {
-    fn frame(&mut self, time: f64) -> client::Frame {
+    fn frame(&mut self, time: f64) -> lightfx::Frame {
         self.points_radius
             .iter()
-            .map(|r| client::Color::hsv(r - time, 1.0, 1.0))
+            .map(|r| lightfx::Color::hsv(r - time, 1.0, 1.0))
             .into()
     }
 

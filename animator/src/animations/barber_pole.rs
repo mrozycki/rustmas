@@ -1,12 +1,11 @@
 use super::{utils, Animation};
-use rustmas_animation_model::schema::{Parameter, ParameterValue, ParametersSchema};
-use rustmas_light_client as client;
+use lightfx::schema::{Parameter, ParameterValue, ParametersSchema};
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize)]
 struct Parameters {
-    color_a: client::Color,
-    color_b: client::Color,
+    color_a: lightfx::Color,
+    color_b: lightfx::Color,
 }
 
 pub struct BarberPole {
@@ -19,15 +18,15 @@ impl BarberPole {
         Self {
             points_polar: points.iter().map(utils::to_polar).collect(),
             parameters: Parameters {
-                color_a: client::Color::rgb(255, 0, 0),
-                color_b: client::Color::rgb(255, 255, 255),
+                color_a: lightfx::Color::rgb(255, 0, 0),
+                color_b: lightfx::Color::rgb(255, 255, 255),
             },
         }
     }
 }
 
 impl Animation for BarberPole {
-    fn frame(&mut self, time: f64) -> client::Frame {
+    fn frame(&mut self, time: f64) -> lightfx::Frame {
         self.points_polar
             .iter()
             .map(|(_, a, h)| {

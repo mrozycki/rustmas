@@ -1,20 +1,19 @@
 use super::Animation;
-use rustmas_light_client as client;
 
 pub struct Blank {
-    frame: client::Frame,
+    frame: lightfx::Frame,
 }
 
 impl Blank {
     pub fn new(points: &Vec<(f64, f64, f64)>) -> Self {
         Self {
-            frame: client::Frame::new_black(points.len()),
+            frame: lightfx::Frame::new_black(points.len()),
         }
     }
 }
 
 impl Animation for Blank {
-    fn frame(&mut self, _: f64) -> client::Frame {
+    fn frame(&mut self, _: f64) -> lightfx::Frame {
         self.frame.clone()
     }
 }

@@ -1,6 +1,5 @@
 use super::utils;
 use super::Animation;
-use rustmas_light_client as client;
 
 pub struct RainbowCylinder {
     points_alpha: Vec<f64>,
@@ -19,10 +18,10 @@ impl RainbowCylinder {
 }
 
 impl Animation for RainbowCylinder {
-    fn frame(&mut self, time: f64) -> client::Frame {
+    fn frame(&mut self, time: f64) -> lightfx::Frame {
         self.points_alpha
             .iter()
-            .map(|a| client::Color::hsv(time + a / (2.0 * std::f64::consts::PI), 1.0, 1.0))
+            .map(|a| lightfx::Color::hsv(time + a / (2.0 * std::f64::consts::PI), 1.0, 1.0))
             .into()
     }
 }

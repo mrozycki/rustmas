@@ -1,5 +1,4 @@
 use super::Animation;
-use rustmas_light_client as client;
 
 pub struct Rgb {
     points_count: usize,
@@ -14,13 +13,13 @@ impl Rgb {
 }
 
 impl Animation for Rgb {
-    fn frame(&mut self, time: f64) -> client::Frame {
+    fn frame(&mut self, time: f64) -> lightfx::Frame {
         (0..self.points_count)
             .into_iter()
             .map(|x| match (x + ((time * 3.0).abs() as usize)) % 3 {
-                0 => client::Color::rgb(255, 0, 0),
-                1 => client::Color::rgb(0, 255, 0),
-                _ => client::Color::rgb(0, 0, 255),
+                0 => lightfx::Color::rgb(255, 0, 0),
+                1 => lightfx::Color::rgb(0, 255, 0),
+                _ => lightfx::Color::rgb(0, 0, 255),
             })
             .into()
     }
