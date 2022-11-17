@@ -1,4 +1,4 @@
-use rustmas_animation_model::parameter_schema::{Parameter, ParameterValue};
+use lightfx::parameter_schema::{Parameter, ParameterValue};
 use serde_json::json;
 use web_sys::{HtmlElement, HtmlInputElement};
 use yew::{html, Component, Context, Html, NodeRef};

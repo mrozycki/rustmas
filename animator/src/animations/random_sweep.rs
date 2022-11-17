@@ -1,7 +1,6 @@
 use super::{utils, Animation};
+use lightfx::schema::{Parameter, ParameterValue, ParametersSchema};
 use nalgebra::Vector3;
-use rustmas_animation_model::schema::{Parameter, ParameterValue, ParametersSchema};
-use rustmas_light_client as client;
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize)]
@@ -12,7 +11,7 @@ struct Parameters {
 pub struct RandomSweep {
     points: Vec<Vector3<f64>>,
     heights: Vec<f64>,
-    color: client::Color,
+    color: lightfx::Color,
     last_time: f64,
     parameters: Parameters,
 }
@@ -25,7 +24,7 @@ impl RandomSweep {
                 .map(|(x, y, z)| Vector3::new(*x, *y, *z))
                 .collect(),
             heights: Vec::new(),
-            color: client::Color::black(),
+            color: lightfx::Color::black(),
             last_time: 1.0,
             parameters: Parameters { tail_length: 0.5 },
         }
@@ -44,7 +43,7 @@ impl RandomSweep {
 }
 
 impl Animation for RandomSweep {
-    fn frame(&mut self, time: f64) -> client::Frame {
+    fn frame(&mut self, time: f64) -> lightfx::Frame {
         let time = time % 2.0 - 1.0;
         if self.heights.len() == 0 || (self.last_time > 0.0 && time < 0.0) {
             self.generate_new_sweep();
@@ -57,7 +56,7 @@ impl Animation for RandomSweep {
                 if *h > time && *h < time + self.parameters.tail_length {
                     self.color.dim((h - time) / self.parameters.tail_length)
                 } else {
-                    client::Color::black()
+                    lightfx::Color::black()
                 }
             })
             .into()

@@ -4,7 +4,7 @@ mod slider_control;
 
 use std::collections::HashMap;
 
-use rustmas_animation_model::{
+use lightfx::{
     parameter_schema::{ParameterValue, ParametersSchema},
     schema::Parameter,
 };

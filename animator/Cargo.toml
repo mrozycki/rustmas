@@ -9,7 +9,7 @@ path = "src/cli.rs"
 
 [dependencies]
 rustmas-light-client = { path = "../light-client", default-features = false }
-rustmas-animation-model = { path = "../animation-model" }
+lightfx = { path = "../lightfx" }
 
 csv = "1.1.6"
 clap = { version = "4.0.18", features = ["derive"] }

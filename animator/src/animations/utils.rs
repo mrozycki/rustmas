@@ -1,6 +1,5 @@
 use nalgebra::{Rotation3, Vector3};
 use rand::Rng;
-use rustmas_light_client as client;
 
 pub fn to_polar((x, y, z): &(f64, f64, f64)) -> (f64, f64, f64) {
     ((x.powi(2) + z.powi(2)).sqrt(), (x / z).atan(), *y)
@@ -20,6 +19,6 @@ pub fn random_rotation() -> Rotation3<f64> {
     Rotation3::rotation_between(&Vector3::new(0.0, 1.0, 0.0), &Vector3::new(x, y, z)).unwrap()
 }
 
-pub fn random_hue(saturation: f64, value: f64) -> client::Color {
-    client::Color::hsv(rand::thread_rng().gen::<f64>() % 1.0, saturation, value)
+pub fn random_hue(saturation: f64, value: f64) -> lightfx::Color {
+    lightfx::Color::hsv(rand::thread_rng().gen::<f64>() % 1.0, saturation, value)
 }

@@ -47,16 +47,16 @@ impl Capturer {
         }
     }
 
-    fn all_lights_off(&self) -> client::Frame {
-        client::Frame::new(self.number_of_lights, client::Color::black())
+    fn all_lights_off(&self) -> lightfx::Frame {
+        lightfx::Frame::new(self.number_of_lights, lightfx::Color::black())
     }
 
-    fn all_lights_on(&self) -> client::Frame {
-        client::Frame::new(self.number_of_lights, client::Color::gray(50))
+    fn all_lights_on(&self) -> lightfx::Frame {
+        lightfx::Frame::new(self.number_of_lights, lightfx::Color::gray(50))
     }
 
-    fn single_light_on(&self, index: usize) -> client::Frame {
-        client::Frame::new_black(self.number_of_lights).with_pixel(index, client::Color::white())
+    fn single_light_on(&self, index: usize) -> lightfx::Frame {
+        lightfx::Frame::new_black(self.number_of_lights).with_pixel(index, lightfx::Color::white())
     }
 
     pub fn read_coordinates_from_file(

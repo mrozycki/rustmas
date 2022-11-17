@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-rustmas-animation-model = { path = "../animation-model" }
+lightfx = { path = "../lightfx" }
 
 gloo-net = "0.2"
 gloo-utils = "0.1"

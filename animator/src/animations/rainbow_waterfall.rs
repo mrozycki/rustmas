@@ -1,6 +1,5 @@
 use super::Animation;
-use rustmas_animation_model::schema::{Parameter, ParameterValue, ParametersSchema};
-use rustmas_light_client as client;
+use lightfx::schema::{Parameter, ParameterValue, ParametersSchema};
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize)]
@@ -23,10 +22,10 @@ impl RainbowWaterfall {
 }
 
 impl Animation for RainbowWaterfall {
-    fn frame(&mut self, time: f64) -> client::Frame {
+    fn frame(&mut self, time: f64) -> lightfx::Frame {
         self.points_height
             .iter()
-            .map(|h| client::Color::hsv(h * self.parameters.cycles + time, 1.0, 0.5))
+            .map(|h| lightfx::Color::hsv(h * self.parameters.cycles + time, 1.0, 0.5))
             .into()
     }
 

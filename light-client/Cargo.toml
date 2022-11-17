@@ -5,6 +5,7 @@ edition = "2021"
 
 [dependencies]
 rustmas-visualiser = { path = "../visualiser", optional = true }
+lightfx = { path = "../lightfx" }
 
 async-trait = "0.1.57"
 csv = "1.1.6"

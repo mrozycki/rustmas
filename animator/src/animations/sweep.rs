@@ -1,6 +1,5 @@
 use super::Animation;
-use rustmas_animation_model::schema::{EnumOption, Parameter, ParameterValue, ParametersSchema};
-use rustmas_light_client as client;
+use lightfx::schema::{EnumOption, Parameter, ParameterValue, ParametersSchema};
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize)]
@@ -17,7 +16,7 @@ enum Direction {
 struct Parameters {
     direction: Direction,
     band_size: f64,
-    color: client::Color,
+    color: lightfx::Color,
 }
 
 pub struct Sweep {
@@ -32,14 +31,14 @@ impl Sweep {
             parameters: Parameters {
                 direction: Direction::BottomToTop,
                 band_size: 0.2,
-                color: client::Color::white(),
+                color: lightfx::Color::white(),
             },
         }
     }
 }
 
 impl Animation for Sweep {
-    fn frame(&mut self, time: f64) -> client::Frame {
+    fn frame(&mut self, time: f64) -> lightfx::Frame {
         let time =
             time % (2.0 + self.parameters.band_size) - (1.0 + self.parameters.band_size / 2.0);
         self.points
@@ -56,7 +55,7 @@ impl Animation for Sweep {
                 if h > time && h < time + self.parameters.band_size {
                     self.parameters.color
                 } else {
-                    client::Color::black()
+                    lightfx::Color::black()
                 }
             })
             .into()

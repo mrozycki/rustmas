@@ -1,12 +1,10 @@
 use std::error::Error;
 
-use rustmas_light_client as client;
-
-use rustmas_animation_model::schema::ParametersSchema;
+use lightfx::schema::ParametersSchema;
 use serde_json::json;
 
 pub trait Animation {
-    fn frame(&mut self, time: f64) -> client::Frame;
+    fn frame(&mut self, time: f64) -> lightfx::Frame;
 
     fn parameter_schema(&self) -> ParametersSchema {
         Default::default()
