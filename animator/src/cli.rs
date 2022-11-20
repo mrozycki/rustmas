@@ -25,7 +25,10 @@ async fn main() -> Result<(), Box<dyn Error>> {
             ColorChoice::Auto,
         ),
         WriteLogger::new(
+            #[cfg(debug_assertions)]
             LevelFilter::Debug,
+            #[cfg(not(debug_assertions))]
+            LevelFilter::Info,
             Config::default(),
             File::create("animator.log")?,
         ),
