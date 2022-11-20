@@ -55,14 +55,14 @@ impl Component for SliderParameterControl {
             .unwrap();
 
             html! {
-                <>
+                <div class="slider-control">
                     <input name={id}
                         type="range" min={min.to_string()} max={max.to_string()} step={step.to_string()}
                         ref={self.slider_ref.clone()}
                         oninput={link.callback(|_| Msg::InputChange)}
                         value={value.clone()} />
                     <output ref={self.value_display_ref.clone()}>{value}</output>
-                </>
+                </div>
             }
         } else {
             html!()

@@ -83,39 +83,47 @@ impl Component for ParameterControlList {
 
     fn view(&self, ctx: &Context<Self>) -> yew::Html {
         html! {
-            <div>
+            <section class="parameter-control-list">
                 <datalist id="warmWhites">
                     {(2200..=2800).step_by(100).map(lightfx::Color::kelvin).into_iter().map(|c| html! {
                         <option value={c.to_hex_string()}></option>
                     }).collect::<Html>()}
                 </datalist>
-                <form onsubmit={ctx.link().callback(|e| Self::Message::SubmitInfo(e))}>
-                    {
-                        ctx.props().schema.parameters.iter().cloned().map(|schema| {
-                            let value = ctx.props().values.get(&schema.id).cloned();
-                            html! {
-                            <div>
-                                <h3>{ &schema.name }</h3>
-                                {
-                                    if let Some(description) = &schema.description {
-                                        html! {
-                                            <p>{ description }</p>
+                {
+                    if ctx.props().schema.parameters.len() != 0 { html! {
+                        <form onsubmit={ctx.link().callback(|e| Self::Message::SubmitInfo(e))}>
+                            {
+                                ctx.props().schema.parameters.iter().cloned().map(|schema| {
+                                    let value = ctx.props().values.get(&schema.id).cloned();
+                                    html! {
+                                    <div class="parameter-control">
+                                        <h3>{ &schema.name }</h3>
+                                        {
+                                            if let Some(description) = &schema.description {
+                                                html! {
+                                                    <p>{ description }</p>
+                                                }
+                                            } else { html!{} }
                                         }
-                                    } else { html!{} }
-                                }
-                                {
-                                    match schema.value {
-                                        ParameterValue::Enum {..} => html!{<SelectParameterControl {schema} {value} />},
-                                        ParameterValue::Color => html!{<ColorParameterControl {schema} {value} />},
-                                        ParameterValue::Number {..} => html!{<SliderParameterControl {schema} {value} />},
-                                    }
-                                }
+                                        {
+                                            match schema.value {
+                                                ParameterValue::Enum {..} => html!{<SelectParameterControl {schema} {value} />},
+                                                ParameterValue::Color => html!{<ColorParameterControl {schema} {value} />},
+                                                ParameterValue::Number {..} => html!{<SliderParameterControl {schema} {value} />},
+                                            }
+                                        }
+                                    </div>
+                                }}).collect::<Html>()
+                            }
+                            <div class="parameter-control">
+                                <input type="submit" value="Send" />
                             </div>
-                        }}).collect::<Html>()
-                    }
-                    <input type="submit" value="Send" />
-                </form>
-            </div>
+                        </form>
+                    }} else { html! {
+                        <p>{"This animation does not have any parameters"}</p>
+                    }}
+                }
+            </section>
         }
     }
 }
