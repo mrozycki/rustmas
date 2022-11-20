@@ -26,7 +26,7 @@ impl Component for AnimationSelector {
     type Properties = ();
 
     fn create(ctx: &Context<Self>) -> Self {
-        let api = api::Gateway::new("http://localhost:8081");
+        let api = api::Gateway::new("/api");
 
         {
             let api = api.clone();
@@ -72,19 +72,23 @@ impl Component for AnimationSelector {
         let animations = self.animations.clone();
         html! {
             <ContextProvider<Gateway> context={self.api.clone()}>
-            <div>
-                <ul style="list-style-type: none;"> {
-                    animations.into_iter().map(|animation| html! {
-                        <li><button onclick={link.callback(move |_| Msg::SwitchAnimation(animation.id.clone()))}>{ animation.name }</button></li>
-                    }).collect::<Html>()
-                } </ul>
-                <hr />
-                {if let Some(parameters) = &self.parameters {
-                    html! {
-                        <ParameterControlList schema={parameters.schema.clone()} values={parameters.values.clone()} />
-                    }
-                } else { html!{} }}
-            </div>
+            <>
+                <header><h1>{"Rustmas Lights"}</h1></header>
+                <div class="content">
+                    <nav>
+                        <ul> {
+                            animations.into_iter().map(|animation| html! {
+                                <li><a onclick={link.callback(move |_| Msg::SwitchAnimation(animation.id.clone()))}>{ animation.name }</a></li>
+                            }).collect::<Html>()
+                        } </ul>
+                    </nav>
+                    {if let Some(parameters) = &self.parameters {
+                        html! {
+                            <ParameterControlList schema={parameters.schema.clone()} values={parameters.values.clone()} />
+                        }
+                    } else { html!{} }}
+                </div>
+            </>
             </ContextProvider<Gateway>>
         }
     }
