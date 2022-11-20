@@ -25,9 +25,11 @@ jobs:
           ~/.cargo/git/db/
           target/
         key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-    - name: Build
-      run: cargo build --verbose
-    - name: Build without default features
-      run: cargo build --verbose --no-default-features
+    - name: Check
+      run: cargo check --verbose
+    - name: Check without default features
+      run: cargo check --verbose --no-default-features
+    - name: Check release
+      run: cargo check --verbose --release
     - name: Run tests
       run: cargo test --verbose
