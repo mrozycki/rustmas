@@ -16,4 +16,8 @@ impl Animation for Blank {
     fn frame(&mut self, _: f64) -> lightfx::Frame {
         self.frame.clone()
     }
+
+    fn get_fps(&self) -> f64 {
+        0.0
+    }
 }

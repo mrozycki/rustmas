@@ -70,6 +70,7 @@ async fn list() -> HttpResponse {
             { "id": "sweep", "name": "Test Sweep" },
             { "id": "random_sweep", "name": "Random Sweep" },
             { "id": "blank", "name": "Blank" },
+            { "id": "check", "name": "Check" },
         ]
     }))
 }

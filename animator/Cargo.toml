@@ -12,6 +12,7 @@ rustmas-light-client = { path = "../light-client", default-features = false }
 lightfx = { path = "../lightfx" }
 
 csv = "1.1.6"
+chrono = "0.4.23"
 clap = { version = "4.0.18", features = ["derive"] }
 nalgebra = "0.31.3"
 rand = "0.8.5"

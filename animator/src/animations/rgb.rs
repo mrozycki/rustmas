@@ -23,4 +23,8 @@ impl Animation for Rgb {
             })
             .into()
     }
+
+    fn get_fps(&self) -> f64 {
+        3.0
+    }
 }

@@ -1,8 +1,9 @@
 mod animations;
 
+use std::error::Error;
 use std::sync::Arc;
-use std::{error::Error, time::Duration};
 
+use chrono::{DateTime, Duration, Utc};
 use log::{info, warn};
 use rustmas_light_client as client;
 use rustmas_light_client::LightClientError;
@@ -19,10 +20,16 @@ enum ConnectionStatus {
     ProlongedFailure,
 }
 
+pub struct ControllerState {
+    points: Vec<(f64, f64, f64)>,
+    animation: Box<dyn Animation + Sync + Send>,
+    next_frame: DateTime<Utc>,
+    fps: f64,
+}
+
 pub struct Controller {
     join_handle: JoinHandle<()>,
-    points: Vec<(f64, f64, f64)>,
-    animation: Arc<Mutex<Box<dyn Animation + Sync + Send>>>,
+    state: Arc<Mutex<ControllerState>>,
 }
 
 impl Controller {
@@ -30,62 +37,90 @@ impl Controller {
         points: Vec<(f64, f64, f64)>,
         client: Box<dyn rustmas_light_client::LightClient + Sync + Send>,
     ) -> Result<Self, Box<dyn Error>> {
-        let animation = Arc::new(Mutex::new(animations::make_animation("blank", &points)));
+        let animation = animations::make_animation("blank", &points);
+        let state = Arc::new(Mutex::new(ControllerState {
+            points,
+            next_frame: Utc::now(),
+            fps: animation.get_fps(),
+            animation,
+        }));
+        let join_handle = tokio::spawn(Self::run(state.clone(), client));
 
-        let animation_clone = animation.clone();
-        let join_handle = tokio::spawn(async move {
-            const FRAME_STEP: f64 = 1.0 / 30.0;
-            const MAX_DELAY: f64 = 5.0;
+        Ok(Self { state, join_handle })
+    }
 
-            let mut t = 0.0;
-            let mut delay = FRAME_STEP;
-            let mut status = ConnectionStatus::Healthy;
+    async fn run(
+        state: Arc<Mutex<ControllerState>>,
+        client: Box<dyn rustmas_light_client::LightClient + Sync + Send>,
+    ) {
+        let start_backoff_delay: Duration = Duration::seconds(1);
+        let max_backoff_delay: Duration = Duration::seconds(8);
 
-            loop {
-                match client
-                    .display_frame(&animation_clone.lock().await.frame(t))
-                    .await
-                {
-                    Ok(_) => {
-                        if status != ConnectionStatus::Healthy {
-                            info!("Regained connection to light client");
-                        }
-                        status = ConnectionStatus::Healthy;
-                        t += FRAME_STEP;
-                        delay = FRAME_STEP; // restore default delay
-                    }
-                    Err(LightClientError::ConnectionLost) => {
-                        delay = (delay * 2.0).min(MAX_DELAY);
-                        if delay < MAX_DELAY {
-                            status = ConnectionStatus::IntermittentFailure;
-                            warn!(
-                                "Failed to send frame to remote lights, will retry in {:.2} seconds",
-                                delay
-                            );
-                        } else if status != ConnectionStatus::ProlongedFailure {
-                            status = ConnectionStatus::ProlongedFailure;
-                            warn!(
-                                "Lost connection to lights, will continue retrying every {:.2} seconds",
-                                MAX_DELAY
-                            );
-                        }
-                    }
-                    Err(LightClientError::ProcessExited) => {
-                        warn!("Light client exited, exiting");
-                        return;
-                    }
-                    _ => (),
+        let mut backoff_delay = start_backoff_delay;
+        let mut status = ConnectionStatus::Healthy;
+        let now = Utc::now();
+        let first_frame = now;
+        let mut next_check = now;
+
+        loop {
+            tokio::time::sleep(
+                (next_check - Utc::now())
+                    .max(Duration::seconds(0))
+                    .to_std()
+                    .unwrap(),
+            )
+            .await;
+
+            let now = Utc::now();
+            let frame = {
+                let mut state = state.lock().await;
+                if now < state.next_frame {
+                    next_check = state.next_frame.min(now + backoff_delay);
+                    continue;
+                }
+                state.next_frame = if state.fps != 0.0 {
+                    now + Duration::milliseconds((1000.0 / state.fps) as i64)
+                } else {
+                    now + Duration::days(1)
                 };
 
-                tokio::time::sleep(Duration::from_secs_f64(delay)).await;
-            }
-        });
+                state
+                    .animation
+                    .frame((now - first_frame).num_milliseconds() as f64 / 1000.0)
+            };
 
-        Ok(Self {
-            join_handle,
-            points,
-            animation,
-        })
+            match client.display_frame(&frame).await {
+                Ok(_) => {
+                    if status != ConnectionStatus::Healthy {
+                        info!("Regained connection to light client");
+                    }
+                    status = ConnectionStatus::Healthy;
+                    backoff_delay = start_backoff_delay;
+                }
+                Err(LightClientError::ConnectionLost) => {
+                    next_check = now + backoff_delay;
+                    backoff_delay = (backoff_delay * 2).min(max_backoff_delay);
+                    if backoff_delay < max_backoff_delay {
+                        status = ConnectionStatus::IntermittentFailure;
+                        warn!(
+                            "Failed to send frame to remote lights, will retry in {:.2} seconds",
+                            backoff_delay.num_milliseconds() as f64 / 1000.0
+                        );
+                    } else if status != ConnectionStatus::ProlongedFailure {
+                        status = ConnectionStatus::ProlongedFailure;
+                        warn!(
+                            "Lost connection to lights, will continue retrying every {:.2} seconds",
+                            max_backoff_delay.num_milliseconds() as f64 / 1000.0
+                        );
+                    }
+                }
+                Err(LightClientError::ProcessExited) => {
+                    warn!("Light client exited, exiting");
+                    return;
+                }
+                _ => (),
+            };
+        }
     }
 
     pub fn builder() -> ControllerBuilder {
@@ -97,19 +132,27 @@ impl Controller {
 
     pub async fn switch_animation(&self, name: &str) -> Result<(), Box<dyn Error>> {
         info!("Trying to switch animation to \"{}\"", name);
-        *self.animation.lock().await = animations::make_animation(name, &self.points);
+        let mut state = self.state.lock().await;
+        state.animation = animations::make_animation(name, &state.points);
+
+        let new_fps = state.animation.get_fps();
+        if new_fps != state.fps {
+            state.fps = new_fps;
+            state.next_frame = Utc::now();
+        }
         Ok(())
     }
 
     pub async fn parameter_schema(&self) -> serde_json::Value {
         // unwrap is safe, since ParametersSchema is serializable
-        serde_json::to_value(self.animation.lock().await.parameter_schema()).unwrap()
+        serde_json::to_value(self.state.lock().await.animation.parameter_schema()).unwrap()
     }
 
     pub async fn parameter_values(&self) -> serde_json::Value {
-        self.animation
+        self.state
             .lock()
             .await
+            .animation
             .get_parameters()
             .unwrap_or(json!({}))
     }
@@ -118,7 +161,7 @@ impl Controller {
         &mut self,
         parameters: serde_json::Value,
     ) -> Result<(), Box<dyn Error>> {
-        self.animation.lock().await.set_parameters(parameters)
+        self.state.lock().await.animation.set_parameters(parameters)
     }
 
     pub async fn join(self) -> Result<(), Box<dyn Error>> {
