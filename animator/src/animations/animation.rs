@@ -17,6 +17,10 @@ pub trait Animation {
     fn get_parameters(&self) -> Result<serde_json::Value, Box<dyn Error>> {
         Ok(json!({}))
     }
+
+    fn get_fps(&self) -> f64 {
+        30.0
+    }
 }
 
 pub fn make_animation(
