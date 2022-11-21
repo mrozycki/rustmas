@@ -12,6 +12,13 @@ use tokio::task::JoinHandle;
 
 use animations::Animation;
 
+#[derive(PartialEq)]
+enum ConnectionStatus {
+    Healthy,
+    IntermittentFailure,
+    ProlongedFailure,
+}
+
 pub struct Controller {
     join_handle: JoinHandle<()>,
     points: Vec<(f64, f64, f64)>,
@@ -28,9 +35,11 @@ impl Controller {
         let animation_clone = animation.clone();
         let join_handle = tokio::spawn(async move {
             const FRAME_STEP: f64 = 1.0 / 30.0;
+            const MAX_DELAY: f64 = 5.0;
 
             let mut t = 0.0;
             let mut delay = FRAME_STEP;
+            let mut status = ConnectionStatus::Healthy;
 
             loop {
                 match client
@@ -38,15 +47,28 @@ impl Controller {
                     .await
                 {
                     Ok(_) => {
+                        if status != ConnectionStatus::Healthy {
+                            info!("Regained connection to light client");
+                        }
+                        status = ConnectionStatus::Healthy;
                         t += FRAME_STEP;
                         delay = FRAME_STEP; // restore default delay
                     }
                     Err(LightClientError::ConnectionLost) => {
-                        delay = (delay * 2.0).min(5.0);
-                        warn!(
-                            "Lost connection to light client, will retry in {} seconds",
-                            delay
-                        );
+                        delay = (delay * 2.0).min(MAX_DELAY);
+                        if delay < MAX_DELAY {
+                            status = ConnectionStatus::IntermittentFailure;
+                            warn!(
+                                "Failed to send frame to remote lights, will retry in {:.2} seconds",
+                                delay
+                            );
+                        } else if status != ConnectionStatus::ProlongedFailure {
+                            status = ConnectionStatus::ProlongedFailure;
+                            warn!(
+                                "Lost connection to lights, will continue retrying every {:.2} seconds",
+                                MAX_DELAY
+                            );
+                        }
                     }
                     Err(LightClientError::ProcessExited) => {
                         warn!("Light client exited, exiting");

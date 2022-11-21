@@ -8,9 +8,9 @@ use std::{
 
 use async_trait::async_trait;
 use lightfx::{Color, Frame};
-use log::error;
+use log::debug;
 #[cfg(feature = "visualiser")]
-use log::info;
+use log::{error, info};
 use reqwest::header::CONNECTION;
 
 #[derive(Debug)]
@@ -70,6 +70,7 @@ impl RemoteLightClient {
             http_client: reqwest::Client::builder()
                 .http1_title_case_headers()
                 .tcp_keepalive(Duration::from_secs(10))
+                .timeout(Duration::from_secs(1))
                 .build()
                 .unwrap(),
         }
@@ -95,7 +96,7 @@ impl LightClient for RemoteLightClient {
         {
             Ok(_) => Ok(()),
             Err(err) => {
-                error!("Failed to send a frame to remote lights client: {}", err);
+                debug!("Failed to send frame to light client: {}", err);
                 Err(LightClientError::ConnectionLost)
             }
         }
