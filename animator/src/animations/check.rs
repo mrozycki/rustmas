@@ -19,4 +19,8 @@ impl Animation for Check {
         debug!("Checking light #{}", index);
         lightfx::Frame::new_black(self.points_count).with_pixel(index, lightfx::Color::white())
     }
+
+    fn get_fps(&self) -> f64 {
+        8.0
+    }
 }
