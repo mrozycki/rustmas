@@ -3,6 +3,8 @@ use std::error::Error;
 use lightfx::schema::ParametersSchema;
 use serde_json::json;
 
+use super::{brightness_controlled::BrightnessControlled, speed_controlled::SpeedControlled};
+
 pub trait Animation {
     fn frame(&mut self, time: f64) -> lightfx::Frame;
 
@@ -27,7 +29,7 @@ pub fn make_animation(
     name: &str,
     points: &Vec<(f64, f64, f64)>,
 ) -> Box<dyn Animation + Sync + Send> {
-    match name {
+    BrightnessControlled::new(SpeedControlled::new(match name {
         "barber_pole" => Box::new(super::barber_pole::BarberPole::new(points)),
         "blank" => Box::new(super::blank::Blank::new(points)),
         "check" => Box::new(super::check::Check::new(points)),
@@ -40,5 +42,5 @@ pub fn make_animation(
         "sweep" => Box::new(super::sweep::Sweep::new(points)),
         "rgb" => Box::new(super::rgb::Rgb::new(points)),
         _ => panic!("Unknown animation pattern \"{}\"", name),
-    }
+    }))
 }
