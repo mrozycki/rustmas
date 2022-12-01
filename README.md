@@ -22,3 +22,8 @@ them up, run the following command inside the repository:
 ```
 git config core.hooksPath .githooks
 ```
+
+Attribution
+-----------
+
+* [Christmas lights icons created by BomSymbols - Flaticon](https://www.flaticon.com/free-icons/christmas-lights)
