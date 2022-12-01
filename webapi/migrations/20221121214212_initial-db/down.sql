@@ -1,0 +1,1 @@
+DROP TABLE animation_parameters;
