@@ -7,3 +7,5 @@
 .env
 
 webui/dist
+
+*.sqlite

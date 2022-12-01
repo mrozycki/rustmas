@@ -1,6 +1,9 @@
+mod db;
+
 use actix_cors::Cors;
+use db::Db;
 use dotenvy::dotenv;
-use log::LevelFilter;
+use log::{info, LevelFilter};
 use serde::Deserialize;
 use serde_json::json;
 use simplelog::{ColorChoice, CombinedLogger, Config, TermLogger, TerminalMode, WriteLogger};
@@ -15,16 +18,27 @@ struct SwitchForm {
 
 #[post("/switch")]
 async fn switch(form: web::Json<SwitchForm>, app_state: web::Data<AppState>) -> HttpResponse {
-    match app_state
+    if let Err(_) = app_state
         .animation_controller
         .lock()
         .unwrap()
         .switch_animation(&form.animation)
         .await
     {
-        Ok(_) => HttpResponse::Ok().json(json!({"success": true})),
-        Err(_) => HttpResponse::InternalServerError().json(json!({"success": false})),
+        return HttpResponse::InternalServerError().json(json!({"success": false}));
     }
+
+    if let Ok(Some(params)) = app_state.db.get_parameters(&form.animation).await {
+        let _ = app_state
+            .animation_controller
+            .lock()
+            .unwrap()
+            .set_parameters(params)
+            .await;
+    }
+
+    *app_state.animation_name.lock().unwrap() = form.animation.clone();
+    HttpResponse::Ok().json(json!({"success": true}))
 }
 
 #[get("/params")]
@@ -45,6 +59,11 @@ async fn post_params(
     params: web::Json<serde_json::Value>,
     app_state: web::Data<AppState>,
 ) -> HttpResponse {
+    let _ = app_state
+        .db
+        .set_parameters(&app_state.animation_name.lock().unwrap(), &params.0)
+        .await;
+
     match app_state
         .animation_controller
         .lock()
@@ -77,6 +96,8 @@ async fn list() -> HttpResponse {
 
 struct AppState {
     animation_controller: Mutex<rustmas_animator::Controller>,
+    animation_name: Mutex<String>,
+    db: Db,
 }
 
 #[actix_web::main]
@@ -100,13 +121,20 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
     dotenv().ok();
 
+    info!("Starting controller");
     let controller = rustmas_animator::Controller::builder()
         .points_from_file(&env::var("RUSTMAS_POINTS_PATH").unwrap_or("lights.csv".to_owned()))?
         .remote_lights(&env::var("RUSTMAS_LIGHTS_URL").unwrap_or("http://127.0.0.1/".to_owned()))?
         .build()?;
 
+    info!("Establishing database connection");
+    let db = Db::new(&env::var("RUSTMAS_DB_PATH").unwrap_or("db.sqlite".to_owned())).await?;
+
+    info!("Starting http server");
     let app_state = web::Data::new(AppState {
         animation_controller: Mutex::new(controller),
+        animation_name: Mutex::new("blank".to_owned()),
+        db,
     });
 
     HttpServer::new(move || {
