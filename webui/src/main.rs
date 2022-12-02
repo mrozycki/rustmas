@@ -84,7 +84,7 @@ impl Component for AnimationSelector {
                     </nav>
                     {if let Some(parameters) = &self.parameters {
                         html! {
-                            <ParameterControlList schema={parameters.schema.clone()} values={parameters.values.clone()} />
+                            <ParameterControlList schema={parameters.schema.clone()} values={parameters.values.clone()} update_values={link.callback(Msg::LoadedParameters)} />
                         }
                     } else { html!{} }}
                 </div>

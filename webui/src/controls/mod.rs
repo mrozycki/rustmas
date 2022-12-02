@@ -32,16 +32,19 @@ fn get_form(target: Option<EventTarget>) -> Option<HtmlFormElement> {
 pub struct ParameterControlProps {
     schema: Parameter,
     value: Option<serde_json::Value>,
+    dummy_update: usize,
 }
 
 pub struct ParameterControlList {
     change_debouncer: Debouncer,
+    dummy_update: usize,
 }
 
 #[derive(Clone, PartialEq, Properties)]
 pub struct ParameterControlListProps {
     pub schema: ParametersSchema,
     pub values: HashMap<String, serde_json::Value>,
+    pub update_values: Callback<Option<api::GetParamsResponse>>,
 }
 
 pub enum ParameterControlListMsg {
@@ -50,6 +53,7 @@ pub enum ParameterControlListMsg {
         form: Option<HtmlFormElement>,
         force: bool,
     },
+    RestoreParams,
 }
 
 impl Component for ParameterControlList {
@@ -59,6 +63,7 @@ impl Component for ParameterControlList {
     fn create(_ctx: &Context<Self>) -> Self {
         Self {
             change_debouncer: Debouncer::new(Duration::from_millis(100)),
+            dummy_update: 0,
         }
     }
 
@@ -105,6 +110,16 @@ impl Component for ParameterControlList {
                 });
                 false
             }
+            ParameterControlListMsg::RestoreParams => {
+                let update_values = ctx.props().update_values.clone();
+                wasm_bindgen_futures::spawn_local(async move {
+                    update_values.emit(api.reset_params().await.ok());
+                });
+
+                self.dummy_update += 1;
+
+                false
+            }
         }
     }
 
@@ -125,6 +140,7 @@ impl Component for ParameterControlList {
                             {
                                 ctx.props().schema.parameters.iter().cloned().map(|schema| {
                                     let value = ctx.props().values.get(&schema.id).cloned();
+                                    let dummy_update = self.dummy_update;
                                     html! {
                                     <div class="parameter-control">
                                         <h3>{ &schema.name }</h3>
@@ -137,15 +153,18 @@ impl Component for ParameterControlList {
                                         }
                                         {
                                             match schema.value {
-                                                ParameterValue::Enum {..} => html!{<SelectParameterControl {schema} {value} />},
-                                                ParameterValue::Color => html!{<ColorParameterControl {schema} {value} />},
-                                                ParameterValue::Number {..} => html!{<SliderParameterControl {schema} {value} />},
+                                                ParameterValue::Enum {..} => html!{<SelectParameterControl {schema} {value} {dummy_update} />},
+                                                ParameterValue::Color => html!{<ColorParameterControl {schema} {value} {dummy_update} />},
+                                                ParameterValue::Number {..} => {
+                                                    html!{<SliderParameterControl {schema} {value} {dummy_update}/>}
+                                                }
                                             }
                                         }
                                     </div>
                                 }}).collect::<Html>()
                             }
-                            <div class="parameter-control">
+                            <div class="parameter-control buttons">
+                                <input type="button" value="Reset" onclick={ctx.link().callback(|_| Self::Message::RestoreParams)} />
                                 <input type="submit" value="Save" />
                             </div>
                         </form>

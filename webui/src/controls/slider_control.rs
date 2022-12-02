@@ -1,6 +1,6 @@
 use lightfx::parameter_schema::{Parameter, ParameterValue};
 use serde_json::json;
-use web_sys::{HtmlElement, HtmlInputElement};
+use web_sys::HtmlInputElement;
 use yew::{html, Component, Context, Html, NodeRef};
 
 use super::ParameterControlProps;
@@ -27,9 +27,9 @@ impl Component for SliderParameterControl {
         match msg {
             Msg::InputChange => {
                 self.value_display_ref
-                    .cast::<HtmlElement>()
+                    .cast::<HtmlInputElement>()
                     .unwrap()
-                    .set_inner_text(&self.slider_ref.cast::<HtmlInputElement>().unwrap().value());
+                    .set_value(&self.slider_ref.cast::<HtmlInputElement>().unwrap().value());
                 false
             }
         }
@@ -61,7 +61,7 @@ impl Component for SliderParameterControl {
                         ref={self.slider_ref.clone()}
                         oninput={link.callback(|_| Msg::InputChange)}
                         value={value.clone()} />
-                    <output ref={self.value_display_ref.clone()}>{value}</output>
+                    <input type="text" ref={self.value_display_ref.clone()} {value} disabled=true class="value-display" />
                 </div>
             }
         } else {

@@ -41,8 +41,7 @@ async fn switch(form: web::Json<SwitchForm>, app_state: web::Data<AppState>) -> 
     HttpResponse::Ok().json(json!({"success": true}))
 }
 
-#[get("/params")]
-async fn get_params(app_state: web::Data<AppState>) -> HttpResponse {
+async fn params_as_response(app_state: &web::Data<AppState>) -> HttpResponse {
     HttpResponse::Ok().json(json!({
         "schema": app_state
             .animation_controller
@@ -52,6 +51,11 @@ async fn get_params(app_state: web::Data<AppState>) -> HttpResponse {
             .await,
         "values": app_state.animation_controller.lock().unwrap().parameter_values().await,
     }))
+}
+
+#[get("/params")]
+async fn get_params(app_state: web::Data<AppState>) -> HttpResponse {
+    params_as_response(&app_state).await
 }
 
 #[post("/params/save")]
@@ -71,6 +75,26 @@ async fn save_params(app_state: web::Data<AppState>) -> HttpResponse {
     {
         Ok(_) => HttpResponse::Ok().json(json!({"success": true})),
         Err(_) => HttpResponse::InternalServerError().json(json!({"success": false})),
+    }
+}
+
+#[post("/params/reset")]
+async fn reset_params(app_state: web::Data<AppState>) -> HttpResponse {
+    if let Ok(Some(params)) = app_state
+        .db
+        .get_parameters(&app_state.animation_name.lock().unwrap())
+        .await
+    {
+        let _ = app_state
+            .animation_controller
+            .lock()
+            .unwrap()
+            .set_parameters(params)
+            .await;
+
+        params_as_response(&app_state).await
+    } else {
+        HttpResponse::InternalServerError().json(json!({"success": false}))
     }
 }
 
@@ -161,6 +185,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
             .service(get_params)
             .service(post_params)
             .service(save_params)
+            .service(reset_params)
             .app_data(app_state.clone())
     })
     .bind(("0.0.0.0", 8081))?
