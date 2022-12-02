@@ -9,11 +9,16 @@ struct Parameters {
 pub struct SpeedControlled {
     animation: Box<dyn Animation + Sync + Send>,
     parameters: Parameters,
+    reference_real_time: f64,
+    reference_fake_time: f64,
 }
 
 impl Animation for SpeedControlled {
     fn frame(&mut self, time: f64) -> lightfx::Frame {
-        self.animation.frame(time * self.parameters.speed_factor)
+        self.reference_fake_time +=
+            (time - self.reference_real_time) * self.parameters.speed_factor;
+        self.reference_real_time = time;
+        self.animation.frame(self.reference_fake_time)
     }
 
     fn parameter_schema(&self) -> ParametersSchema {
@@ -67,6 +72,8 @@ impl SpeedControlled {
         Box::new(Self {
             animation,
             parameters: Parameters { speed_factor: 1.0 },
+            reference_fake_time: 0.0,
+            reference_real_time: 0.0,
         })
     }
 }
