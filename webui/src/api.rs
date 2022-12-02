@@ -28,7 +28,7 @@ pub struct Animation {
 struct ListAnimationsResponse {
     animations: Vec<Animation>,
 }
-#[derive(Deserialize, Default)]
+#[derive(Deserialize, Default, Debug)]
 pub struct GetParamsResponse {
     pub schema: ParametersSchema,
     pub values: HashMap<String, serde_json::Value>,
@@ -93,6 +93,18 @@ impl Gateway {
     pub async fn save_params(&self) -> Result<()> {
         let _ = Request::post(&self.url("params/save")).send().await;
         Ok(())
+    }
+
+    pub async fn reset_params(&self) -> Result<GetParamsResponse> {
+        Ok(Request::post(&self.url("params/reset"))
+            .send()
+            .await
+            .map_err(|e| GatewayError::RequestError {
+                reason: e.to_string(),
+            })?
+            .json::<GetParamsResponse>()
+            .await
+            .map_err(|_| GatewayError::InvalidResponse)?)
     }
 }
 

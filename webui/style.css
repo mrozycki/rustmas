@@ -61,16 +61,34 @@ nav a:hover {
     padding: 0 1em;
 }
 
+.parameter-control.buttons {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-end;
+    gap: 1em;
+}
+
 .parameter-control-list input[type="submit"] {
-    width: 50%;
+    width: 25%;
     padding: 1em;
-    margin-left: 50%;
     background-color: seagreen;
+    color: white;
+}
+
+.parameter-control-list input[type="button"] {
+    width: 25%;
+    padding: 1em;
+    background-color: darkgray;
     color: white;
 }
 
 .parameter-control-list input[type="submit"]:hover {
     background-color: lightseagreen;
+    cursor: pointer;
+}
+
+.parameter-control-list input[type="button"]:hover {
+    background-color: gray;
     cursor: pointer;
 }
 
@@ -117,9 +135,11 @@ nav a:hover {
     flex-grow: 1;
 }
 
-.parameter-control output {
-    min-width: 50px;
+.parameter-control input.value-display {
+    width: 50px;
+    color: black;
     padding-left: 0.5em;
+    background: none;
     line-height: 2em;
     text-align: right;
 }
