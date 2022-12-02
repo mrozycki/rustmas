@@ -89,6 +89,11 @@ impl Gateway {
             .await;
         Ok(())
     }
+
+    pub async fn save_params(&self) -> Result<()> {
+        let _ = Request::post(&self.url("params/save")).send().await;
+        Ok(())
+    }
 }
 
 impl Default for Gateway {

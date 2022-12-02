@@ -54,16 +54,31 @@ async fn get_params(app_state: web::Data<AppState>) -> HttpResponse {
     }))
 }
 
+#[post("/params/save")]
+async fn save_params(app_state: web::Data<AppState>) -> HttpResponse {
+    match app_state
+        .db
+        .set_parameters(
+            &app_state.animation_name.lock().unwrap(),
+            &app_state
+                .animation_controller
+                .lock()
+                .unwrap()
+                .parameter_values()
+                .await,
+        )
+        .await
+    {
+        Ok(_) => HttpResponse::Ok().json(json!({"success": true})),
+        Err(_) => HttpResponse::InternalServerError().json(json!({"success": false})),
+    }
+}
+
 #[post("/params")]
 async fn post_params(
     params: web::Json<serde_json::Value>,
     app_state: web::Data<AppState>,
 ) -> HttpResponse {
-    let _ = app_state
-        .db
-        .set_parameters(&app_state.animation_name.lock().unwrap(), &params.0)
-        .await;
-
     match app_state
         .animation_controller
         .lock()
@@ -145,6 +160,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
             .service(list)
             .service(get_params)
             .service(post_params)
+            .service(save_params)
             .app_data(app_state.clone())
     })
     .bind(("0.0.0.0", 8081))?
