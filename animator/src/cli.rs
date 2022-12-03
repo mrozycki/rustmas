@@ -1,8 +1,10 @@
-use std::{error::Error, fs::File};
+use std::{error::Error, fs};
 
 use clap::Parser;
 use log::LevelFilter;
-use simplelog::{ColorChoice, CombinedLogger, Config, TermLogger, TerminalMode, WriteLogger};
+use simplelog::{
+    ColorChoice, CombinedLogger, Config, ConfigBuilder, TermLogger, TerminalMode, WriteLogger,
+};
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
@@ -29,8 +31,11 @@ async fn main() -> Result<(), Box<dyn Error>> {
             LevelFilter::Debug,
             #[cfg(not(debug_assertions))]
             LevelFilter::Info,
-            Config::default(),
-            File::create("animator.log")?,
+            ConfigBuilder::new().set_time_format_rfc3339().build(),
+            fs::OpenOptions::new()
+                .append(true)
+                .create(true)
+                .open("animator.log")?,
         ),
     ])?;
 

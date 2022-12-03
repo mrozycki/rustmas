@@ -6,8 +6,10 @@ use dotenvy::dotenv;
 use log::{info, LevelFilter};
 use serde::Deserialize;
 use serde_json::json;
-use simplelog::{ColorChoice, CombinedLogger, Config, TermLogger, TerminalMode, WriteLogger};
-use std::{env, error::Error, fs::File, sync::Mutex};
+use simplelog::{
+    ColorChoice, CombinedLogger, Config, ConfigBuilder, TermLogger, TerminalMode, WriteLogger,
+};
+use std::{env, error::Error, fs, sync::Mutex};
 
 use actix_web::{get, post, web, App, HttpResponse, HttpServer};
 
@@ -153,8 +155,11 @@ async fn main() -> Result<(), Box<dyn Error>> {
             LevelFilter::Debug,
             #[cfg(not(debug_assertions))]
             LevelFilter::Info,
-            Config::default(),
-            File::create("webapi.log")?,
+            ConfigBuilder::new().set_time_format_rfc3339().build(),
+            fs::OpenOptions::new()
+                .append(true)
+                .create(true)
+                .open("webapi.log")?,
         ),
     ])?;
 

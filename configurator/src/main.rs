@@ -1,14 +1,16 @@
 mod capture;
 mod cv;
 
-use std::{error::Error, fs::File};
+use std::{error::Error, fs};
 
 use capture::{Capturer, WithConfidence};
 use clap::{arg, Parser, Subcommand};
 use cv::Camera;
 use log::{debug, info, LevelFilter};
 use rustmas_light_client as light_client;
-use simplelog::{ColorChoice, CombinedLogger, Config, TermLogger, TerminalMode, WriteLogger};
+use simplelog::{
+    ColorChoice, CombinedLogger, Config, ConfigBuilder, TermLogger, TerminalMode, WriteLogger,
+};
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
@@ -104,8 +106,11 @@ async fn main() -> Result<(), Box<dyn Error>> {
             LevelFilter::Debug,
             #[cfg(not(debug_assertions))]
             LevelFilter::Info,
-            Config::default(),
-            File::create("configurator.log")?,
+            ConfigBuilder::new().set_time_format_rfc3339().build(),
+            fs::OpenOptions::new()
+                .append(true)
+                .create(true)
+                .open("configurator.log")?,
         ),
     ])?;
 
