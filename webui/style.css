@@ -1,3 +1,12 @@
+/**
+ * Color palette:
+ * Primary: #195710
+ * Background: #869684
+ * Black: #031600
+ * Secondary light: #45763D
+ * Secondary dark: #073300
+ */
+
 * {
     margin: 0;
     padding: 0;
@@ -9,13 +18,14 @@ body {
     display: flex;
     flex-direction: column;
     font-family: sans-serif;
-    background-color: #eee;
+    background-color: #031600;
     min-height: 100vh;
+    color: #031600;
 }
 
 header {
     width: 100%;
-    background-color: gray;
+    background-color: #031600;
     color: white;
     padding: 1em;
     font-weight: bold;
@@ -26,15 +36,15 @@ header h1 {
 }
 
 .content {
-    flex-wrap: wrap;
-    align-items: stretch;
     display: flex;
     flex-grow: 1;
+    background-color: white;
 }
 
 nav {
-    flex-grow: 1;
-    background-color: darkgray;
+    width: 20vw;
+    min-width: 240px;
+    background-color: #869684;
 }
 
 nav ul {
@@ -53,12 +63,14 @@ nav a:hover {
     display: inline-block;
     width: 100%;
     height: 100%;
-    background-color: lightgray;
+    background-color: #45763D;
+    color: white;
 }
 
 .parameter-control-list {
-    flex-grow: 5;
+    width: 80vw;
     padding: 0 1em;
+    background-color: #86968466;
 }
 
 .parameter-control.buttons {
@@ -68,34 +80,40 @@ nav a:hover {
     gap: 1em;
 }
 
-.parameter-control-list input[type="submit"] {
+.parameter-control-list input[type="submit"],
+.parameter-control-list input[type="button"] {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    border-radius: 0;
     width: 25%;
     padding: 1em;
-    background-color: seagreen;
     color: white;
+    font-size: 1em;
+    cursor: pointer;
+}
+
+.parameter-control-list input[type="submit"] {
+    background-color: #1A5710;
 }
 
 .parameter-control-list input[type="button"] {
-    width: 25%;
-    padding: 1em;
-    background-color: darkgray;
-    color: white;
+    background-color: #aba;
+    color: #031600;
 }
 
 .parameter-control-list input[type="submit"]:hover {
-    background-color: lightseagreen;
-    cursor: pointer;
+    background-color: #45763D;
 }
 
 .parameter-control-list input[type="button"]:hover {
-    background-color: gray;
-    cursor: pointer;
+    background-color: #bcb;
 }
 
 .parameter-control {
     max-width: 800px;
     padding: 1em 0;
-    border-top: 1px solid black;
+    border-top: 1px solid #031600;
 }
 
 .parameter-control:first-child,
@@ -104,14 +122,26 @@ nav a:hover {
 }
 
 .parameter-control input[type="color"] {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
     width: 100%;
     height: 4em;
     margin-top: 1em;
-    border: 1px solid black;
+    border: 1px solid #031600;
+    border-radius: 0;
     cursor: pointer;
 }
 
 .parameter-control input[type="color"]::-moz-color-swatch {
+    border: none;
+}
+
+.parameter-control input[type="color"]::-webkit-color-swatch-wrapper {
+    padding: 0;
+}
+
+.parameter-control input[type="color"]::-webkit-color-swatch {
     border: none;
 }
 
@@ -120,8 +150,11 @@ nav a:hover {
     height: 3em;
     margin-top: 1em;
     padding: 0.5em;
-    border: 1px solid black;
+    border: 1px solid #031600;
+    border-radius: 0;
     background-color: white;
+    color: #031600;
+    font-size: 1em;
 }
 
 .slider-control {
@@ -137,9 +170,22 @@ nav a:hover {
 
 .parameter-control input.value-display {
     width: 50px;
-    color: black;
+    color: #031600;
+    opacity: 1;
     padding-left: 0.5em;
     background: none;
     line-height: 2em;
     text-align: right;
+    font-size: 1em;
+}
+
+@media screen and (max-width: 560px) {
+    .content {
+        flex-direction: column;
+    }
+
+    nav,
+    .parameter-control-list {
+        width: 100vw;
+    }
 }
