@@ -20,22 +20,17 @@ struct SwitchForm {
 
 #[post("/switch")]
 async fn switch(form: web::Json<SwitchForm>, app_state: web::Data<AppState>) -> HttpResponse {
-    if let Err(_) = app_state
-        .animation_controller
-        .lock()
-        .unwrap()
-        .switch_animation(&form.animation)
-        .await
-    {
+    let mut controller = app_state.animation_controller.lock().unwrap();
+    if let Err(_) = controller.switch_animation(&form.animation).await {
         return HttpResponse::InternalServerError().json(json!({"success": false}));
     }
 
     if let Ok(Some(params)) = app_state.db.get_parameters(&form.animation).await {
+        let _ = controller.set_parameters(params).await;
+    } else {
         let _ = app_state
-            .animation_controller
-            .lock()
-            .unwrap()
-            .set_parameters(params)
+            .db
+            .set_parameters(&form.animation, &controller.parameter_values().await)
             .await;
     }
 
@@ -43,21 +38,16 @@ async fn switch(form: web::Json<SwitchForm>, app_state: web::Data<AppState>) -> 
     HttpResponse::Ok().json(json!({"success": true}))
 }
 
-async fn params_as_response(app_state: &web::Data<AppState>) -> HttpResponse {
-    HttpResponse::Ok().json(json!({
-        "schema": app_state
+#[get("/params")]
+async fn get_params(app_state: web::Data<AppState>) -> HttpResponse {
+    HttpResponse::Ok().json(
+        app_state
             .animation_controller
             .lock()
             .unwrap()
-            .parameter_schema()
+            .parameters()
             .await,
-        "values": app_state.animation_controller.lock().unwrap().parameter_values().await,
-    }))
-}
-
-#[get("/params")]
-async fn get_params(app_state: web::Data<AppState>) -> HttpResponse {
-    params_as_response(&app_state).await
+    )
 }
 
 #[post("/params/save")]
@@ -87,14 +77,9 @@ async fn reset_params(app_state: web::Data<AppState>) -> HttpResponse {
         .get_parameters(&app_state.animation_name.lock().unwrap())
         .await
     {
-        let _ = app_state
-            .animation_controller
-            .lock()
-            .unwrap()
-            .set_parameters(params)
-            .await;
-
-        params_as_response(&app_state).await
+        let mut controller = app_state.animation_controller.lock().unwrap();
+        let _ = controller.set_parameters(params).await;
+        HttpResponse::Ok().json(controller.parameters().await)
     } else {
         HttpResponse::InternalServerError().json(json!({"success": false}))
     }
