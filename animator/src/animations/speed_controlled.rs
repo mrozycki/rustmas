@@ -28,10 +28,7 @@ impl Animation for SpeedControlled {
             id: "speed_factor".to_owned(),
             name: "Speed Factor".to_owned(),
             description: None,
-            value: lightfx::parameter_schema::ParameterValue::Number {
-                min: Some(0.0),
-                max: Some(10.0),
-            },
+            value: lightfx::parameter_schema::ParameterValue::Speed,
         }]);
         ParametersSchema { parameters }
     }

@@ -27,10 +27,7 @@ impl Animation for BrightnessControlled {
             id: "brightness_factor".to_owned(),
             name: "Brightness".to_owned(),
             description: None,
-            value: lightfx::parameter_schema::ParameterValue::Number {
-                min: Some(0.0),
-                max: Some(1.0),
-            },
+            value: lightfx::parameter_schema::ParameterValue::Percentage,
         }]);
         ParametersSchema { parameters }
     }

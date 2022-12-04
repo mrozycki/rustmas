@@ -2,6 +2,7 @@ mod color_control;
 mod debouncer;
 mod select_control;
 mod slider_control;
+mod speed_control;
 
 use std::{collections::HashMap, time::Duration};
 
@@ -20,6 +21,7 @@ use crate::api;
 use color_control::ColorParameterControl;
 use select_control::SelectParameterControl;
 use slider_control::SliderParameterControl;
+use speed_control::SpeedParameterControl;
 
 use self::debouncer::Debouncer;
 
@@ -160,9 +162,10 @@ impl Component for ParameterControlList {
                                             match schema.value {
                                                 ParameterValue::Enum {..} => html!{<SelectParameterControl {schema} {value} {dummy_update} />},
                                                 ParameterValue::Color => html!{<ColorParameterControl {schema} {value} {dummy_update} />},
-                                                ParameterValue::Number {..} => {
-                                                    html!{<SliderParameterControl {schema} {value} {dummy_update}/>}
-                                                }
+                                                ParameterValue::Number {..} | ParameterValue::Percentage => {
+                                                    html!{<SliderParameterControl {schema} {value} {dummy_update} />}
+                                                },
+                                                ParameterValue::Speed => html!{<SpeedParameterControl {schema} {value} {dummy_update} />}
                                             }
                                         }
                                     </div>

@@ -13,6 +13,8 @@ pub enum ParameterValue {
     Number { min: Option<f64>, max: Option<f64> },
     Color,
     Enum { values: Vec<EnumOption> },
+    Speed,
+    Percentage,
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Clone, Debug)]
