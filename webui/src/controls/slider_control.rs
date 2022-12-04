@@ -1,10 +1,16 @@
-use lightfx::parameter_schema::{Parameter, ParameterValue};
-use serde_json::json;
+use lightfx::parameter_schema::ParameterValue;
 use web_sys::HtmlInputElement;
 use yew::{html, Component, Context, Html, NodeRef};
 
 use super::ParameterControlProps;
 
+fn display_value(value: f64, percent: bool) -> String {
+    if percent {
+        format!("{}%", (value * 100.0) as i32)
+    } else {
+        format!("{:.2}", value)
+    }
+}
 #[derive(Default)]
 pub struct SliderParameterControl {
     slider_ref: NodeRef,
@@ -23,49 +29,54 @@ impl Component for SliderParameterControl {
         Default::default()
     }
 
-    fn update(&mut self, _ctx: &Context<Self>, msg: Self::Message) -> bool {
+    fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
         match msg {
             Msg::InputChange => {
+                let value = self
+                    .slider_ref
+                    .cast::<HtmlInputElement>()
+                    .map(|elem| elem.value())
+                    .and_then(|v| v.parse::<f64>().ok())
+                    .unwrap_or(0.0);
+                let percent = matches!(ctx.props().schema.value, ParameterValue::Percentage);
+
                 self.value_display_ref
                     .cast::<HtmlInputElement>()
                     .unwrap()
-                    .set_value(&self.slider_ref.cast::<HtmlInputElement>().unwrap().value());
+                    .set_value(&display_value(value, percent));
                 false
             }
         }
     }
 
     fn view(&self, ctx: &Context<Self>) -> Html {
-        if let Parameter {
-            id,
-            value: ParameterValue::Number { min, max },
-            ..
-        } = ctx.props().schema.clone()
-        {
-            let link = ctx.link();
-            let min = min.unwrap_or(0.0);
-            let max = max.unwrap_or(100.0);
-            let step = (max - min).abs() / 100.0;
-            let value = serde_json::to_string(
-                ctx.props()
-                    .value
-                    .as_ref()
-                    .unwrap_or(&json!((max + min) / 2.0)),
-            )
-            .unwrap();
-
-            html! {
-                <div class="slider-control">
-                    <input name={id}
-                        type="range" min={min.to_string()} max={max.to_string()} step={step.to_string()}
-                        ref={self.slider_ref.clone()}
-                        oninput={link.callback(|_| Msg::InputChange)}
-                        value={value.clone()} />
-                    <input type="text" ref={self.value_display_ref.clone()} {value} disabled=true class="value-display" />
-                </div>
+        let schema = &ctx.props().schema;
+        let (min, max, percent) = match &schema.value {
+            ParameterValue::Number { min, max } => {
+                (min.unwrap_or(0.0), max.unwrap_or(100.0), false)
             }
-        } else {
-            html!()
+            ParameterValue::Percentage => (0.0, 1.0, true),
+            _ => return html!(),
+        };
+
+        let link = ctx.link();
+        let step = (max - min).abs() / 100.0;
+        let value = ctx
+            .props()
+            .value
+            .as_ref()
+            .and_then(|v| v.as_f64())
+            .unwrap_or((max + min) / 2.0);
+
+        html! {
+            <div class="slider-control">
+                <input name={schema.id.clone()}
+                    type="range" min={min.to_string()} max={max.to_string()} step={step.to_string()}
+                    ref={self.slider_ref.clone()}
+                    oninput={link.callback(|_| Msg::InputChange)}
+                    value={value.to_string()} />
+                <input type="text" ref={self.value_display_ref.clone()} value={display_value(value, percent)} disabled=true class="value-display" />
+            </div>
         }
     }
 }
