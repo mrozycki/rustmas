@@ -1,6 +1,7 @@
 use crate::Animation;
 use lightfx::{parameter_schema::Parameter, schema::ParametersSchema};
 use serde::{Deserialize, Serialize};
+use serde_json::json;
 
 #[derive(Serialize, Deserialize)]
 struct Parameters {
@@ -45,21 +46,21 @@ impl Animation for SpeedControlled {
         Ok(())
     }
 
-    fn get_parameters(&self) -> Result<serde_json::Value, Box<dyn std::error::Error>> {
+    fn get_parameters(&self) -> serde_json::Value {
         let mut parameters = self
             .animation
-            .get_parameters()?
+            .get_parameters()
             .as_object_mut()
             .unwrap()
             .to_owned();
         parameters.extend(
-            serde_json::to_value(&self.parameters)?
+            json!(self.parameters)
                 .as_object_mut()
                 .cloned()
                 .unwrap()
                 .into_iter(),
         );
-        Ok(serde_json::to_value(parameters)?)
+        json!(parameters)
     }
 
     fn get_fps(&self) -> f64 {

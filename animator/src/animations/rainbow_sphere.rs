@@ -1,6 +1,7 @@
 use super::Animation;
 use lightfx::schema::{Parameter, ParameterValue, ParametersSchema};
 use serde::{Deserialize, Serialize};
+use serde_json::json;
 
 #[derive(Serialize, Deserialize)]
 struct Parameters {
@@ -95,7 +96,7 @@ impl Animation for RainbowSphere {
         Ok(())
     }
 
-    fn get_parameters(&self) -> Result<serde_json::Value, Box<dyn std::error::Error>> {
-        Ok(serde_json::to_value(&self.parameters)?)
+    fn get_parameters(&self) -> serde_json::Value {
+        json!(self.parameters)
     }
 }
