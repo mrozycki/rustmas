@@ -11,7 +11,8 @@ use lightfx::{
 };
 use wasm_bindgen::JsCast;
 use web_sys::{
-    Event, EventTarget, FocusEvent, FormData, HtmlFormElement, HtmlInputElement, InputEvent,
+    Event, EventTarget, FocusEvent, FormData, HtmlFormElement, HtmlInputElement, HtmlSelectElement,
+    InputEvent,
 };
 use yew::{html, Callback, Component, Context, Html, Properties};
 
@@ -24,8 +25,12 @@ use self::debouncer::Debouncer;
 
 fn get_form(target: Option<EventTarget>) -> Option<HtmlFormElement> {
     target
-        .and_then(|t| t.dyn_into::<HtmlInputElement>().ok())
+        .clone()
+        .and_then(|t| t.dyn_into::<HtmlSelectElement>().ok())
         .and_then(|e| e.form())
+        .or(target
+            .and_then(|t| t.dyn_into::<HtmlInputElement>().ok())
+            .and_then(|e| e.form()))
 }
 
 #[derive(Properties, PartialEq, Clone)]
