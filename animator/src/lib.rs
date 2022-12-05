@@ -22,7 +22,7 @@ enum ConnectionStatus {
 
 pub struct ControllerState {
     points: Vec<(f64, f64, f64)>,
-    animation: Box<dyn Animation + Sync + Send>,
+    animation: Box<dyn Animation>,
     next_frame: DateTime<Utc>,
     fps: f64,
 }

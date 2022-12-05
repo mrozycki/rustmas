@@ -16,3 +16,4 @@ mod utils;
 
 pub use animation::make_animation;
 pub use animation::Animation;
+pub use animation::AnimationParameters;

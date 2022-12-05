@@ -1,4 +1,4 @@
-use super::Animation;
+use super::{Animation, AnimationParameters};
 use log::debug;
 
 pub struct Check {
@@ -6,10 +6,10 @@ pub struct Check {
 }
 
 impl Check {
-    pub fn new(points: &Vec<(f64, f64, f64)>) -> Self {
-        Self {
+    pub fn new(points: &Vec<(f64, f64, f64)>) -> Box<dyn Animation> {
+        Box::new(Self {
             points_count: points.len(),
-        }
+        })
     }
 }
 
@@ -19,7 +19,9 @@ impl Animation for Check {
         debug!("Checking light #{}", index);
         lightfx::Frame::new_black(self.points_count).with_pixel(index, lightfx::Color::white())
     }
+}
 
+impl AnimationParameters for Check {
     fn get_fps(&self) -> f64 {
         8.0
     }

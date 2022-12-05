@@ -1,4 +1,4 @@
-use super::Animation;
+use super::{Animation, AnimationParameters};
 use lightfx::schema::{Parameter, ParameterValue, ParametersSchema};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
@@ -14,11 +14,11 @@ pub struct RainbowWaterfall {
 }
 
 impl RainbowWaterfall {
-    pub fn new(points: &Vec<(f64, f64, f64)>) -> Self {
-        Self {
+    pub fn new(points: &Vec<(f64, f64, f64)>) -> Box<dyn Animation> {
+        Box::new(Self {
             parameters: Parameters { cycles: 2.0 },
             points_height: points.iter().map(|(_, h, _)| (h + 1.0) / 2.0).collect(),
-        }
+        })
     }
 }
 
@@ -29,7 +29,9 @@ impl Animation for RainbowWaterfall {
             .map(|h| lightfx::Color::hsv(h * self.parameters.cycles + time, 1.0, 0.5))
             .into()
     }
+}
 
+impl AnimationParameters for RainbowWaterfall {
     fn parameter_schema(&self) -> ParametersSchema {
         ParametersSchema {
             parameters: vec![

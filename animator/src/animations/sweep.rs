@@ -1,4 +1,4 @@
-use super::Animation;
+use super::{Animation, AnimationParameters};
 use lightfx::schema::{EnumOption, Parameter, ParameterValue, ParametersSchema};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
@@ -26,15 +26,15 @@ pub struct Sweep {
 }
 
 impl Sweep {
-    pub fn new(points: &Vec<(f64, f64, f64)>) -> Self {
-        Self {
+    pub fn new(points: &Vec<(f64, f64, f64)>) -> Box<dyn Animation> {
+        Box::new(Self {
             points: points.clone(),
             parameters: Parameters {
                 direction: Direction::BottomToTop,
                 band_size: 0.2,
                 color: lightfx::Color::white(),
             },
-        }
+        })
     }
 }
 
@@ -61,7 +61,9 @@ impl Animation for Sweep {
             })
             .into()
     }
+}
 
+impl AnimationParameters for Sweep {
     fn parameter_schema(&self) -> ParametersSchema {
         ParametersSchema {
             parameters: vec![

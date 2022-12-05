@@ -1,4 +1,4 @@
-use super::Animation;
+use super::{Animation, AnimationParameters};
 use lightfx::schema::{Parameter, ParameterValue, ParametersSchema};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
@@ -30,7 +30,7 @@ impl RainbowSphere {
             .collect();
     }
 
-    pub fn new(points: &Vec<(f64, f64, f64)>) -> Self {
+    pub fn new(points: &Vec<(f64, f64, f64)>) -> Box<dyn Animation> {
         let mut result = Self {
             points_radius: vec![],
             points: points.clone(),
@@ -41,7 +41,7 @@ impl RainbowSphere {
             },
         };
         result.reset();
-        result
+        Box::new(result)
     }
 }
 
@@ -52,7 +52,9 @@ impl Animation for RainbowSphere {
             .map(|r| lightfx::Color::hsv(r - time, 1.0, 1.0))
             .into()
     }
+}
 
+impl AnimationParameters for RainbowSphere {
     fn parameter_schema(&self) -> ParametersSchema {
         ParametersSchema {
             parameters: vec![

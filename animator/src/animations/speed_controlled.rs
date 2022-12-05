@@ -3,12 +3,14 @@ use lightfx::{parameter_schema::Parameter, schema::ParametersSchema};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 
+use super::AnimationParameters;
+
 #[derive(Serialize, Deserialize)]
 struct Parameters {
     speed_factor: f64,
 }
 pub struct SpeedControlled {
-    animation: Box<dyn Animation + Sync + Send>,
+    animation: Box<dyn Animation>,
     parameters: Parameters,
     reference_real_time: f64,
     reference_fake_time: f64,
@@ -21,7 +23,9 @@ impl Animation for SpeedControlled {
         self.reference_real_time = time;
         self.animation.frame(self.reference_fake_time)
     }
+}
 
+impl AnimationParameters for SpeedControlled {
     fn parameter_schema(&self) -> ParametersSchema {
         let mut parameters = self.animation.parameter_schema().parameters;
         parameters.extend(vec![Parameter {
@@ -66,7 +70,7 @@ impl Animation for SpeedControlled {
 }
 
 impl SpeedControlled {
-    pub fn new(animation: Box<dyn Animation + Sync + Send>) -> Box<dyn Animation + Sync + Send> {
+    pub fn new(animation: Box<dyn Animation>) -> Box<dyn Animation> {
         Box::new(Self {
             animation,
             parameters: Parameters { speed_factor: 1.0 },

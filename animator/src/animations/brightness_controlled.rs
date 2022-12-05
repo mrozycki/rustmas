@@ -1,4 +1,4 @@
-use crate::Animation;
+use super::{Animation, AnimationParameters};
 use lightfx::{parameter_schema::Parameter, schema::ParametersSchema};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
@@ -8,7 +8,7 @@ struct Parameters {
     brightness_factor: f64,
 }
 pub struct BrightnessControlled {
-    animation: Box<dyn Animation + Sync + Send>,
+    animation: Box<dyn Animation>,
     parameters: Parameters,
 }
 
@@ -20,7 +20,9 @@ impl Animation for BrightnessControlled {
             .map(|x| x.dim(self.parameters.brightness_factor))
             .into()
     }
+}
 
+impl AnimationParameters for BrightnessControlled {
     fn parameter_schema(&self) -> ParametersSchema {
         let mut parameters = self.animation.parameter_schema().parameters;
         parameters.extend(vec![Parameter {
@@ -65,7 +67,7 @@ impl Animation for BrightnessControlled {
 }
 
 impl BrightnessControlled {
-    pub fn new(animation: Box<dyn Animation + Sync + Send>) -> Box<dyn Animation + Sync + Send> {
+    pub fn new(animation: Box<dyn Animation>) -> Box<dyn Animation> {
         Box::new(Self {
             animation,
             parameters: Parameters {
