@@ -2,6 +2,7 @@
  * Color palette:
  * Primary: #195710
  * Background: #869684
+ * Lighter background: #d9ddd9
  * Black: #031600
  * Secondary light: #45763D
  * Secondary dark: #073300
@@ -38,7 +39,7 @@ header h1 {
 .content {
     display: flex;
     flex-grow: 1;
-    background-color: white;
+    background-color: #d9ddd9;
 }
 
 nav {
@@ -70,7 +71,11 @@ nav a:hover {
 .parameter-control-list {
     width: 80vw;
     padding: 0 1em;
-    background-color: #86968466;
+}
+
+.parameter-control-list>p {
+    padding: 1em 0;
+    font-style: italic;
 }
 
 .parameter-control.buttons {
