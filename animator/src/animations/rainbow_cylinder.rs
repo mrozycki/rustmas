@@ -1,19 +1,20 @@
 use super::utils;
 use super::Animation;
+use super::AnimationParameters;
 
 pub struct RainbowCylinder {
     points_alpha: Vec<f64>,
 }
 
 impl RainbowCylinder {
-    pub fn new(points: &Vec<(f64, f64, f64)>) -> Self {
-        Self {
+    pub fn new(points: &Vec<(f64, f64, f64)>) -> Box<dyn Animation> {
+        Box::new(Self {
             points_alpha: points
                 .iter()
                 .map(utils::to_polar)
                 .map(|(_, a, _)| a)
                 .collect(),
-        }
+        })
     }
 }
 
@@ -25,3 +26,5 @@ impl Animation for RainbowCylinder {
             .into()
     }
 }
+
+impl AnimationParameters for RainbowCylinder {}

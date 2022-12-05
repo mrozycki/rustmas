@@ -1,4 +1,4 @@
-use super::{utils, Animation};
+use super::{utils, Animation, AnimationParameters};
 use lightfx::schema::{Parameter, ParameterValue, ParametersSchema};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
@@ -15,14 +15,14 @@ pub struct BarberPole {
 }
 
 impl BarberPole {
-    pub fn new(points: &Vec<(f64, f64, f64)>) -> Self {
-        Self {
+    pub fn new(points: &Vec<(f64, f64, f64)>) -> Box<dyn Animation> {
+        Box::new(Self {
             points_polar: points.iter().map(utils::to_polar).collect(),
             parameters: Parameters {
                 color_a: lightfx::Color::rgb(255, 0, 0),
                 color_b: lightfx::Color::rgb(255, 255, 255),
             },
-        }
+        })
     }
 }
 
@@ -39,7 +39,9 @@ impl Animation for BarberPole {
             })
             .into()
     }
+}
 
+impl AnimationParameters for BarberPole {
     fn parameter_schema(&self) -> ParametersSchema {
         ParametersSchema {
             parameters: vec![

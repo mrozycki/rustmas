@@ -1,4 +1,5 @@
-use super::{utils, Animation};
+use super::{animation::StepAnimation, utils, AnimationParameters};
+use itertools::Itertools;
 use lightfx::schema::{Parameter, ParameterValue, ParametersSchema};
 use nalgebra::Vector3;
 use serde::{Deserialize, Serialize};
@@ -13,56 +14,65 @@ pub struct RandomSweep {
     points: Vec<Vector3<f64>>,
     heights: Vec<f64>,
     color: lightfx::Color,
-    last_time: f64,
+    current_height: f64,
+    max_height: f64,
     parameters: Parameters,
 }
 
 impl RandomSweep {
-    pub fn new(points: &Vec<(f64, f64, f64)>) -> Self {
-        Self {
+    pub fn new(points: &Vec<(f64, f64, f64)>) -> Box<dyn StepAnimation> {
+        Box::new(Self {
             points: points
                 .iter()
                 .map(|(x, y, z)| Vector3::new(*x, *y, *z))
                 .collect(),
             heights: Vec::new(),
             color: lightfx::Color::black(),
-            last_time: 1.0,
+            current_height: 0.0,
+            max_height: 0.0,
             parameters: Parameters { tail_length: 0.5 },
-        }
-    }
-
-    fn generate_new_sweep(&mut self) {
-        let rotation = utils::random_rotation();
-        self.heights = self
-            .points
-            .iter()
-            .map(|p| rotation * p)
-            .map(|p| p.y)
-            .collect();
-        self.color = utils::random_hue(1.0, 0.5);
+        })
     }
 }
 
-impl Animation for RandomSweep {
-    fn frame(&mut self, time: f64) -> lightfx::Frame {
-        let time = time % 2.0 - 1.0;
-        if self.heights.len() == 0 || (self.last_time > 0.0 && time < 0.0) {
-            self.generate_new_sweep();
+impl StepAnimation for RandomSweep {
+    fn update(&mut self, delta: f64) {
+        if self.current_height > self.max_height + self.parameters.tail_length {
+            let rotation = utils::random_rotation();
+            self.heights = self
+                .points
+                .iter()
+                .map(|p| rotation * p)
+                .map(|p| p.y)
+                .collect();
+            self.color = utils::random_hue(1.0, 0.5);
+            (self.current_height, self.max_height) = match self.heights.iter().minmax() {
+                itertools::MinMaxResult::MinMax(min, max) => (*min, *max),
+                _ => return,
+            };
         }
 
-        self.last_time = time;
+        self.current_height += delta;
+    }
+
+    fn render(&self) -> lightfx::Frame {
         self.heights
             .iter()
             .map(|h| {
-                if *h > time && *h < time + self.parameters.tail_length {
-                    self.color.dim((h - time) / self.parameters.tail_length)
+                if *h < self.current_height
+                    && *h > self.current_height - self.parameters.tail_length
+                {
+                    self.color
+                        .dim(1.0 - (self.current_height - h) / self.parameters.tail_length)
                 } else {
                     lightfx::Color::black()
                 }
             })
             .into()
     }
+}
 
+impl AnimationParameters for RandomSweep {
     fn parameter_schema(&self) -> ParametersSchema {
         ParametersSchema {
             parameters: vec![Parameter {

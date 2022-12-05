@@ -1,14 +1,14 @@
-use super::Animation;
+use super::{Animation, AnimationParameters};
 
 pub struct RainbowCable {
     points_count: usize,
 }
 
 impl RainbowCable {
-    pub fn new(points: &Vec<(f64, f64, f64)>) -> Self {
-        Self {
+    pub fn new(points: &Vec<(f64, f64, f64)>) -> Box<dyn Animation> {
+        Box::new(Self {
             points_count: points.len(),
-        }
+        })
     }
 }
 
@@ -22,3 +22,5 @@ impl Animation for RainbowCable {
             .into()
     }
 }
+
+impl AnimationParameters for RainbowCable {}

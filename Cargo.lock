@@ -2072,6 +2072,7 @@ dependencies = [
  "chrono",
  "clap",
  "csv",
+ "itertools",
  "lightfx",
  "log",
  "nalgebra",

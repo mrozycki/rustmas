@@ -1,14 +1,14 @@
-use super::{utils, Animation};
+use super::{utils, Animation, AnimationParameters};
 
 pub struct RainbowSpiral {
     points_polar: Vec<(f64, f64, f64)>,
 }
 
 impl RainbowSpiral {
-    pub fn new(points: &Vec<(f64, f64, f64)>) -> Self {
-        Self {
+    pub fn new(points: &Vec<(f64, f64, f64)>) -> Box<dyn Animation> {
+        Box::new(Self {
             points_polar: points.iter().map(utils::to_polar).collect(),
-        }
+        })
     }
 }
 
@@ -22,3 +22,5 @@ impl Animation for RainbowSpiral {
             .into()
     }
 }
+
+impl AnimationParameters for RainbowSpiral {}
