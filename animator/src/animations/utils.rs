@@ -2,7 +2,7 @@ use nalgebra::{Rotation3, Vector3};
 use rand::Rng;
 
 pub fn to_polar((x, y, z): &(f64, f64, f64)) -> (f64, f64, f64) {
-    ((x.powi(2) + z.powi(2)).sqrt(), (x / z).atan(), *y)
+    ((x.powi(2) + z.powi(2)).sqrt(), x.atan2(*z), *y)
 }
 
 pub fn random_component() -> f64 {
