@@ -47,6 +47,13 @@ pub struct Capturer {
     number_of_lights: usize,
 }
 
+fn pause() {
+    print!("Press return to continue...");
+    io::stdout().flush().expect("Can't flush to stdout");
+    let mut stdin = io::stdin();
+    stdin.read(&mut [0u8]).expect("Can't read from stdin");
+}
+
 impl Capturer {
     pub fn new(
         light_client: Box<dyn LightClient>,
@@ -83,6 +90,50 @@ impl Capturer {
         ))
     }
 
+    async fn display_frame_with_retry(&self, frame: &lightfx::Frame) {
+        const MAX_ATTEMPTS: u32 = 10;
+        const DELAY: Duration = Duration::from_millis(30);
+
+        let mut attempts = 0;
+
+        loop {
+            if attempts >= MAX_ATTEMPTS {
+                warn!("Please check the lights connection.");
+                pause();
+                attempts = 0;
+            }
+            if let Err(_) = self.light_client.display_frame(frame).await {
+                warn!("Failed to update the lights, retrying...");
+                attempts += 1;
+                thread::sleep(DELAY * attempts);
+            }
+        }
+    }
+
+    fn capture_with_retry(&mut self) -> cv::Picture {
+        const MAX_ATTEMPTS: u32 = 10;
+        const DELAY: Duration = Duration::from_millis(30);
+
+        let mut attempts = 0;
+
+        loop {
+            match self.camera.capture() {
+                Ok(picture) => break picture,
+                Err(_) => {
+                    if attempts >= MAX_ATTEMPTS {
+                        warn!("Failed to capture an image. Please check the camera.");
+                        pause();
+                        attempts = 0;
+                        continue;
+                    }
+                    warn!("Failed to capture an image, retrying...");
+                    attempts += 1;
+                    thread::sleep(DELAY * attempts);
+                }
+            }
+        }
+    }
+
     pub async fn capture_perspective(
         &mut self,
         perspective_name: &str,
@@ -109,11 +160,8 @@ impl Capturer {
 
         info!("Locating lights");
         for i in (0..self.number_of_lights).progress_with(pb) {
-            let all_lights_off = self.all_lights_off();
-            if let Err(_) = self.light_client.display_frame(&all_lights_off).await {
-                warn!("Failed to clear the lights, stopping");
-                break;
-            }
+            self.display_frame_with_retry(&self.all_lights_off()).await;
+
             thread::sleep(Duration::from_millis(30));
             let base_picture = self.camera.capture()?;
 
@@ -123,7 +171,9 @@ impl Capturer {
                 continue;
             }
             thread::sleep(Duration::from_millis(30));
-            let mut led_picture = self.camera.capture()?;
+
+            let mut led_picture = self.capture_with_retry();
+
             let found_coords = cv::find_light_from_diff(&base_picture, &led_picture)?;
             if save_pictures {
                 if found_coords.confident() {
@@ -136,11 +186,10 @@ impl Capturer {
         }
 
         info!("Preparing output reference image");
-        self.light_client
-            .display_frame(&self.all_lights_on())
-            .await?;
+        self.display_frame_with_retry(&self.all_lights_on()).await;
+
         thread::sleep(Duration::from_millis(30));
-        let mut all_lights_picture = self.camera.capture()?;
+        let mut all_lights_picture = self.capture_with_retry();
         for point in &coords {
             if point.confident() {
                 all_lights_picture.mark(point.inner.0, point.inner.1)?;
@@ -154,14 +203,11 @@ impl Capturer {
 
     pub async fn wait_for_perspective(&mut self, prompt: &str) -> Result<(), Box<dyn Error>> {
         info!("Waiting for camera positioning");
-        let mut stdin = io::stdin();
         self.light_client
             .display_frame(&self.all_lights_on())
             .await?;
         println!("{}", prompt);
-        print!("Press return to continue...");
-        io::stdout().flush()?;
-        stdin.read(&mut [0u8])?;
+        pause();
         Ok(())
     }
 
