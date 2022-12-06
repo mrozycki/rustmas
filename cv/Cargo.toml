@@ -1,0 +1,11 @@
+[package]
+name = "rustmas-cv"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+opencv = "0.70"
+serde = { version = "1.0", features = ["derive"] }
+tokio = { version = "1", features = ["full"] }
+
+log = "0.4.17"

@@ -1,8 +1,9 @@
 [workspace]
 members = [
-    "light-client",
-    "configurator",
     "animator",
+    "configurator",
+    "cv",
+    "light-client",
     "lightfx",
     "visualiser",
     "webapi",

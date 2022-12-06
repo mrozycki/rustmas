@@ -2095,10 +2095,20 @@ dependencies = [
  "itertools",
  "lightfx",
  "log",
- "opencv",
+ "rustmas-cv",
  "rustmas-light-client",
  "serde",
  "simplelog",
+ "tokio",
+]
+
+[[package]]
+name = "rustmas-cv"
+version = "0.1.0"
+dependencies = [
+ "log",
+ "opencv",
+ "serde",
  "tokio",
 ]
 

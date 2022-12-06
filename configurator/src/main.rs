@@ -1,12 +1,11 @@
 mod capture;
-mod cv;
 
 use std::{error::Error, fs};
 
-use capture::{Capturer, WithConfidence};
+use capture::Capturer;
 use clap::{arg, Parser, Subcommand};
-use cv::Camera;
 use log::{debug, info, LevelFilter};
+use rustmas_cv::{Camera, WithConfidence};
 use rustmas_light_client as light_client;
 use simplelog::{
     ColorChoice, CombinedLogger, Config, ConfigBuilder, TermLogger, TerminalMode, WriteLogger,

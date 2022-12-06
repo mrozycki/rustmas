@@ -8,9 +8,20 @@ use opencv::{
     prelude::{Mat, MatTraitConstManual},
     videoio::{self, VideoCapture, VideoCaptureTrait, VideoCaptureTraitConst},
 };
+use serde::{Deserialize, Serialize};
 use tokio::task::JoinHandle;
 
-use crate::capture::WithConfidence;
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct WithConfidence<T> {
+    pub inner: T,
+    pub confidence: f64,
+}
+
+impl<T> WithConfidence<T> {
+    pub fn confident(&self) -> bool {
+        return self.confidence > 0.3;
+    }
+}
 
 #[derive(Debug)]
 pub enum CameraError {

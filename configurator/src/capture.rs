@@ -8,13 +8,12 @@ use std::{
 };
 
 use client::LightClient;
+use cv::WithConfidence;
 use indicatif::{ProgressBar, ProgressFinish, ProgressIterator, ProgressState, ProgressStyle};
 use itertools::Itertools;
 use log::{info, warn};
+use rustmas_cv as cv;
 use rustmas_light_client as client;
-use serde::{Deserialize, Serialize};
-
-use crate::cv;
 
 trait UnzipOption<T, U> {
     fn unzip_option(self) -> (Option<T>, Option<U>);
@@ -28,18 +27,6 @@ impl<T, U> UnzipOption<T, U> for Option<(T, U)> {
         }
     }
 }
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct WithConfidence<T> {
-    pub inner: T,
-    pub confidence: f64,
-}
-
-impl<T> WithConfidence<T> {
-    pub fn confident(&self) -> bool {
-        return self.confidence > 0.3;
-    }
-}
-
 pub struct Capturer {
     light_client: Box<dyn LightClient>,
     camera: cv::Camera,
