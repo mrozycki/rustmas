@@ -77,9 +77,9 @@ impl Capturer {
         let mut reader = csv::ReaderBuilder::new()
             .has_headers(false)
             .from_path(path)?;
-        let coords = reader.deserialize().filter_map(|a| a.ok()).collect_vec();
-        println!("{:?}", coords);
-        Ok(coords)
+        Ok(Self::normalize(
+            reader.deserialize().filter_map(|a| a.ok()).collect_vec(),
+        ))
     }
 
     pub async fn capture_perspective(
@@ -146,10 +146,9 @@ impl Capturer {
             }
         }
         all_lights_picture.save_to_file(format!("{}/reference.jpg", dir).as_str())?;
-
-        let coords = Self::normalize(coords);
         Self::save_2d_coordinates(format!("{dir}/{perspective_name}.csv").as_str(), &coords)?;
-        Ok(coords)
+
+        Ok(Self::normalize(coords))
     }
 
     pub async fn wait_for_perspective(&mut self, prompt: &str) -> Result<(), Box<dyn Error>> {
@@ -284,14 +283,14 @@ impl Capturer {
         Ok(())
     }
 
-    fn save_2d_coordinates<P: AsRef<Path>>(
+    fn save_2d_coordinates<P: AsRef<Path>, T: Serialize>(
         path: P,
-        coordinates: &Vec<WithConfidence<(f64, f64)>>,
+        coordinates: &Vec<WithConfidence<(T, T)>>,
     ) -> Result<(), Box<dyn Error>> {
         let mut writer = csv::Writer::from_path(path)?;
 
         for coords in coordinates {
-            writer.serialize::<&WithConfidence<(f64, f64)>>(coords)?;
+            writer.serialize::<&WithConfidence<(T, T)>>(coords)?;
         }
         Ok(())
     }
