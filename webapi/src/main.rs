@@ -106,16 +106,19 @@ async fn post_params(
 async fn list() -> HttpResponse {
     HttpResponse::Ok().json(json!({
         "animations": [
+            { "id": "blank", "name": "Off" },
             { "id": "rainbow_waterfall", "name": "Rainbow Waterfall" },
             { "id": "rainbow_cylinder", "name": "Rainbow Cylinder" },
             { "id": "rainbow_sphere", "name": "Rainbow Sphere" },
             { "id": "rainbow_spiral", "name": "Rainbow Spiral" },
             { "id": "rainbow_cable", "name": "Rainbow Cable" },
             { "id": "barber_pole", "name": "Barber Pole" },
-            { "id": "sweep", "name": "Test Sweep" },
             { "id": "random_sweep", "name": "Random Sweep" },
-            { "id": "blank", "name": "Blank" },
-            { "id": "check", "name": "Check" },
+            { "id": "test_check", "name": "Testing: Check lights" },
+            { "id": "test_sweep", "name": "Testing: Sweep" },
+            { "id": "test_manual_sweep", "name": "Testing: Manual Sweep" },
+            { "id": "test_indexing", "name": "Testing: Indexing" },
+            { "id": "test_detection_status", "name": "Testing: Detection status" },
         ]
     }))
 }
