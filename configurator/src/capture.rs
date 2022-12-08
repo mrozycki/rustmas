@@ -29,15 +29,20 @@ impl<T, U> UnzipOption<T, U> for Option<(T, U)> {
         }
     }
 }
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct WithConfidence<T> {
+#[derive(Debug, Default, Clone, Serialize, Deserialize)]
+pub struct WithConfidence<T: Default> {
     pub inner: T,
     pub confidence: f64,
 }
 
-impl<T> WithConfidence<T> {
+impl<T: Default> WithConfidence<T> {
     pub fn confident(&self) -> bool {
         return self.confidence > 0.3;
+    }
+
+    pub fn with_confidence(mut self, new_confidence: f64) -> Self {
+        self.confidence = new_confidence;
+        self
     }
 }
 
@@ -85,9 +90,9 @@ impl Capturer {
         let mut reader = csv::ReaderBuilder::new()
             .has_headers(false)
             .from_path(path)?;
-        Ok(Self::normalize(
+        Ok(Self::normalize(Self::remove_outliers_by_2d_distance(
             reader.deserialize().filter_map(|a| a.ok()).collect_vec(),
-        ))
+        )))
     }
 
     async fn display_frame_with_retry(&self, frame: &lightfx::Frame) {
@@ -198,7 +203,9 @@ impl Capturer {
         all_lights_picture.save_to_file(format!("{}/reference.jpg", dir).as_str())?;
         Self::save_2d_coordinates(format!("{dir}/{perspective_name}.csv").as_str(), &coords)?;
 
-        Ok(Self::normalize(coords))
+        Ok(Self::normalize(Self::remove_outliers_by_2d_distance(
+            coords,
+        )))
     }
 
     pub async fn wait_for_perspective(&mut self, prompt: &str) -> Result<(), Box<dyn Error>> {
@@ -209,6 +216,43 @@ impl Capturer {
         println!("{}", prompt);
         pause();
         Ok(())
+    }
+
+    fn distance_2d((x1, y1): (usize, usize), (x2, y2): (usize, usize)) -> f64 {
+        ((x1 as f64 - x2 as f64).powi(2) + (y1 as f64 - y2 as f64).powi(2)).sqrt()
+    }
+
+    fn remove_outliers_by_2d_distance(
+        raw_points: Vec<WithConfidence<(usize, usize)>>,
+    ) -> Vec<WithConfidence<(usize, usize)>> {
+        let distances = raw_points
+            .iter()
+            .tuple_windows()
+            .filter(|(a, b)| a.confident() && b.confident())
+            .map(|(a, b)| Self::distance_2d(a.inner, b.inner))
+            .collect_vec();
+        let avg_distance = distances.iter().sum::<f64>() / distances.len() as f64;
+        let stddev_distance =
+            statistical::standard_deviation(distances.as_slice(), Some(avg_distance));
+        let acceptable_distance = avg_distance + stddev_distance;
+
+        [WithConfidence::default()]
+            .into_iter()
+            .chain(raw_points.into_iter())
+            .chain([WithConfidence::default()].into_iter())
+            .tuple_windows()
+            .map(|(before, current, after)| {
+                if before.confident()
+                    && Self::distance_2d(before.inner, current.inner) > acceptable_distance
+                    || after.confident()
+                        && Self::distance_2d(current.inner, after.inner) > acceptable_distance
+                {
+                    current.with_confidence(0.1)
+                } else {
+                    current
+                }
+            })
+            .collect()
     }
 
     fn normalize(
@@ -363,7 +407,7 @@ impl Capturer {
         Ok(())
     }
 
-    fn save_2d_coordinates<P: AsRef<Path>, T: Serialize>(
+    fn save_2d_coordinates<P: AsRef<Path>, T: Default + Serialize>(
         path: P,
         coordinates: &Vec<WithConfidence<(T, T)>>,
     ) -> Result<(), Box<dyn Error>> {
