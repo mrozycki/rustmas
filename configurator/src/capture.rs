@@ -287,8 +287,9 @@ impl Capturer {
         path: P,
         coordinates: &Vec<WithConfidence<(T, T)>>,
     ) -> Result<(), Box<dyn Error>> {
-        let mut writer = csv::Writer::from_path(path)?;
-
+        let mut writer = csv::WriterBuilder::new()
+            .has_headers(false)
+            .from_path(path)?;
         for coords in coordinates {
             writer.serialize::<&WithConfidence<(T, T)>>(coords)?;
         }
