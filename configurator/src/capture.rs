@@ -11,6 +11,7 @@ use client::LightClient;
 use indicatif::{ProgressBar, ProgressFinish, ProgressIterator, ProgressState, ProgressStyle};
 use itertools::Itertools;
 use log::{info, warn};
+use nalgebra::Vector3;
 use rustmas_light_client as client;
 use serde::{Deserialize, Serialize};
 
@@ -203,7 +204,7 @@ impl Capturer {
         right: WithConfidence<(f64, f64)>,
         back: WithConfidence<(f64, f64)>,
         left: WithConfidence<(f64, f64)>,
-    ) -> Option<(f64, f64, f64)> {
+    ) -> Option<Vector3<f64>> {
         let (x_positive, y_negative_front) = if front.confident() {
             (Some(front.inner.0), Some(front.inner.1))
         } else {
@@ -253,7 +254,7 @@ impl Capturer {
             (None, None) => return None,
         };
 
-        Some((x, y, z))
+        Some(Vector3::new(x, y, z))
     }
 
     pub fn merge_perspectives(
@@ -261,7 +262,7 @@ impl Capturer {
         right: Vec<WithConfidence<(f64, f64)>>,
         back: Vec<WithConfidence<(f64, f64)>>,
         left: Vec<WithConfidence<(f64, f64)>>,
-    ) -> Vec<Option<(f64, f64, f64)>> {
+    ) -> Vec<Option<Vector3<f64>>> {
         front
             .into_iter()
             .zip(back.into_iter())
@@ -270,15 +271,48 @@ impl Capturer {
             .collect()
     }
 
+    pub fn interpolate_gaps(mut points: Vec<Option<Vector3<f64>>>) -> Vec<Option<Vector3<f64>>> {
+        let gaps = points
+            .iter()
+            .enumerate()
+            .group_by(|(_, p)| p.is_none())
+            .into_iter()
+            .filter(|(key, _)| *key)
+            .filter_map(|(_, group)| match group.minmax() {
+                itertools::MinMaxResult::NoElements => None,
+                itertools::MinMaxResult::OneElement((a, _)) => Some((a, a)),
+                itertools::MinMaxResult::MinMax((a, _), (b, _)) => Some((a, b)),
+            })
+            .collect::<Vec<_>>();
+
+        for (start, end) in gaps {
+            if start == 0 {
+                continue;
+            }
+            if let (Some(Some(before)), Some(Some(after))) =
+                (points.get(start - 1).cloned(), points.get(end + 1).cloned())
+            {
+                let step = (after - before) / ((end - start + 2) as f64);
+                let mut next = before;
+                for i in start..=end {
+                    next += step;
+                    *points.get_mut(i).unwrap() = Some(next);
+                }
+            }
+        }
+
+        points
+    }
+
     pub fn save_3d_coordinates<P: AsRef<Path>>(
         path: P,
-        coordinates: &Vec<Option<(f64, f64, f64)>>,
+        coordinates: &Vec<Option<Vector3<f64>>>,
     ) -> Result<(), Box<dyn Error>> {
         let mut writer = csv::Writer::from_path(path)?;
         coordinates
             .iter()
-            .map(|p| p.unwrap_or((-1.0, -1.0, -1.0)))
-            .map(|light| writer.serialize(light))
+            .map(|p| p.unwrap_or(Vector3::new(-1.0, -1.0, -1.0)))
+            .map(|light| writer.serialize((light[0], light[1], light[2])))
             .collect::<Result<Vec<_>, _>>()?;
         Ok(())
     }
