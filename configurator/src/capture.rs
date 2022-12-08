@@ -91,7 +91,7 @@ impl Capturer {
         let mut coords = Vec::new();
         let timestamp = chrono::offset::Local::now().format("%FT%X");
         let dir = format!("captures/{}", timestamp);
-        std::fs::create_dir_all(dir.as_str())?;
+        std::fs::create_dir_all(dir.as_str().to_owned() + "/img")?;
 
         let pb = ProgressBar::new(self.number_of_lights as u64)
             .with_style(
@@ -129,7 +129,7 @@ impl Capturer {
                 if found_coords.confident() {
                     led_picture.mark(found_coords.inner.0, found_coords.inner.1)?;
                 }
-                let filename = format!("{}/{:03}.jpg", dir, i);
+                let filename = format!("{}/img/{:03}.jpg", dir, i);
                 led_picture.save_to_file(filename.as_str())?;
             }
             coords.push(found_coords);
