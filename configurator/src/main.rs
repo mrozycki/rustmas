@@ -151,6 +151,8 @@ async fn main() -> Result<(), Box<dyn Error>> {
                     .await?;
 
             let light_positions = Capturer::merge_perspectives(front, right, back, left);
+            let light_positions = Capturer::interpolate_gaps(light_positions);
+
             debug!("Mapped 3D light positions: {:?}", light_positions);
             Capturer::save_3d_coordinates(output, &light_positions)?;
 
