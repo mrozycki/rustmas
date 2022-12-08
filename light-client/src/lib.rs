@@ -12,6 +12,7 @@ use log::debug;
 #[cfg(feature = "visualiser")]
 use log::{error, info};
 use reqwest::header::CONNECTION;
+use tracing::instrument;
 
 #[derive(Debug)]
 pub enum LightClientError {
@@ -102,7 +103,7 @@ impl LightClient for RemoteLightClient {
         }
     }
 }
-
+#[derive(Debug)]
 #[cfg(feature = "visualiser")]
 pub struct VisualiserLightClient {
     _join_handle: tokio::task::JoinHandle<()>,
@@ -133,6 +134,7 @@ impl VisualiserLightClient {
 #[async_trait]
 #[cfg(feature = "visualiser")]
 impl LightClient for VisualiserLightClient {
+    #[instrument]
     async fn display_frame(&self, frame: &Frame) -> Result<(), LightClientError> {
         let pixels = frame
             .pixels_iter()

@@ -11,6 +11,8 @@ use serde_json::json;
 use tokio::sync::Mutex;
 use tokio::task::JoinHandle;
 
+use tracing::{span, Level};
+
 use animations::Animation;
 
 #[derive(PartialEq)]
@@ -88,6 +90,8 @@ impl Controller {
                     .animation
                     .frame((now - first_frame).num_milliseconds() as f64 / 1000.0)
             };
+            let span = span!(Level::INFO, "display");
+            let _enter = span.enter();
 
             match client.display_frame(&frame).await {
                 Ok(_) => {

@@ -1,6 +1,6 @@
 use crate::Color;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Frame {
     pixels: Vec<Color>,
 }

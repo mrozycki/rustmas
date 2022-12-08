@@ -9,3 +9,5 @@
 webui/dist
 
 *.sqlite
+
+*/trace-*.json
