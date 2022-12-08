@@ -79,7 +79,6 @@ pub fn make_animation(name: &str, points: &Vec<(f64, f64, f64)>) -> Box<dyn Anim
     } else {
         BrightnessControlled::new(SpeedControlled::new(match name {
             "barber_pole" => super::barber_pole::BarberPole::new(points),
-            "check" => super::check::Check::new(points),
             "rainbow_cable" => super::rainbow_cable::RainbowCable::new(points),
             "rainbow_cylinder" => super::rainbow_cylinder::RainbowCylinder::new(points),
             "rainbow_sphere" => super::rainbow_sphere::RainbowSphere::new(points),
@@ -88,8 +87,12 @@ pub fn make_animation(name: &str, points: &Vec<(f64, f64, f64)>) -> Box<dyn Anim
             "random_sweep" => {
                 StepAnimationDecorator::new(super::random_sweep::RandomSweep::new(points))
             }
-            "sweep" => super::sweep::Sweep::new(points),
             "rgb" => super::rgb::Rgb::new(points),
+            "test_check" => super::check::Check::new(points),
+            "test_sweep" => super::sweep::Sweep::new(points),
+            "test_manual_sweep" => super::manual_sweep::ManualSweep::new(points),
+            "test_indexing" => super::indexing::Indexing::new(points),
+            "test_detection_status" => super::detection_status::DetectionStatus::new(points),
             _ => panic!("Unknown animation pattern \"{}\"", name),
         }))
     }

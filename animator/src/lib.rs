@@ -65,7 +65,7 @@ impl Controller {
         loop {
             tokio::time::sleep(
                 (next_check - Utc::now())
-                    .max(Duration::seconds(0))
+                    .clamp(Duration::milliseconds(0), Duration::milliseconds(33))
                     .to_std()
                     .unwrap(),
             )
@@ -136,10 +136,8 @@ impl Controller {
         state.animation = animations::make_animation(name, &state.points);
 
         let new_fps = state.animation.get_fps();
-        if new_fps != state.fps {
-            state.fps = new_fps;
-            state.next_frame = Utc::now();
-        }
+        state.fps = new_fps;
+        state.next_frame = Utc::now();
         Ok(())
     }
 
@@ -156,7 +154,10 @@ impl Controller {
         &mut self,
         parameters: serde_json::Value,
     ) -> Result<(), Box<dyn Error>> {
-        self.state.lock().await.animation.set_parameters(parameters)
+        let mut state = self.state.lock().await;
+        state.animation.set_parameters(parameters)?;
+        state.next_frame = Utc::now();
+        Ok(())
     }
 
     pub async fn join(self) -> Result<(), Box<dyn Error>> {
