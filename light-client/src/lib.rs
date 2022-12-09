@@ -105,7 +105,7 @@ impl LightClient for RemoteLightClient {
 
 #[cfg(feature = "visualiser")]
 pub struct VisualiserLightClient {
-    _join_handle: tokio::task::JoinHandle<()>,
+    _join_handle: std::thread::JoinHandle<()>,
     light_tx: Mutex<mpsc::Sender<Vec<(f32, f32, f32)>>>,
 }
 
@@ -119,7 +119,7 @@ impl VisualiserLightClient {
 
         let (tx, rx) = mpsc::channel();
         Ok(Self {
-            _join_handle: tokio::spawn(async move {
+            _join_handle: std::thread::spawn(move || {
                 match rustmas_visualiser::visualise(points, rx) {
                     Ok(_) => info!("Visualiser completed without errors"),
                     Err(e) => error!("Visualiser returned an error: {}", e),
