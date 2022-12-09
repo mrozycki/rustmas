@@ -2,7 +2,7 @@ use lightfx::parameter_schema::{EnumOption, Parameter, ParameterValue, Parameter
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 
-use super::{Animation, AnimationParameters};
+use super::{brightness_controlled::BrightnessControlled, Animation, AnimationParameters};
 
 #[derive(Deserialize, Serialize)]
 struct Parameters {
@@ -16,10 +16,10 @@ pub struct Indexing {
 
 impl Indexing {
     pub fn new(points: &Vec<(f64, f64, f64)>) -> Box<dyn Animation> {
-        Box::new(Self {
+        BrightnessControlled::new(Box::new(Self {
             points_count: points.len(),
             parameters: Parameters { bit: 0 },
-        })
+        }))
     }
 }
 

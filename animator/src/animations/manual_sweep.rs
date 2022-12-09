@@ -1,4 +1,4 @@
-use super::{Animation, AnimationParameters};
+use super::{brightness_controlled::BrightnessControlled, Animation, AnimationParameters};
 use lightfx::schema::{EnumOption, Parameter, ParameterValue, ParametersSchema};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
@@ -25,7 +25,7 @@ pub struct ManualSweep {
 
 impl ManualSweep {
     pub fn new(points: &Vec<(f64, f64, f64)>) -> Box<dyn Animation> {
-        Box::new(Self {
+        BrightnessControlled::new(Box::new(Self {
             points: points.clone(),
             parameters: Parameters {
                 axis: Axis::Y,
@@ -33,7 +33,7 @@ impl ManualSweep {
                 band_position: 0.0,
                 color: lightfx::Color::white(),
             },
-        })
+        }))
     }
 }
 

@@ -1,10 +1,14 @@
-use super::{Animation, AnimationParameters};
+use super::{
+    brightness_controlled::BrightnessControlled, speed_controlled::SpeedControlled, Animation,
+    AnimationParameters,
+};
 use lightfx::schema::{Parameter, ParameterValue, ParametersSchema};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 
 #[derive(Serialize, Deserialize)]
 struct Parameters {
+    density: f64,
     x: f64,
     y: f64,
     z: f64,
@@ -35,13 +39,14 @@ impl RainbowSphere {
             points_radius: vec![],
             points: points.clone(),
             parameters: Parameters {
+                density: 1.0,
                 x: 0.0,
                 y: 0.0,
                 z: 0.0,
             },
         };
         result.reset();
-        Box::new(result)
+        SpeedControlled::new(BrightnessControlled::new(Box::new(result)))
     }
 }
 
@@ -49,7 +54,7 @@ impl Animation for RainbowSphere {
     fn frame(&mut self, time: f64) -> lightfx::Frame {
         self.points_radius
             .iter()
-            .map(|r| lightfx::Color::hsv(r - time, 1.0, 1.0))
+            .map(|r| lightfx::Color::hsv(r / 2.0 * self.parameters.density - time, 1.0, 1.0))
             .into()
     }
 }
@@ -58,6 +63,15 @@ impl AnimationParameters for RainbowSphere {
     fn parameter_schema(&self) -> ParametersSchema {
         ParametersSchema {
             parameters: vec![
+                Parameter {
+                    id: "density".to_owned(),
+                    name: "Density".to_owned(),
+                    description: None,
+                    value: ParameterValue::Number {
+                        min: Some(0.5),
+                        max: Some(5.0),
+                    },
+                },
                 Parameter {
                     id: "x".to_owned(),
                     name: "Center X".to_owned(),

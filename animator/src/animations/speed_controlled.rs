@@ -27,13 +27,13 @@ impl Animation for SpeedControlled {
 
 impl AnimationParameters for SpeedControlled {
     fn parameter_schema(&self) -> ParametersSchema {
-        let mut parameters = self.animation.parameter_schema().parameters;
-        parameters.extend(vec![Parameter {
+        let mut parameters = vec![Parameter {
             id: "speed_factor".to_owned(),
             name: "Speed Factor".to_owned(),
             description: None,
             value: lightfx::parameter_schema::ParameterValue::Speed,
-        }]);
+        }];
+        parameters.extend(self.animation.parameter_schema().parameters);
         ParametersSchema { parameters }
     }
 

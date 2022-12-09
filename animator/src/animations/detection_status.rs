@@ -1,4 +1,4 @@
-use super::{Animation, AnimationParameters};
+use super::{brightness_controlled::BrightnessControlled, Animation, AnimationParameters};
 
 pub struct DetectionStatus {
     points: Vec<bool>,
@@ -6,7 +6,7 @@ pub struct DetectionStatus {
 
 impl DetectionStatus {
     pub fn new(points: &Vec<(f64, f64, f64)>) -> Box<dyn Animation> {
-        Box::new(Self {
+        BrightnessControlled::new(Box::new(Self {
             points: points
                 .iter()
                 .map(|(a, b, c)| {
@@ -15,7 +15,7 @@ impl DetectionStatus {
                         || c.to_bits() == (-1.0_f64).to_bits()
                 })
                 .collect(),
-        })
+        }))
     }
 }
 

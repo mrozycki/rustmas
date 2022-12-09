@@ -3,8 +3,6 @@ use std::error::Error;
 use lightfx::schema::ParametersSchema;
 use serde_json::json;
 
-use super::{brightness_controlled::BrightnessControlled, speed_controlled::SpeedControlled};
-
 pub trait AnimationParameters {
     fn parameter_schema(&self) -> ParametersSchema {
         Default::default()
@@ -32,13 +30,13 @@ pub trait StepAnimation: AnimationParameters + Sync + Send {
     fn render(&self) -> lightfx::Frame;
 }
 
-struct StepAnimationDecorator {
+pub struct StepAnimationDecorator {
     last_time: f64,
     step_animation: Box<dyn StepAnimation>,
 }
 
 impl StepAnimationDecorator {
-    fn new(step_animation: Box<dyn StepAnimation>) -> Box<dyn Animation> {
+    pub fn new(step_animation: Box<dyn StepAnimation>) -> Box<dyn Animation> {
         Box::new(Self {
             last_time: 0.0,
             step_animation,
@@ -74,26 +72,21 @@ impl AnimationParameters for StepAnimationDecorator {
 }
 
 pub fn make_animation(name: &str, points: &Vec<(f64, f64, f64)>) -> Box<dyn Animation> {
-    if name == "blank" {
-        super::blank::Blank::new(points)
-    } else {
-        BrightnessControlled::new(SpeedControlled::new(match name {
-            "barber_pole" => super::barber_pole::BarberPole::new(points),
-            "rainbow_cable" => super::rainbow_cable::RainbowCable::new(points),
-            "rainbow_cylinder" => super::rainbow_cylinder::RainbowCylinder::new(points),
-            "rainbow_sphere" => super::rainbow_sphere::RainbowSphere::new(points),
-            "rainbow_spiral" => super::rainbow_spiral::RainbowSpiral::new(points),
-            "rainbow_waterfall" => super::rainbow_waterfall::RainbowWaterfall::new(points),
-            "random_sweep" => {
-                StepAnimationDecorator::new(super::random_sweep::RandomSweep::new(points))
-            }
-            "rgb" => super::rgb::Rgb::new(points),
-            "test_check" => super::check::Check::new(points),
-            "test_sweep" => super::sweep::Sweep::new(points),
-            "test_manual_sweep" => super::manual_sweep::ManualSweep::new(points),
-            "test_indexing" => super::indexing::Indexing::new(points),
-            "test_detection_status" => super::detection_status::DetectionStatus::new(points),
-            _ => panic!("Unknown animation pattern \"{}\"", name),
-        }))
+    match name {
+        "blank" => super::blank::Blank::new(points),
+        "barber_pole" => super::barber_pole::BarberPole::new(points),
+        "rainbow_cable" => super::rainbow_cable::RainbowCable::new(points),
+        "rainbow_cylinder" => super::rainbow_cylinder::RainbowCylinder::new(points),
+        "rainbow_sphere" => super::rainbow_sphere::RainbowSphere::new(points),
+        "rainbow_spiral" => super::rainbow_spiral::RainbowSpiral::new(points),
+        "rainbow_waterfall" => super::rainbow_waterfall::RainbowWaterfall::new(points),
+        "random_sweep" => super::random_sweep::RandomSweep::new(points),
+        "rgb" => super::rgb::Rgb::new(points),
+        "test_check" => super::check::Check::new(points),
+        "test_sweep" => super::sweep::Sweep::new(points),
+        "test_manual_sweep" => super::manual_sweep::ManualSweep::new(points),
+        "test_indexing" => super::indexing::Indexing::new(points),
+        "test_detection_status" => super::detection_status::DetectionStatus::new(points),
+        _ => panic!("Unknown animation pattern \"{}\"", name),
     }
 }

@@ -1,4 +1,7 @@
-use super::{Animation, AnimationParameters};
+use super::{
+    brightness_controlled::BrightnessControlled, speed_controlled::SpeedControlled, Animation,
+    AnimationParameters,
+};
 use log::debug;
 
 pub struct Check {
@@ -7,9 +10,9 @@ pub struct Check {
 
 impl Check {
     pub fn new(points: &Vec<(f64, f64, f64)>) -> Box<dyn Animation> {
-        Box::new(Self {
+        SpeedControlled::new(BrightnessControlled::new(Box::new(Self {
             points_count: points.len(),
-        })
+        })))
     }
 }
 

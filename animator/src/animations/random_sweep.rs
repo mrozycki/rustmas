@@ -1,4 +1,9 @@
-use super::{animation::StepAnimation, utils, AnimationParameters};
+use super::{
+    animation::{StepAnimation, StepAnimationDecorator},
+    brightness_controlled::BrightnessControlled,
+    speed_controlled::SpeedControlled,
+    utils, Animation, AnimationParameters,
+};
 use itertools::Itertools;
 use lightfx::schema::{Parameter, ParameterValue, ParametersSchema};
 use nalgebra::Vector3;
@@ -20,18 +25,20 @@ pub struct RandomSweep {
 }
 
 impl RandomSweep {
-    pub fn new(points: &Vec<(f64, f64, f64)>) -> Box<dyn StepAnimation> {
-        Box::new(Self {
-            points: points
-                .iter()
-                .map(|(x, y, z)| Vector3::new(*x, *y, *z))
-                .collect(),
-            heights: Vec::new(),
-            color: lightfx::Color::black(),
-            current_height: 0.0,
-            max_height: 0.0,
-            parameters: Parameters { tail_length: 0.5 },
-        })
+    pub fn new(points: &Vec<(f64, f64, f64)>) -> Box<dyn Animation> {
+        SpeedControlled::new(BrightnessControlled::new(StepAnimationDecorator::new(
+            Box::new(Self {
+                points: points
+                    .iter()
+                    .map(|(x, y, z)| Vector3::new(*x, *y, *z))
+                    .collect(),
+                heights: Vec::new(),
+                color: lightfx::Color::black(),
+                current_height: 0.0,
+                max_height: 0.0,
+                parameters: Parameters { tail_length: 0.5 },
+            }),
+        )))
     }
 }
 
@@ -45,7 +52,7 @@ impl StepAnimation for RandomSweep {
                 .map(|p| rotation * p)
                 .map(|p| p.y)
                 .collect();
-            self.color = utils::random_hue(1.0, 0.5);
+            self.color = utils::random_hue(1.0, 1.0);
             (self.current_height, self.max_height) = match self.heights.iter().minmax() {
                 itertools::MinMaxResult::MinMax(min, max) => (*min, *max),
                 _ => return,
@@ -81,7 +88,7 @@ impl AnimationParameters for RandomSweep {
                 description: Some("Length of the sweep tail".to_owned()),
                 value: ParameterValue::Number {
                     min: Some(0.0),
-                    max: Some(1.0),
+                    max: Some(2.0),
                 },
             }],
         }
