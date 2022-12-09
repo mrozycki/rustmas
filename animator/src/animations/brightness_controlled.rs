@@ -24,13 +24,13 @@ impl Animation for BrightnessControlled {
 
 impl AnimationParameters for BrightnessControlled {
     fn parameter_schema(&self) -> ParametersSchema {
-        let mut parameters = self.animation.parameter_schema().parameters;
-        parameters.extend(vec![Parameter {
+        let mut parameters = vec![Parameter {
             id: "brightness_factor".to_owned(),
             name: "Brightness".to_owned(),
             description: None,
             value: lightfx::parameter_schema::ParameterValue::Percentage,
-        }]);
+        }];
+        parameters.extend(self.animation.parameter_schema().parameters);
         ParametersSchema { parameters }
     }
 
