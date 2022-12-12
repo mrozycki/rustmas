@@ -1,8 +1,8 @@
 use std::f64::consts::PI;
 
 use super::{
-    brightness_controlled::BrightnessControlled, speed_controlled::SpeedControlled, utils,
-    Animation, AnimationParameters,
+    brightness_controlled::BrightnessControlled, direction_controlled::DirectionControlled,
+    speed_controlled::SpeedControlled, utils, Animation, AnimationParameters,
 };
 use lightfx::schema::{Parameter, ParameterValue, ParametersSchema};
 use serde::{Deserialize, Serialize};
@@ -22,14 +22,18 @@ pub struct BarberPole {
 
 impl BarberPole {
     pub fn new(points: &Vec<(f64, f64, f64)>) -> Box<dyn Animation> {
-        SpeedControlled::new(BrightnessControlled::new(Box::new(Self {
-            points_polar: points.iter().map(utils::to_polar).collect(),
-            parameters: Parameters {
-                color_a: lightfx::Color::rgb(255, 0, 0),
-                color_b: lightfx::Color::rgb(255, 255, 255),
-                density: 1.0,
-            },
-        })))
+        DirectionControlled::new(
+            "Up",
+            "Down",
+            SpeedControlled::new(BrightnessControlled::new(Box::new(Self {
+                points_polar: points.iter().map(utils::to_polar).collect(),
+                parameters: Parameters {
+                    color_a: lightfx::Color::rgb(255, 0, 0),
+                    color_b: lightfx::Color::rgb(255, 255, 255),
+                    density: 1.0,
+                },
+            }))),
+        )
     }
 }
 

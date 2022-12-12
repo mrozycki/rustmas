@@ -4,6 +4,7 @@ mod blank;
 mod brightness_controlled;
 mod check;
 mod detection_status;
+mod direction_controlled;
 mod indexing;
 mod manual_sweep;
 mod rainbow_cable;

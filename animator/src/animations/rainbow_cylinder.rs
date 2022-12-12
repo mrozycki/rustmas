@@ -6,6 +6,7 @@ use serde::Serialize;
 use serde_json::json;
 
 use super::brightness_controlled::BrightnessControlled;
+use super::direction_controlled::DirectionControlled;
 use super::speed_controlled::SpeedControlled;
 use super::utils;
 use super::Animation;
@@ -23,14 +24,18 @@ pub struct RainbowCylinder {
 
 impl RainbowCylinder {
     pub fn new(points: &Vec<(f64, f64, f64)>) -> Box<dyn Animation> {
-        SpeedControlled::new(BrightnessControlled::new(Box::new(Self {
-            points_alpha: points
-                .iter()
-                .map(utils::to_polar)
-                .map(|(_, a, _)| a)
-                .collect(),
-            parameters: Parameters { density: 1.0 },
-        })))
+        DirectionControlled::new(
+            "Clockwise",
+            "Counterclockwise",
+            SpeedControlled::new(BrightnessControlled::new(Box::new(Self {
+                points_alpha: points
+                    .iter()
+                    .map(utils::to_polar)
+                    .map(|(_, a, _)| a)
+                    .collect(),
+                parameters: Parameters { density: 1.0 },
+            }))),
+        )
     }
 }
 
