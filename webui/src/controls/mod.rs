@@ -52,6 +52,7 @@ pub struct ParameterControlListProps {
     pub schema: ParametersSchema,
     pub values: HashMap<String, serde_json::Value>,
     pub update_values: Callback<Option<api::GetParamsResponse>>,
+    pub dirty_values: Callback<()>,
 }
 
 pub enum ParameterControlListMsg {
@@ -112,6 +113,7 @@ impl Component for ParameterControlList {
                     .collect::<HashMap<_, _>>();
                 let params = serde_json::to_value(&params).unwrap();
 
+                ctx.props().dirty_values.emit(());
                 wasm_bindgen_futures::spawn_local(async move {
                     let _ = api.set_params(&params).await;
                 });
