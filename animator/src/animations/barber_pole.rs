@@ -1,3 +1,5 @@
+use std::f64::consts::PI;
+
 use super::{
     brightness_controlled::BrightnessControlled, speed_controlled::SpeedControlled, utils,
     Animation, AnimationParameters,
@@ -36,9 +38,7 @@ impl Animation for BarberPole {
         self.points_polar
             .iter()
             .map(|(_, a, h)| {
-                if ((a / (std::f64::consts::PI * 2.0) + h) * self.parameters.density + time) % 2.0
-                    < 1.0
-                {
+                if (a / PI + time + h * self.parameters.density) % 2.0 < 1.0 {
                     self.parameters.color_a
                 } else {
                     self.parameters.color_b

@@ -16,8 +16,8 @@ struct Parameters {
 }
 
 pub struct RandomSweep {
-    points: Vec<Vector3<f64>>,
-    heights: Vec<f64>,
+    points: Vec<Option<Vector3<f64>>>,
+    heights: Vec<Option<f64>>,
     color: lightfx::Color,
     current_height: f64,
     max_height: f64,
@@ -30,7 +30,16 @@ impl RandomSweep {
             Box::new(Self {
                 points: points
                     .iter()
-                    .map(|(x, y, z)| Vector3::new(*x, *y, *z))
+                    .map(|(x, y, z)| {
+                        if x.to_bits() == (-1.0_f64).to_bits()
+                            && y.to_bits() == (-1.0_f64).to_bits()
+                            && z.to_bits() == (-1.0_f64).to_bits()
+                        {
+                            None
+                        } else {
+                            Some(Vector3::new(*x, *y, *z))
+                        }
+                    })
                     .collect(),
                 heights: Vec::new(),
                 color: lightfx::Color::black(),
@@ -49,14 +58,15 @@ impl StepAnimation for RandomSweep {
             self.heights = self
                 .points
                 .iter()
-                .map(|p| rotation * p)
-                .map(|p| p.y)
+                .map(|p| p.map(|p| rotation * p))
+                .map(|p| p.map(|p| p.y))
                 .collect();
             self.color = utils::random_hue(1.0, 1.0);
-            (self.current_height, self.max_height) = match self.heights.iter().minmax() {
-                itertools::MinMaxResult::MinMax(min, max) => (*min, *max),
-                _ => return,
-            };
+            (self.current_height, self.max_height) =
+                match self.heights.iter().filter_map(|x| x.as_ref()).minmax() {
+                    itertools::MinMaxResult::MinMax(min, max) => (*min, *max),
+                    _ => return,
+                };
         }
 
         self.current_height += delta;
@@ -66,11 +76,15 @@ impl StepAnimation for RandomSweep {
         self.heights
             .iter()
             .map(|h| {
-                if *h < self.current_height
-                    && *h > self.current_height - self.parameters.tail_length
-                {
-                    self.color
-                        .dim(1.0 - (self.current_height - h) / self.parameters.tail_length)
+                if let Some(h) = h {
+                    if *h < self.current_height
+                        && *h > self.current_height - self.parameters.tail_length
+                    {
+                        self.color
+                            .dim(1.0 - (self.current_height - h) / self.parameters.tail_length)
+                    } else {
+                        lightfx::Color::black()
+                    }
                 } else {
                     lightfx::Color::black()
                 }

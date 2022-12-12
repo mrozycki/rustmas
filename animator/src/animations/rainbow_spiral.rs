@@ -1,3 +1,5 @@
+use std::f64::consts::PI;
+
 use lightfx::parameter_schema::{Parameter, ParameterValue, ParametersSchema};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
@@ -32,7 +34,7 @@ impl Animation for RainbowSpiral {
             .iter()
             .map(|(_, a, h)| {
                 lightfx::Color::hsv(
-                    (a / (std::f64::consts::PI * 2.0) + h) / 2.0 * self.parameters.density + time,
+                    (a / PI + time + h * self.parameters.density) / 2.0,
                     1.0,
                     1.0,
                 )
@@ -49,7 +51,7 @@ impl AnimationParameters for RainbowSpiral {
                 name: "Density".to_owned(),
                 description: None,
                 value: ParameterValue::Number {
-                    min: Some(0.5),
+                    min: Some(0.25),
                     max: Some(5.0),
                 },
             }],
