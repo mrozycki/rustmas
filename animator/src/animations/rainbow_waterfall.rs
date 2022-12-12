@@ -1,6 +1,6 @@
 use super::{
-    brightness_controlled::BrightnessControlled, speed_controlled::SpeedControlled, Animation,
-    AnimationParameters,
+    brightness_controlled::BrightnessControlled, direction_controlled::DirectionControlled,
+    speed_controlled::SpeedControlled, Animation, AnimationParameters,
 };
 use lightfx::schema::{Parameter, ParameterValue, ParametersSchema};
 use serde::{Deserialize, Serialize};
@@ -18,10 +18,14 @@ pub struct RainbowWaterfall {
 
 impl RainbowWaterfall {
     pub fn new(points: &Vec<(f64, f64, f64)>) -> Box<dyn Animation> {
-        SpeedControlled::new(BrightnessControlled::new(Box::new(Self {
-            parameters: Parameters { density: 1.0 },
-            points_height: points.iter().map(|(_, h, _)| (h + 1.0) / 2.0).collect(),
-        })))
+        DirectionControlled::new(
+            "Up",
+            "Down",
+            SpeedControlled::new(BrightnessControlled::new(Box::new(Self {
+                parameters: Parameters { density: 1.0 },
+                points_height: points.iter().map(|(_, h, _)| (h + 1.0) / 2.0).collect(),
+            }))),
+        )
     }
 }
 
