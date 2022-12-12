@@ -42,6 +42,10 @@ impl Animation for DirectionControlled {
 }
 
 impl AnimationParameters for DirectionControlled {
+    fn animation_name(&self) -> &str {
+        self.animation.animation_name()
+    }
+
     fn parameter_schema(&self) -> ParametersSchema {
         let mut parameters = vec![Parameter {
             id: "direction".to_owned(),

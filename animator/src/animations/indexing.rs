@@ -36,6 +36,10 @@ impl Animation for Indexing {
 }
 
 impl AnimationParameters for Indexing {
+    fn animation_name(&self) -> &str {
+        "Testing: Indexing"
+    }
+
     fn get_fps(&self) -> f64 {
         0.0
     }

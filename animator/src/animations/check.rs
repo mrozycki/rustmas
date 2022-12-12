@@ -25,6 +25,10 @@ impl Animation for Check {
 }
 
 impl AnimationParameters for Check {
+    fn animation_name(&self) -> &str {
+        "Testing: Check Lights"
+    }
+
     fn get_fps(&self) -> f64 {
         8.0
     }

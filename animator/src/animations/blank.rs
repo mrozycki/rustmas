@@ -19,6 +19,10 @@ impl Animation for Blank {
 }
 
 impl AnimationParameters for Blank {
+    fn animation_name(&self) -> &str {
+        "Off"
+    }
+
     fn get_fps(&self) -> f64 {
         0.0
     }

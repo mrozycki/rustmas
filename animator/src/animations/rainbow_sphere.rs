@@ -64,6 +64,10 @@ impl Animation for RainbowSphere {
 }
 
 impl AnimationParameters for RainbowSphere {
+    fn animation_name(&self) -> &str {
+        "Rainbow Sphere"
+    }
+
     fn parameter_schema(&self) -> ParametersSchema {
         ParametersSchema {
             parameters: vec![

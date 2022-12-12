@@ -60,6 +60,10 @@ impl Animation for ManualSweep {
 }
 
 impl AnimationParameters for ManualSweep {
+    fn animation_name(&self) -> &str {
+        "Testing: Manual sweep"
+    }
+
     fn get_fps(&self) -> f64 {
         0.0
     }

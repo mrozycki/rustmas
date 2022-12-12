@@ -1,22 +1,23 @@
 mod animation;
-mod barber_pole;
-mod blank;
 mod brightness_controlled;
-mod check;
-mod detection_status;
 mod direction_controlled;
-mod indexing;
-mod manual_sweep;
-mod rainbow_cable;
-mod rainbow_cylinder;
-mod rainbow_sphere;
-mod rainbow_spiral;
-mod rainbow_waterfall;
-mod random_sweep;
-mod rgb;
 mod speed_controlled;
-mod sweep;
 mod utils;
+
+pub(crate) mod barber_pole;
+pub(crate) mod blank;
+pub(crate) mod check;
+pub(crate) mod detection_status;
+pub(crate) mod indexing;
+pub(crate) mod manual_sweep;
+pub(crate) mod rainbow_cable;
+pub(crate) mod rainbow_cylinder;
+pub(crate) mod rainbow_sphere;
+pub(crate) mod rainbow_spiral;
+pub(crate) mod rainbow_waterfall;
+pub(crate) mod random_sweep;
+pub(crate) mod rgb;
+pub(crate) mod sweep;
 
 pub use animation::make_animation;
 pub use animation::Animation;

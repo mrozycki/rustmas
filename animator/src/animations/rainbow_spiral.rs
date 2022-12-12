@@ -48,6 +48,10 @@ impl Animation for RainbowSpiral {
 }
 
 impl AnimationParameters for RainbowSpiral {
+    fn animation_name(&self) -> &str {
+        "Rainbow Spiral"
+    }
+
     fn parameter_schema(&self) -> ParametersSchema {
         ParametersSchema {
             parameters: vec![Parameter {

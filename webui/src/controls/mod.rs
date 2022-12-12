@@ -49,6 +49,7 @@ pub struct ParameterControlList {
 
 #[derive(Clone, PartialEq, Properties)]
 pub struct ParameterControlListProps {
+    pub name: String,
     pub schema: ParametersSchema,
     pub values: HashMap<String, serde_json::Value>,
     pub update_values: Callback<Option<api::GetParamsResponse>>,
@@ -135,6 +136,7 @@ impl Component for ParameterControlList {
     fn view(&self, ctx: &Context<Self>) -> yew::Html {
         html! {
             <section class="parameter-control-list">
+                <h2>{&ctx.props().name}</h2>
                 <datalist id="warmWhites">
                     {(2200..=2800).step_by(100).map(lightfx::Color::kelvin).into_iter().map(|c| html! {
                         <option value={c.to_hex_string()}></option>

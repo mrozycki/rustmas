@@ -26,6 +26,10 @@ impl Animation for SpeedControlled {
 }
 
 impl AnimationParameters for SpeedControlled {
+    fn animation_name(&self) -> &str {
+        self.animation.animation_name()
+    }
+
     fn parameter_schema(&self) -> ParametersSchema {
         let mut parameters = vec![Parameter {
             id: "speed_factor".to_owned(),
