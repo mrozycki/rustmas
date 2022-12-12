@@ -22,3 +22,11 @@ pub fn random_rotation() -> Rotation3<f64> {
 pub fn random_hue(saturation: f64, value: f64) -> lightfx::Color {
     lightfx::Color::hsv(rand::thread_rng().gen::<f64>() % 1.0, saturation, value)
 }
+
+pub fn cycle(value: f64, cycle_length: f64) -> f64 {
+    if value > 0.0 {
+        value % cycle_length
+    } else {
+        cycle_length + value % cycle_length
+    }
+}
