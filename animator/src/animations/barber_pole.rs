@@ -42,7 +42,7 @@ impl Animation for BarberPole {
         self.points_polar
             .iter()
             .map(|(_, a, h)| {
-                if (a / PI + time + h * self.parameters.density) % 2.0 < 1.0 {
+                if utils::cycle(a / PI + time + h * self.parameters.density, 2.0) < 1.0 {
                     self.parameters.color_a
                 } else {
                     self.parameters.color_b
