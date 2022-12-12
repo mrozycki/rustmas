@@ -12,7 +12,7 @@ enum Msg {
     LoadedAnimations(Vec<api::Animation>),
     SwitchAnimation(String),
     LoadedParameters(Option<GetParamsResponse>),
-    ParametersChanged(()),
+    ParametersDirty(bool),
 }
 
 #[derive(Default)]
@@ -81,8 +81,8 @@ impl Component for AnimationSelector {
                 self.dirty = false;
                 true
             }
-            Msg::ParametersChanged(_) => {
-                self.dirty = true;
+            Msg::ParametersDirty(dirty) => {
+                self.dirty = dirty;
                 false
             }
         }
@@ -110,7 +110,7 @@ impl Component for AnimationSelector {
                                 schema={parameters.schema.clone()}
                                 values={parameters.values.clone()}
                                 update_values={link.callback(Msg::LoadedParameters)}
-                                dirty_values={link.callback(Msg::ParametersChanged)} />
+                                parameters_dirty={link.callback(Msg::ParametersDirty)} />
                         }
                     } else { html!{} }}
                 </div>
