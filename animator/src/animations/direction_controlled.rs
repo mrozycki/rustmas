@@ -21,8 +21,8 @@ struct Parameters {
 pub struct DirectionControlled {
     animation: Box<dyn Animation>,
     parameters: Parameters,
-    forward_name: String,
     backward_name: String,
+    forward_name: String,
     reference_real_time: f64,
     reference_fake_time: f64,
 }
@@ -54,14 +54,14 @@ impl AnimationParameters for DirectionControlled {
             value: ParameterValue::Enum {
                 values: vec![
                     EnumOption {
-                        name: self.forward_name.clone(),
-                        description: None,
-                        value: "Forward".to_owned(),
-                    },
-                    EnumOption {
                         name: self.backward_name.clone(),
                         description: None,
                         value: "Backward".to_owned(),
+                    },
+                    EnumOption {
+                        name: self.forward_name.clone(),
+                        description: None,
+                        value: "Forward".to_owned(),
                     },
                 ],
             },
@@ -100,8 +100,8 @@ impl AnimationParameters for DirectionControlled {
 
 impl DirectionControlled {
     pub fn new(
-        forward_name: &str,
         backward_name: &str,
+        forward_name: &str,
         animation: Box<dyn Animation>,
     ) -> Box<dyn Animation> {
         Box::new(Self {

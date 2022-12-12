@@ -47,8 +47,8 @@ impl RainbowSphere {
         };
         result.reset();
         DirectionControlled::new(
-            "In",
             "Out",
+            "In",
             SpeedControlled::new(BrightnessControlled::new(Box::new(result))),
         )
     }
@@ -58,7 +58,7 @@ impl Animation for RainbowSphere {
     fn frame(&mut self, time: f64) -> lightfx::Frame {
         self.points_radius
             .iter()
-            .map(|r| lightfx::Color::hsv(r / 2.0 * self.parameters.density - time, 1.0, 1.0))
+            .map(|r| lightfx::Color::hsv(r / 2.0 * self.parameters.density + time, 1.0, 1.0))
             .into()
     }
 }
