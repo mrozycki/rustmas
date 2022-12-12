@@ -30,6 +30,7 @@ struct ListAnimationsResponse {
 }
 #[derive(Deserialize, Default, Debug)]
 pub struct GetParamsResponse {
+    pub name: String,
     pub schema: ParametersSchema,
     pub values: HashMap<String, serde_json::Value>,
 }
@@ -58,13 +59,18 @@ impl Gateway {
             .animations)
     }
 
-    pub async fn switch_animation(&self, animation_name: String) -> Result<()> {
-        let _ = Request::post(&self.url("switch"))
-            .json(&json!({ "animation": animation_name }))
+    pub async fn switch_animation(&self, animation_id: String) -> Result<GetParamsResponse> {
+        Ok(Request::post(&self.url("switch"))
+            .json(&json!({ "animation": animation_id }))
             .map_err(|_| GatewayError::InvalidRequest)?
             .send()
-            .await;
-        Ok(())
+            .await
+            .map_err(|e| GatewayError::RequestError {
+                reason: e.to_string(),
+            })?
+            .json::<GetParamsResponse>()
+            .await
+            .map_err(|_| GatewayError::InvalidResponse)?)
     }
 
     pub async fn get_params(&self) -> Result<GetParamsResponse> {

@@ -23,6 +23,10 @@ impl Animation for BrightnessControlled {
 }
 
 impl AnimationParameters for BrightnessControlled {
+    fn animation_name(&self) -> &str {
+        self.animation.animation_name()
+    }
+
     fn parameter_schema(&self) -> ParametersSchema {
         let mut parameters = vec![Parameter {
             id: "brightness_factor".to_owned(),

@@ -39,6 +39,10 @@ impl Animation for RainbowWaterfall {
 }
 
 impl AnimationParameters for RainbowWaterfall {
+    fn animation_name(&self) -> &str {
+        "Rainbow Waterfall"
+    }
+
     fn parameter_schema(&self) -> ParametersSchema {
         ParametersSchema {
             parameters: vec![Parameter {

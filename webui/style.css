@@ -18,6 +18,7 @@
 body {
     display: flex;
     flex-direction: column;
+    font-size: 16px;
     font-family: sans-serif;
     background-color: #031600;
     min-height: 100vh;
@@ -28,12 +29,12 @@ header {
     width: 100%;
     background-color: #031600;
     color: white;
-    padding: 1em;
+    padding: 1rem;
     font-weight: bold;
 }
 
 header h1 {
-    font-size: 1em;
+    font-size: 1rem;
 }
 
 .content {
@@ -54,7 +55,7 @@ nav ul {
 
 nav a {
     display: inline-block;
-    padding: 1em;
+    padding: 1rem;
     width: 100%;
     height: 100%;
     cursor: pointer;
@@ -70,11 +71,17 @@ nav a:hover {
 
 .parameter-control-list {
     width: 80vw;
-    padding: 0 1em;
+    padding: 0 1rem;
+}
+
+.parameter-control-list h2 {
+    margin-top: 1rem;
+    font-size: 1.5rem;
+    line-height: 2rem;
 }
 
 .parameter-control-list>p {
-    padding: 1em 0;
+    padding: 1rem 0;
     font-style: italic;
 }
 
@@ -82,7 +89,7 @@ nav a:hover {
     display: flex;
     flex-direction: row;
     justify-content: flex-end;
-    gap: 1em;
+    gap: 1rem;
 }
 
 .parameter-control-list input[type="submit"],
@@ -92,9 +99,9 @@ nav a:hover {
     appearance: none;
     border-radius: 0;
     width: 25%;
-    padding: 1em;
+    padding: 1rem;
     color: white;
-    font-size: 1em;
+    font-size: 1rem;
     cursor: pointer;
 }
 
@@ -117,7 +124,7 @@ nav a:hover {
 
 .parameter-control {
     max-width: 800px;
-    padding: 1em 0;
+    padding: 1rem 0;
     border-top: 1px solid #031600;
 }
 
@@ -131,8 +138,8 @@ nav a:hover {
     -moz-appearance: none;
     appearance: none;
     width: 100%;
-    height: 4em;
-    margin-top: 1em;
+    height: 4rem;
+    margin-top: 1rem;
     border: 1px solid #031600;
     border-radius: 0;
     cursor: pointer;
@@ -152,21 +159,21 @@ nav a:hover {
 
 .parameter-control select {
     width: 100%;
-    height: 3em;
-    margin-top: 1em;
-    padding: 0.5em;
+    height: 3rem;
+    margin-top: 1rem;
+    padding: 0.5rem;
     border: 1px solid #031600;
     border-radius: 0;
     background-color: white;
     color: #031600;
-    font-size: 1em;
+    font-size: 1rem;
 }
 
 .slider-control {
     display: flex;
     align-items: stretch;
-    height: 2em;
-    margin-top: 1em;
+    height: 2rem;
+    margin-top: 1rem;
 }
 
 .parameter-control input[type="range"] {
@@ -177,11 +184,11 @@ nav a:hover {
     width: 50px;
     color: #031600;
     opacity: 1;
-    padding-left: 0.5em;
+    padding-left: 0.5rem;
     background: none;
-    line-height: 2em;
+    line-height: 2rem;
     text-align: right;
-    font-size: 1em;
+    font-size: 1rem;
 }
 
 @media screen and (max-width: 560px) {

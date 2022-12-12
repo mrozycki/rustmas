@@ -67,6 +67,10 @@ impl Animation for Sweep {
 }
 
 impl AnimationParameters for Sweep {
+    fn animation_name(&self) -> &str {
+        "Sweep"
+    }
+
     fn parameter_schema(&self) -> ParametersSchema {
         ParametersSchema {
             parameters: vec![

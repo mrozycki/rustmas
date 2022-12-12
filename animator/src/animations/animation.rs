@@ -4,6 +4,8 @@ use lightfx::schema::ParametersSchema;
 use serde_json::json;
 
 pub trait AnimationParameters {
+    fn animation_name(&self) -> &str;
+
     fn parameter_schema(&self) -> ParametersSchema {
         Default::default()
     }
@@ -54,6 +56,10 @@ impl Animation for StepAnimationDecorator {
 }
 
 impl AnimationParameters for StepAnimationDecorator {
+    fn animation_name(&self) -> &str {
+        self.step_animation.animation_name()
+    }
+
     fn parameter_schema(&self) -> ParametersSchema {
         self.step_animation.parameter_schema()
     }

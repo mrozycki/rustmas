@@ -21,8 +21,8 @@ struct SwitchForm {
 #[post("/switch")]
 async fn switch(form: web::Json<SwitchForm>, app_state: web::Data<AppState>) -> HttpResponse {
     let mut controller = app_state.animation_controller.lock().unwrap();
-    if let Err(_) = controller.switch_animation(&form.animation).await {
-        return HttpResponse::InternalServerError().json(json!({"success": false}));
+    if let Err(e) = controller.switch_animation(&form.animation).await {
+        return HttpResponse::InternalServerError().json(json!({"error": e.to_string()}));
     }
 
     if let Ok(Some(params)) = app_state.db.get_parameters(&form.animation).await {
@@ -35,7 +35,7 @@ async fn switch(form: web::Json<SwitchForm>, app_state: web::Data<AppState>) -> 
     }
 
     *app_state.animation_name.lock().unwrap() = form.animation.clone();
-    HttpResponse::Ok().json(json!({"success": true}))
+    HttpResponse::Ok().json(controller.parameters().await)
 }
 
 #[get("/params")]

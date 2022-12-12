@@ -49,7 +49,7 @@ impl Component for AnimationSelector {
 
     fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
         match msg {
-            Msg::SwitchAnimation(name) => {
+            Msg::SwitchAnimation(animation_id) => {
                 if self.dirty {
                     let response = web_sys::window()
                         .and_then(|w| {
@@ -66,8 +66,9 @@ impl Component for AnimationSelector {
                 let link = ctx.link().clone();
                 let api = self.api.clone();
                 wasm_bindgen_futures::spawn_local(async move {
-                    let _ = api.switch_animation(name).await;
-                    link.send_message(Msg::LoadedParameters(api.get_params().await.ok()));
+                    link.send_message(Msg::LoadedParameters(
+                        api.switch_animation(animation_id).await.ok(),
+                    ));
                 });
                 false
             }
@@ -104,7 +105,10 @@ impl Component for AnimationSelector {
                     </nav>
                     {if let Some(parameters) = &self.parameters {
                         html! {
-                            <ParameterControlList schema={parameters.schema.clone()} values={parameters.values.clone()}
+                            <ParameterControlList
+                                name={parameters.name.clone()}
+                                schema={parameters.schema.clone()}
+                                values={parameters.values.clone()}
                                 update_values={link.callback(Msg::LoadedParameters)}
                                 dirty_values={link.callback(Msg::ParametersChanged)} />
                         }

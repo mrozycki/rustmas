@@ -53,6 +53,10 @@ impl Animation for BarberPole {
 }
 
 impl AnimationParameters for BarberPole {
+    fn animation_name(&self) -> &str {
+        "Barber Pole"
+    }
+
     fn parameter_schema(&self) -> ParametersSchema {
         ParametersSchema {
             parameters: vec![

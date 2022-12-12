@@ -94,6 +94,10 @@ impl StepAnimation for RandomSweep {
 }
 
 impl AnimationParameters for RandomSweep {
+    fn animation_name(&self) -> &str {
+        "Rainbow Sweep"
+    }
+
     fn parameter_schema(&self) -> ParametersSchema {
         ParametersSchema {
             parameters: vec![Parameter {

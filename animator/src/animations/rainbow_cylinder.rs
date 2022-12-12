@@ -55,6 +55,10 @@ impl Animation for RainbowCylinder {
 }
 
 impl AnimationParameters for RainbowCylinder {
+    fn animation_name(&self) -> &str {
+        "Rainbow Cylinder"
+    }
+
     fn parameter_schema(&self) -> ParametersSchema {
         ParametersSchema {
             parameters: vec![Parameter {

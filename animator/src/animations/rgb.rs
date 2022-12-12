@@ -26,6 +26,10 @@ impl Animation for Rgb {
 }
 
 impl AnimationParameters for Rgb {
+    fn animation_name(&self) -> &str {
+        "RGB"
+    }
+
     fn get_fps(&self) -> f64 {
         3.0
     }

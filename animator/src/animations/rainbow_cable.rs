@@ -46,6 +46,10 @@ impl Animation for RainbowCable {
 }
 
 impl AnimationParameters for RainbowCable {
+    fn animation_name(&self) -> &str {
+        "Rainbow Cable"
+    }
+
     fn parameter_schema(&self) -> ParametersSchema {
         ParametersSchema {
             parameters: vec![Parameter {

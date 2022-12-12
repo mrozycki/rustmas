@@ -143,7 +143,11 @@ impl Controller {
 
     pub async fn parameters(&self) -> serde_json::Value {
         let animation = &self.state.lock().await.animation;
-        json!({"schema": animation.parameter_schema(), "values": animation.get_parameters()})
+        json!({
+            "name": animation.animation_name(),
+            "schema": animation.parameter_schema(),
+            "values": animation.get_parameters(),
+        })
     }
 
     pub async fn parameter_values(&self) -> serde_json::Value {
