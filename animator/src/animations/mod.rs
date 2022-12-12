@@ -10,6 +10,7 @@ pub(crate) mod check;
 pub(crate) mod detection_status;
 pub(crate) mod indexing;
 pub(crate) mod manual_sweep;
+pub(crate) mod present;
 pub(crate) mod rainbow_cable;
 pub(crate) mod rainbow_cylinder;
 pub(crate) mod rainbow_sphere;

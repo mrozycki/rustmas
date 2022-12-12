@@ -114,6 +114,7 @@ async fn list() -> HttpResponse {
             { "id": "rainbow_cable", "name": "Rainbow Cable" },
             { "id": "barber_pole", "name": "Barber Pole" },
             { "id": "random_sweep", "name": "Random Sweep" },
+            { "id": "present", "name": "Present" },
             { "id": "test_check", "name": "Testing: Check lights" },
             { "id": "test_sweep", "name": "Testing: Sweep" },
             { "id": "test_manual_sweep", "name": "Testing: Manual Sweep" },
