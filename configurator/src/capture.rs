@@ -46,6 +46,11 @@ impl<T: Default> WithConfidence<T> {
     }
 }
 
+const NOT_FOUND_3D: WithConfidence<Vector3<f64>> = WithConfidence::<Vector3<f64>> {
+    confidence: 0.0,
+    inner: Vector3::new(-1.0, -1.0, -1.0),
+};
+
 pub struct Capturer {
     light_client: Box<dyn LightClient>,
     camera: cv::Camera,
@@ -90,8 +95,9 @@ impl Capturer {
         let mut reader = csv::ReaderBuilder::new()
             .has_headers(false)
             .from_path(path)?;
-        Ok(Self::normalize(Self::remove_outliers_by_2d_distance(
+        Ok(Self::normalize(Self::mark_outliers_by_distance(
             reader.deserialize().filter_map(|a| a.ok()).collect_vec(),
+            Self::distance_2d,
         )))
     }
 
@@ -203,8 +209,9 @@ impl Capturer {
         all_lights_picture.save_to_file(format!("{}/reference.jpg", dir).as_str())?;
         Self::save_2d_coordinates(format!("{dir}/{perspective_name}.csv").as_str(), &coords)?;
 
-        Ok(Self::normalize(Self::remove_outliers_by_2d_distance(
+        Ok(Self::normalize(Self::mark_outliers_by_distance(
             coords,
+            Self::distance_2d,
         )))
     }
 
@@ -218,18 +225,23 @@ impl Capturer {
         Ok(())
     }
 
-    fn distance_2d((x1, y1): (usize, usize), (x2, y2): (usize, usize)) -> f64 {
-        ((x1 as f64 - x2 as f64).powi(2) + (y1 as f64 - y2 as f64).powi(2)).sqrt()
+    fn distance_2d((x1, y1): &(usize, usize), (x2, y2): &(usize, usize)) -> f64 {
+        ((*x1 as f64 - *x2 as f64).powi(2) + (*y1 as f64 - *y2 as f64).powi(2)).sqrt()
     }
 
-    fn remove_outliers_by_2d_distance(
-        raw_points: Vec<WithConfidence<(usize, usize)>>,
-    ) -> Vec<WithConfidence<(usize, usize)>> {
+    pub fn mark_outliers_by_distance<T, F>(
+        raw_points: Vec<WithConfidence<T>>,
+        distance_fn: F,
+    ) -> Vec<WithConfidence<T>>
+    where
+        T: Default + Clone,
+        F: Fn(&T, &T) -> f64,
+    {
         let distances = raw_points
             .iter()
             .tuple_windows()
             .filter(|(a, b)| a.confident() && b.confident())
-            .map(|(a, b)| Self::distance_2d(a.inner, b.inner))
+            .map(|(a, b)| distance_fn(&a.inner, &b.inner))
             .collect_vec();
         let avg_distance = distances.iter().sum::<f64>() / distances.len() as f64;
         let stddev_distance =
@@ -243,9 +255,9 @@ impl Capturer {
             .tuple_windows()
             .map(|(before, current, after)| {
                 if before.confident()
-                    && Self::distance_2d(before.inner, current.inner) > acceptable_distance
+                    && distance_fn(&before.inner, &current.inner) > acceptable_distance
                     || after.confident()
-                        && Self::distance_2d(current.inner, after.inner) > acceptable_distance
+                        && distance_fn(&current.inner, &after.inner) > acceptable_distance
                 {
                     current.with_confidence(0.1)
                 } else {
@@ -294,7 +306,7 @@ impl Capturer {
         right: WithConfidence<(f64, f64)>,
         back: WithConfidence<(f64, f64)>,
         left: WithConfidence<(f64, f64)>,
-    ) -> Option<Vector3<f64>> {
+    ) -> WithConfidence<Vector3<f64>> {
         let (x_positive, y_negative_front) = if front.confident() {
             (Some(front.inner.0), Some(front.inner.1))
         } else {
@@ -326,7 +338,7 @@ impl Capturer {
         .filter_map(|a| a)
         .collect_vec();
         if yns.len() == 0 {
-            return None;
+            return NOT_FOUND_3D;
         }
         let y = -yns.iter().sum::<f64>() / yns.len() as f64;
 
@@ -334,17 +346,20 @@ impl Capturer {
             (Some(xp), Some(xn)) => (xp - xn) / 2.0,
             (Some(xp), None) => xp,
             (None, Some(xn)) => -xn,
-            (None, None) => return None,
+            (None, None) => return NOT_FOUND_3D,
         };
 
         let z = match (z_positive, z_negative) {
             (Some(zp), Some(zn)) => (zp - zn) / 2.0,
             (Some(zp), None) => zp,
             (None, Some(zn)) => -zn,
-            (None, None) => return None,
+            (None, None) => return NOT_FOUND_3D,
         };
 
-        Some(Vector3::new(x, y, z))
+        WithConfidence::<Vector3<f64>> {
+            confidence: 1.0,
+            inner: Vector3::new(x, y, z),
+        }
     }
 
     pub fn merge_perspectives(
@@ -352,7 +367,7 @@ impl Capturer {
         right: Vec<WithConfidence<(f64, f64)>>,
         back: Vec<WithConfidence<(f64, f64)>>,
         left: Vec<WithConfidence<(f64, f64)>>,
-    ) -> Vec<Option<Vector3<f64>>> {
+    ) -> Vec<WithConfidence<Vector3<f64>>> {
         front
             .into_iter()
             .zip(back.into_iter())
@@ -361,32 +376,36 @@ impl Capturer {
             .collect()
     }
 
-    pub fn interpolate_gaps(mut points: Vec<Option<Vector3<f64>>>) -> Vec<Option<Vector3<f64>>> {
-        let gaps = points
+    pub fn interpolate_gaps(
+        mut points: Vec<WithConfidence<Vector3<f64>>>,
+    ) -> Vec<WithConfidence<Vector3<f64>>> {
+        let gaps: Vec<(usize, usize)> = points
             .iter()
             .enumerate()
-            .group_by(|(_, p)| p.is_none())
+            .group_by(|(_, p)| !p.confident())
             .into_iter()
             .filter(|(key, _)| *key)
-            .filter_map(|(_, group)| match group.minmax() {
-                itertools::MinMaxResult::NoElements => None,
-                itertools::MinMaxResult::OneElement((a, _)) => Some((a, a)),
-                itertools::MinMaxResult::MinMax((a, _), (b, _)) => Some((a, b)),
-            })
-            .collect::<Vec<_>>();
+            .filter_map(
+                |(_, group)| match group.into_iter().map(|(index, _)| index).minmax() {
+                    itertools::MinMaxResult::NoElements => None,
+                    itertools::MinMaxResult::OneElement(a) => Some((a, a)),
+                    itertools::MinMaxResult::MinMax(a, b) => Some((a, b)),
+                },
+            )
+            .collect();
 
         for (start, end) in gaps {
             if start == 0 {
                 continue;
             }
-            if let (Some(Some(before)), Some(Some(after))) =
+            if let (Some(before), Some(after)) =
                 (points.get(start - 1).cloned(), points.get(end + 1).cloned())
             {
-                let step = (after - before) / ((end - start + 2) as f64);
+                let step = (after.inner - before.inner) / ((end - start + 2) as f64);
                 let mut next = before;
                 for i in start..=end {
-                    next += step;
-                    *points.get_mut(i).unwrap() = Some(next);
+                    next.inner += step;
+                    *points.get_mut(i).unwrap() = next.clone();
                 }
             }
         }
@@ -396,12 +415,18 @@ impl Capturer {
 
     pub fn save_3d_coordinates<P: AsRef<Path>>(
         path: P,
-        coordinates: &Vec<Option<Vector3<f64>>>,
+        coordinates: &Vec<WithConfidence<Vector3<f64>>>,
     ) -> Result<(), Box<dyn Error>> {
         let mut writer = csv::Writer::from_path(path)?;
         coordinates
             .iter()
-            .map(|p| p.unwrap_or(Vector3::new(-1.0, -1.0, -1.0)))
+            .map(|p| {
+                if p.confident() {
+                    p.inner
+                } else {
+                    Vector3::new(-1.0, -1.0, -1.0)
+                }
+            })
             .map(|light| writer.serialize((light[0], light[1], light[2])))
             .collect::<Result<Vec<_>, _>>()?;
         Ok(())
