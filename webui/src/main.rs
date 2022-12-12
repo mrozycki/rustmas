@@ -12,6 +12,7 @@ enum Msg {
     LoadedAnimations(Vec<api::Animation>),
     SwitchAnimation(String),
     LoadedParameters(Option<GetParamsResponse>),
+    ParametersChanged(()),
 }
 
 #[derive(Default)]
@@ -19,6 +20,7 @@ struct AnimationSelector {
     api: api::Gateway,
     animations: Vec<api::Animation>,
     parameters: Option<GetParamsResponse>,
+    dirty: bool,
 }
 
 impl Component for AnimationSelector {
@@ -48,6 +50,19 @@ impl Component for AnimationSelector {
     fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
         match msg {
             Msg::SwitchAnimation(name) => {
+                if self.dirty {
+                    let response = web_sys::window()
+                        .and_then(|w| {
+                            w.confirm_with_message(
+                                "You have unsaved changes that will be lost. Continue?",
+                            )
+                            .ok()
+                        })
+                        .unwrap_or(false);
+                    if !response {
+                        return false;
+                    }
+                }
                 let link = ctx.link().clone();
                 let api = self.api.clone();
                 wasm_bindgen_futures::spawn_local(async move {
@@ -62,7 +77,12 @@ impl Component for AnimationSelector {
             }
             Msg::LoadedParameters(parameters) => {
                 self.parameters = parameters;
+                self.dirty = false;
                 true
+            }
+            Msg::ParametersChanged(_) => {
+                self.dirty = true;
+                false
             }
         }
     }
@@ -84,7 +104,9 @@ impl Component for AnimationSelector {
                     </nav>
                     {if let Some(parameters) = &self.parameters {
                         html! {
-                            <ParameterControlList schema={parameters.schema.clone()} values={parameters.values.clone()} update_values={link.callback(Msg::LoadedParameters)} />
+                            <ParameterControlList schema={parameters.schema.clone()} values={parameters.values.clone()}
+                                update_values={link.callback(Msg::LoadedParameters)}
+                                dirty_values={link.callback(Msg::ParametersChanged)} />
                         }
                     } else { html!{} }}
                 </div>
