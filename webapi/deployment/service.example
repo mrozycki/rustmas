@@ -1,0 +1,16 @@
+[Unit]
+Description=Rustmas Lights Web API
+After=network.target
+
+[Service]
+User=pi
+Group=pi
+WorkingDirectory=/home/pi/rustmas
+Environment="RUSTMAS_POINTS_PATH=lights.csv"
+Environment="RUSTMAS_LIGHTS_URL=http://127.0.0.1/pixels"
+Environment="RUSTMAS_DB_PATH=webapi/db.sqlite"
+ExecStart=/home/pi/rustmas/target/release/rustmas-webapi
+IPAccounting=true
+
+[Install]
+WantedBy=multi-user.target

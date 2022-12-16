@@ -1,0 +1,19 @@
+server {
+    listen 80;
+    listen [::]:80;
+
+    root /var/www/rustmas;
+
+    server_name 192.168.0.11 rustmaspi.local www.rustmaspi.local;
+
+    location / {
+    }
+
+    location /api/ {
+        proxy_pass http://localhost:8081/;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_buffering off;
+        proxy_redirect off;
+    }
+}
