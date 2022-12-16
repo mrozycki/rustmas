@@ -77,13 +77,26 @@ impl RemoteLightClient {
     }
 }
 
+fn component_gamma_correction(component: u8) -> u8 {
+    (((component as f64) / 255.0).powi(2) * 255.0) as u8
+}
+
+fn gamma_correction(color: Color) -> Color {
+    Color {
+        r: component_gamma_correction(color.r),
+        g: component_gamma_correction(color.g),
+        b: component_gamma_correction(color.b),
+    }
+}
+
 #[async_trait]
 impl LightClient for RemoteLightClient {
     async fn display_frame(&self, frame: &Frame) -> Result<(), LightClientError> {
         let pixels: Vec<_> = frame
             .pixels_iter()
-            .flat_map(|pixel| vec![&pixel.g, &pixel.r, &pixel.b])
             .cloned()
+            .map(gamma_correction)
+            .flat_map(|pixel| vec![pixel.g, pixel.r, pixel.b])
             .collect();
 
         match self
