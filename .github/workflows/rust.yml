@@ -14,7 +14,7 @@ jobs:
     - name: Run format check
       run: cargo fmt --check
     - name: Install dependencies
-      run: sudo apt install libopencv-dev libxinerama-dev libxcursor-dev xorg-dev libgl1 libgl1-mesa-dev
+      run: sudo apt update && sudo apt install libopencv-dev libxinerama-dev libxcursor-dev xorg-dev libgl1 libgl1-mesa-dev
     - name: Cache cargo dependencies
       uses: actions/cache@v3
       with:
