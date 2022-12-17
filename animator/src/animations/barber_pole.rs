@@ -12,7 +12,7 @@ use serde_json::json;
 struct Parameters {
     color_a: lightfx::Color,
     color_b: lightfx::Color,
-    density: f64,
+    twistiness: f64,
 }
 
 pub struct BarberPole {
@@ -30,7 +30,7 @@ impl BarberPole {
                 parameters: Parameters {
                     color_a: lightfx::Color::rgb(255, 0, 0),
                     color_b: lightfx::Color::rgb(255, 255, 255),
-                    density: 1.0,
+                    twistiness: 1.0,
                 },
             }))),
         )
@@ -42,7 +42,7 @@ impl Animation for BarberPole {
         self.points_polar
             .iter()
             .map(|(_, a, h)| {
-                if utils::cycle(a / PI + time + h * self.parameters.density, 2.0) < 1.0 {
+                if utils::cycle(a / PI + time + h * self.parameters.twistiness, 2.0) < 1.0 {
                     self.parameters.color_a
                 } else {
                     self.parameters.color_b
@@ -73,12 +73,13 @@ impl AnimationParameters for BarberPole {
                     value: ParameterValue::Color,
                 },
                 Parameter {
-                    id: "density".to_owned(),
-                    name: "Density".to_owned(),
+                    id: "twistiness".to_owned(),
+                    name: "Twistiness".to_owned(),
                     description: None,
                     value: ParameterValue::Number {
-                        min: Some(0.5),
-                        max: Some(5.0),
+                        min: -5.0,
+                        max: 5.0,
+                        step: 0.02,
                     },
                 },
             ],

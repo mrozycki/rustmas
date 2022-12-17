@@ -50,8 +50,9 @@ impl AnimationParameters for RainbowWaterfall {
                 name: "Density".to_owned(),
                 description: None,
                 value: ParameterValue::Number {
-                    min: Some(0.5),
-                    max: Some(5.0),
+                    min: 0.5,
+                    max: 5.0,
+                    step: 0.05,
                 },
             }],
         }

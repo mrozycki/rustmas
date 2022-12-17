@@ -105,8 +105,9 @@ impl AnimationParameters for RandomSweep {
                 name: "Tail length".to_owned(),
                 description: Some("Length of the sweep tail".to_owned()),
                 value: ParameterValue::Number {
-                    min: Some(0.0),
-                    max: Some(2.0),
+                    min: 0.0,
+                    max: 2.0,
+                    step: 0.05,
                 },
             }],
         }
