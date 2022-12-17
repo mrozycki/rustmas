@@ -10,7 +10,7 @@ pub struct EnumOption {
 #[derive(Serialize, Deserialize, PartialEq, Clone, Debug)]
 #[serde(tag = "type", rename_all = "snake_case")]
 pub enum ParameterValue {
-    Number { min: Option<f64>, max: Option<f64> },
+    Number { min: f64, max: f64, step: f64 },
     Color,
     Enum { values: Vec<EnumOption> },
     Speed,

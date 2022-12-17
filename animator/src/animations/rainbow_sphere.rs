@@ -76,8 +76,9 @@ impl AnimationParameters for RainbowSphere {
                     name: "Density".to_owned(),
                     description: None,
                     value: ParameterValue::Number {
-                        min: Some(0.5),
-                        max: Some(5.0),
+                        min: 0.5,
+                        max: 5.0,
+                        step: 0.05,
                     },
                 },
                 Parameter {
@@ -85,8 +86,9 @@ impl AnimationParameters for RainbowSphere {
                     name: "Center X".to_owned(),
                     description: Some("Position of the center in the left-right axis".to_owned()),
                     value: ParameterValue::Number {
-                        min: Some(-1.0),
-                        max: Some(1.0),
+                        min: -1.0,
+                        max: 1.0,
+                        step: 0.05,
                     },
                 },
                 Parameter {
@@ -94,8 +96,9 @@ impl AnimationParameters for RainbowSphere {
                     name: "Center Y".to_owned(),
                     description: Some("Position of the center in the bottom-top axis".to_owned()),
                     value: ParameterValue::Number {
-                        min: Some(-1.0),
-                        max: Some(1.0),
+                        min: -1.0,
+                        max: 1.0,
+                        step: 0.05,
                     },
                 },
                 Parameter {
@@ -103,8 +106,9 @@ impl AnimationParameters for RainbowSphere {
                     name: "Center Z".to_owned(),
                     description: Some("Position of the center in the front-back axis".to_owned()),
                     value: ParameterValue::Number {
-                        min: Some(-1.0),
-                        max: Some(1.0),
+                        min: -1.0,
+                        max: 1.0,
+                        step: 0.05,
                     },
                 },
             ],

@@ -66,8 +66,9 @@ impl AnimationParameters for RainbowCylinder {
                 name: "Density".to_owned(),
                 description: None,
                 value: ParameterValue::Number {
-                    min: Some(0.5),
-                    max: Some(5.0),
+                    min: 1.0,
+                    max: 5.0,
+                    step: 1.0,
                 },
             }],
         }

@@ -51,16 +51,13 @@ impl Component for SliderParameterControl {
 
     fn view(&self, ctx: &Context<Self>) -> Html {
         let schema = &ctx.props().schema;
-        let (min, max, percent) = match &schema.value {
-            ParameterValue::Number { min, max } => {
-                (min.unwrap_or(0.0), max.unwrap_or(100.0), false)
-            }
-            ParameterValue::Percentage => (0.0, 1.0, true),
+        let (min, max, step, percent) = match &schema.value {
+            ParameterValue::Number { min, max, step } => (*min, *max, *step, false),
+            ParameterValue::Percentage => (0.0, 1.0, 0.01, true),
             _ => return html!(),
         };
 
         let link = ctx.link();
-        let step = (max - min).abs() / 100.0;
         let value = ctx
             .props()
             .value

@@ -102,8 +102,9 @@ impl AnimationParameters for ManualSweep {
                         "Position of the start (left, bottom, front) of the band".to_owned(),
                     ),
                     value: ParameterValue::Number {
-                        min: Some(-1.0),
-                        max: Some(1.0),
+                        min: -1.0,
+                        max: 1.0,
+                        step: 0.05,
                     },
                 },
                 Parameter {
@@ -111,8 +112,9 @@ impl AnimationParameters for ManualSweep {
                     name: "Band size".to_owned(),
                     description: Some("Thickness of the sweep band".to_owned()),
                     value: ParameterValue::Number {
-                        min: Some(0.0),
-                        max: Some(2.0),
+                        min: 0.0,
+                        max: 2.0,
+                        step: 0.1,
                     },
                 },
                 Parameter {

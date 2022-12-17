@@ -95,8 +95,9 @@ impl AnimationParameters for Present {
                     name: "Center X".to_owned(),
                     description: Some("Position of the center in the left-right axis".to_owned()),
                     value: ParameterValue::Number {
-                        min: Some(-1.0),
-                        max: Some(1.0),
+                        min: -1.0,
+                        max: 1.0,
+                        step: 0.05,
                     },
                 },
                 Parameter {
@@ -104,8 +105,9 @@ impl AnimationParameters for Present {
                     name: "Center Y".to_owned(),
                     description: Some("Position of the center in the bottom-top axis".to_owned()),
                     value: ParameterValue::Number {
-                        min: Some(-1.0),
-                        max: Some(1.0),
+                        min: -1.0,
+                        max: 1.0,
+                        step: 0.05,
                     },
                 },
                 Parameter {
@@ -113,8 +115,9 @@ impl AnimationParameters for Present {
                     name: "Center Z".to_owned(),
                     description: Some("Position of the center in the front-back axis".to_owned()),
                     value: ParameterValue::Number {
-                        min: Some(-1.0),
-                        max: Some(1.0),
+                        min: -1.0,
+                        max: 1.0,
+                        step: 0.05,
                     },
                 },
                 Parameter {
@@ -122,8 +125,9 @@ impl AnimationParameters for Present {
                     name: "Ribbon width".to_owned(),
                     description: Some("Width of the ribbon".to_owned()),
                     value: ParameterValue::Number {
-                        min: Some(0.0),
-                        max: Some(1.0),
+                        min: 0.0,
+                        max: 1.0,
+                        step: 0.02,
                     },
                 },
             ],

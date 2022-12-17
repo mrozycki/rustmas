@@ -118,8 +118,9 @@ impl AnimationParameters for Sweep {
                     name: "Band size".to_owned(),
                     description: Some("Thickness of the sweep band".to_owned()),
                     value: ParameterValue::Number {
-                        min: Some(0.0),
-                        max: Some(2.0),
+                        min: 0.0,
+                        max: 2.0,
+                        step: 0.05,
                     },
                 },
                 Parameter {

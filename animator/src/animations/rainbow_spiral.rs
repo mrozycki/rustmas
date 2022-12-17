@@ -11,7 +11,7 @@ use super::{
 
 #[derive(Serialize, Deserialize)]
 struct Parameters {
-    density: f64,
+    twistiness: f64,
 }
 
 pub struct RainbowSpiral {
@@ -26,7 +26,7 @@ impl RainbowSpiral {
             "Down",
             SpeedControlled::new(BrightnessControlled::new(Box::new(Self {
                 points_polar: points.iter().map(utils::to_polar).collect(),
-                parameters: Parameters { density: 1.0 },
+                parameters: Parameters { twistiness: 1.0 },
             }))),
         )
     }
@@ -38,7 +38,7 @@ impl Animation for RainbowSpiral {
             .iter()
             .map(|(_, a, h)| {
                 lightfx::Color::hsv(
-                    (a / PI + time + h * self.parameters.density) / 2.0,
+                    (a / PI + time + h * self.parameters.twistiness) / 2.0,
                     1.0,
                     1.0,
                 )
@@ -55,12 +55,13 @@ impl AnimationParameters for RainbowSpiral {
     fn parameter_schema(&self) -> ParametersSchema {
         ParametersSchema {
             parameters: vec![Parameter {
-                id: "density".to_owned(),
-                name: "Density".to_owned(),
+                id: "twistiness".to_owned(),
+                name: "Twistiness".to_owned(),
                 description: None,
                 value: ParameterValue::Number {
-                    min: Some(0.25),
-                    max: Some(5.0),
+                    min: -5.0,
+                    max: 5.0,
+                    step: 0.02,
                 },
             }],
         }
