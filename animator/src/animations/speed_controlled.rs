@@ -69,7 +69,7 @@ impl AnimationParameters for SpeedControlled {
     }
 
     fn get_fps(&self) -> f64 {
-        (self.animation.get_fps() * self.parameters.speed_factor).clamp(0.0, 30.0)
+        (self.animation.get_fps() * self.parameters.speed_factor.abs()).clamp(0.0, 30.0)
     }
 }
 

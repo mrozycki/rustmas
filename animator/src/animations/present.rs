@@ -1,6 +1,6 @@
 use super::{
-    brightness_controlled::BrightnessControlled, direction_controlled::DirectionControlled,
-    speed_controlled::SpeedControlled, Animation, AnimationParameters,
+    brightness_controlled::BrightnessControlled, speed_controlled::SpeedControlled, Animation,
+    AnimationParameters,
 };
 use lightfx::schema::{Parameter, ParameterValue, ParametersSchema};
 use nalgebra::{Rotation3, Vector3};
@@ -24,24 +24,20 @@ pub struct Present {
 
 impl Present {
     pub fn new(points: &Vec<(f64, f64, f64)>) -> Box<dyn Animation> {
-        DirectionControlled::new(
-            "Clockwise",
-            "Counterclockwise",
-            SpeedControlled::new(BrightnessControlled::new(Box::new(Self {
-                points: points
-                    .iter()
-                    .map(|(x, y, z)| Vector3::new(*x, *y, *z))
-                    .collect(),
-                parameters: Parameters {
-                    color_wrap: lightfx::Color::rgb(255, 255, 255),
-                    color_ribbon: lightfx::Color::rgb(255, 0, 0),
-                    x: 0.0,
-                    y: 0.0,
-                    z: 0.0,
-                    width: 0.1,
-                },
-            }))),
-        )
+        SpeedControlled::new(BrightnessControlled::new(Box::new(Self {
+            points: points
+                .iter()
+                .map(|(x, y, z)| Vector3::new(*x, *y, *z))
+                .collect(),
+            parameters: Parameters {
+                color_wrap: lightfx::Color::rgb(255, 255, 255),
+                color_ribbon: lightfx::Color::rgb(255, 0, 0),
+                x: 0.0,
+                y: 0.0,
+                z: 0.0,
+                width: 0.1,
+            },
+        })))
     }
 }
 
