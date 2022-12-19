@@ -17,6 +17,22 @@ pub enum Msg {
     InputChange,
 }
 
+fn raw_to_speed(raw: f64) -> f64 {
+    if raw.abs() > 1.0 {
+        ((raw.abs() - 1.0) * (MAX_SPEED - 1.0) + 1.0) * raw.signum()
+    } else {
+        raw
+    }
+}
+
+fn speed_to_raw(speed: f64) -> f64 {
+    if speed.abs() > 1.0 {
+        ((speed.abs() - 1.0) / (MAX_SPEED - 1.0) + 1.0) * speed.signum()
+    } else {
+        speed
+    }
+}
+
 impl Component for SpeedParameterControl {
     type Message = Msg;
     type Properties = ParameterControlProps;
@@ -29,13 +45,9 @@ impl Component for SpeedParameterControl {
         match msg {
             Msg::InputChange => {
                 let input = self.slider_ref.cast::<HtmlInputElement>().unwrap();
-                let raw_value = input.value().parse::<f64>().unwrap_or(1.0);
+                let raw = input.value().parse::<f64>().unwrap_or(1.0);
 
-                let speed = if raw_value > 1.0 {
-                    (raw_value - 1.0) * (MAX_SPEED - 1.0) + 1.0
-                } else {
-                    raw_value
-                };
+                let speed = raw_to_speed(raw);
 
                 self.value_display_ref
                     .cast::<HtmlInputElement>()
@@ -64,19 +76,16 @@ impl Component for SpeedParameterControl {
                 .as_ref()
                 .and_then(|v| v.as_f64())
                 .unwrap_or(1.0);
-            let raw_value = if speed > 1.0 {
-                (speed - 1.0) / (MAX_SPEED - 1.0) + 1.0
-            } else {
-                speed
-            };
+
+            let raw = speed_to_raw(speed);
 
             html! {
                 <div class="slider-control">
                     <input
-                        type="range" min="0.0" max="2.0" step="0.05"
+                        type="range" min="-2.0" max="2.0" step="0.05"
                         ref={self.slider_ref.clone()}
                         oninput={link.callback(|_| Msg::InputChange)}
-                        value={raw_value.to_string()} />
+                        value={raw.to_string()} />
                     <input type="text" ref={self.value_display_ref.clone()} value={format!("{:.2}x", speed)} class="value-display" />
                     <input name={id} type="hidden" ref={self.hidden_ref.clone()} value={speed.to_string()} />
                 </div>

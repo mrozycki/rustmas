@@ -1,6 +1,6 @@
 use super::{
-    brightness_controlled::BrightnessControlled, direction_controlled::DirectionControlled,
-    speed_controlled::SpeedControlled, Animation, AnimationParameters,
+    brightness_controlled::BrightnessControlled, speed_controlled::SpeedControlled, Animation,
+    AnimationParameters,
 };
 use lightfx::schema::{Parameter, ParameterValue, ParametersSchema};
 use serde::{Deserialize, Serialize};
@@ -46,11 +46,7 @@ impl RainbowSphere {
             },
         };
         result.reset();
-        DirectionControlled::new(
-            "Out",
-            "In",
-            SpeedControlled::new(BrightnessControlled::new(Box::new(result))),
-        )
+        SpeedControlled::new(BrightnessControlled::new(Box::new(result)))
     }
 }
 

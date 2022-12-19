@@ -3,8 +3,8 @@ use serde::{Deserialize, Serialize};
 use serde_json::json;
 
 use super::{
-    brightness_controlled::BrightnessControlled, direction_controlled::DirectionControlled,
-    speed_controlled::SpeedControlled, Animation, AnimationParameters,
+    brightness_controlled::BrightnessControlled, speed_controlled::SpeedControlled, Animation,
+    AnimationParameters,
 };
 
 #[derive(Serialize, Deserialize)]
@@ -19,14 +19,10 @@ pub struct RainbowCable {
 
 impl RainbowCable {
     pub fn new(points: &Vec<(f64, f64, f64)>) -> Box<dyn Animation> {
-        DirectionControlled::new(
-            "Forward",
-            "Backward",
-            SpeedControlled::new(BrightnessControlled::new(Box::new(Self {
-                points_count: points.len(),
-                parameters: Parameters { density: 1.0 },
-            }))),
-        )
+        SpeedControlled::new(BrightnessControlled::new(Box::new(Self {
+            points_count: points.len(),
+            parameters: Parameters { density: 1.0 },
+        })))
     }
 }
 

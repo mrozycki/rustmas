@@ -1,6 +1,5 @@
 mod animation;
 mod brightness_controlled;
-mod direction_controlled;
 mod speed_controlled;
 mod utils;
 
