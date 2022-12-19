@@ -424,14 +424,13 @@ impl Capturer {
             .collect_vec();
         if !first_two_groups.get(0).unwrap().0 {
             // first group is not confident
-
-            let extrapolate_vector = first_two_groups
+            let extrapolation_vector = first_two_groups
                 .get(1)
                 .unwrap()
                 .1
                 .iter()
                 .tuple_windows::<(_, _)>()
-                .map(|(a, b)| b.inner - a.inner)
+                .map(|(a, b)| a.inner - b.inner)
                 .next()
                 .unwrap();
 
@@ -445,7 +444,7 @@ impl Capturer {
                 .for_each(|(i, x)| {
                     *x = WithConfidence {
                         inner: first_good_coords
-                            + (i - number_to_extrapolate) as f64 * extrapolate_vector,
+                            + (number_to_extrapolate - i) as f64 * extrapolation_vector,
                         confidence: 0.5,
                     }
                 });
