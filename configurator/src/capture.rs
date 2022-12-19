@@ -413,6 +413,57 @@ impl Capturer {
         points
     }
 
+    fn extrapolate_beginning(
+        mut points: Vec<WithConfidence<Vector3<f64>>>,
+    ) -> Vec<WithConfidence<Vector3<f64>>> {
+        let groups = points.iter().group_by(|x| x.confident());
+        let first_two_groups = groups
+            .into_iter()
+            .take(2)
+            .map(|(key, group)| (key, group.collect_vec()))
+            .collect_vec();
+        if !first_two_groups.get(0).unwrap().0 {
+            // first group is not confident
+
+            let extrapolate_vector = first_two_groups
+                .get(1)
+                .unwrap()
+                .1
+                .iter()
+                .tuple_windows::<(_, _)>()
+                .map(|(a, b)| b.inner - a.inner)
+                .next()
+                .unwrap();
+
+            let first_good_coords = first_two_groups.get(1).unwrap().1.first().unwrap().inner;
+            let number_to_extrapolate = first_two_groups.first().unwrap().clone().1.len();
+
+            points
+                .iter_mut()
+                .enumerate()
+                .take(number_to_extrapolate)
+                .for_each(|(i, x)| {
+                    *x = WithConfidence {
+                        inner: first_good_coords
+                            + (i - number_to_extrapolate) as f64 * extrapolate_vector,
+                        confidence: 0.5,
+                    }
+                });
+        }
+
+        points
+    }
+
+    pub fn extrapolate_ends(
+        mut points: Vec<WithConfidence<Vector3<f64>>>,
+    ) -> Vec<WithConfidence<Vector3<f64>>> {
+        points = Self::extrapolate_beginning(points);
+        points.reverse();
+        points = Self::extrapolate_beginning(points);
+        points.reverse();
+        points
+    }
+
     pub fn save_3d_coordinates<P: AsRef<Path>>(
         path: P,
         coordinates: &Vec<WithConfidence<Vector3<f64>>>,
