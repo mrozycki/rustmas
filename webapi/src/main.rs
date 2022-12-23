@@ -107,6 +107,7 @@ async fn list() -> HttpResponse {
     HttpResponse::Ok().json(json!({
         "animations": [
             { "id": "blank", "name": "Off" },
+            { "id": "classic", "name": "Classic" },
             { "id": "rainbow_waterfall", "name": "Rainbow Waterfall" },
             { "id": "rainbow_cylinder", "name": "Rainbow Cylinder" },
             { "id": "rainbow_halves", "name": "Rainbow Halves" },
