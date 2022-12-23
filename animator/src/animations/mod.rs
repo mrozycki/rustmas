@@ -6,6 +6,7 @@ mod utils;
 pub(crate) mod barber_pole;
 pub(crate) mod blank;
 pub(crate) mod check;
+pub(crate) mod classic;
 pub(crate) mod detection_status;
 pub(crate) mod indexing;
 pub(crate) mod manual_sweep;
@@ -17,7 +18,6 @@ pub(crate) mod rainbow_sphere;
 pub(crate) mod rainbow_spiral;
 pub(crate) mod rainbow_waterfall;
 pub(crate) mod random_sweep;
-pub(crate) mod rgb;
 pub(crate) mod spinning_halves;
 pub(crate) mod sweep;
 

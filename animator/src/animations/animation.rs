@@ -81,6 +81,7 @@ pub fn make_animation(name: &str, points: &Vec<(f64, f64, f64)>) -> Box<dyn Anim
     match name {
         "blank" => super::blank::Blank::new(points),
         "barber_pole" => super::barber_pole::BarberPole::new(points),
+        "classic" => super::classic::Classic::new(points),
         "rainbow_cable" => super::rainbow_cable::RainbowCable::new(points),
         "rainbow_cylinder" => super::rainbow_cylinder::RainbowCylinder::new(points),
         "rainbow_halves" => super::rainbow_halves::RainbowHalves::new(points),
@@ -88,7 +89,6 @@ pub fn make_animation(name: &str, points: &Vec<(f64, f64, f64)>) -> Box<dyn Anim
         "rainbow_spiral" => super::rainbow_spiral::RainbowSpiral::new(points),
         "rainbow_waterfall" => super::rainbow_waterfall::RainbowWaterfall::new(points),
         "random_sweep" => super::random_sweep::RandomSweep::new(points),
-        "rgb" => super::rgb::Rgb::new(points),
         "present" => super::present::Present::new(points),
         "spinning_halves" => super::spinning_halves::SpinningHalves::new(points),
         "test_check" => super::check::Check::new(points),
