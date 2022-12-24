@@ -484,6 +484,20 @@ impl Capturer {
         Ok(())
     }
 
+    pub fn load_3d_coordinates<P: AsRef<Path>>(
+        path: P,
+    ) -> Result<Vec<Vector3<f64>>, Box<dyn Error>> {
+        let points = csv::ReaderBuilder::new()
+            .has_headers(false)
+            .from_path(path)?
+            .deserialize()
+            .filter_map(|record: Result<(f64, f64, f64), _>| record.ok())
+            .map(|(x, y, z)| Vector3::new(x, y, z))
+            .collect();
+
+        Ok(points)
+    }
+
     fn save_2d_coordinates<P: AsRef<Path>, T: Default + Serialize>(
         path: P,
         coordinates: &Vec<WithConfidence<(T, T)>>,
