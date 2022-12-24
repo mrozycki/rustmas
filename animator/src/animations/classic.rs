@@ -2,7 +2,7 @@ use std::f64::consts::{FRAC_PI_2, PI};
 
 use itertools::Itertools;
 use lightfx::{
-    parameter_schema::{Parameter, ParameterValue, ParametersSchema},
+    parameter_schema::{EnumOption, Parameter, ParameterValue, ParametersSchema},
     Color,
 };
 use serde::{Deserialize, Serialize};
@@ -14,11 +14,19 @@ use super::{
 };
 
 #[derive(Serialize, Deserialize)]
+enum Mode {
+    FlowingSingles,
+    FlowingPairs,
+    Static,
+}
+
+#[derive(Serialize, Deserialize)]
 struct Parameters {
     color_red: Color,
     color_green: Color,
     color_yellow: Color,
     color_blue: Color,
+    mode: Mode,
 }
 
 pub struct Classic {
@@ -35,6 +43,7 @@ impl Classic {
                 color_green: lightfx::Color::rgb(0, 255, 0),
                 color_yellow: lightfx::Color::rgb(255, 160, 0),
                 color_blue: lightfx::Color::rgb(0, 0, 255),
+                mode: Mode::Static,
             },
         })))
     }
@@ -52,11 +61,19 @@ impl Animation for Classic {
             })
             .collect_vec();
 
-        let mask = (0..self.points_count).into_iter().map(|i| {
-            ((time / 4.0).fract() * 2.0 * PI + (i % 4) as f64 * FRAC_PI_2)
-                .sin()
-                .clamp(0.0, 1.0)
-        });
+        let mask = (0..self.points_count)
+            .into_iter()
+            .map(|i| match self.parameters.mode {
+                Mode::FlowingSingles => ((time / 4.0).fract() * 2.0 * PI
+                    + (i % 4) as f64 * FRAC_PI_2)
+                    .sin()
+                    .clamp(0.0, 1.0),
+                Mode::FlowingPairs => ((time / 4.0).fract() * 2.0 * PI
+                    + (i % 2) as f64 * FRAC_PI_2)
+                    .sin()
+                    .abs(),
+                Mode::Static => 1.0,
+            });
 
         base.into_iter()
             .zip(mask)
@@ -100,6 +117,30 @@ impl AnimationParameters for Classic {
                     name: "Color D (Blue)".to_owned(),
                     description: None,
                     value: ParameterValue::Color,
+                },
+                Parameter {
+                    id: "mode".to_owned(),
+                    name: "Mode".to_owned(),
+                    description: None,
+                    value: ParameterValue::Enum {
+                        values: vec![
+                            EnumOption {
+                                name: "Flowing one-by-one".into(),
+                                description: None,
+                                value: "FlowingSingles".into(),
+                            },
+                            EnumOption {
+                                name: "Flowing two-by-two".into(),
+                                description: None,
+                                value: "FlowingPairs".into(),
+                            },
+                            EnumOption {
+                                name: "Static".into(),
+                                description: None,
+                                value: "Static".into(),
+                            },
+                        ],
+                    },
                 },
             ],
         }

@@ -18,7 +18,9 @@ pub(crate) mod rainbow_sphere;
 pub(crate) mod rainbow_spiral;
 pub(crate) mod rainbow_waterfall;
 pub(crate) mod random_sweep;
+pub(crate) mod snow;
 pub(crate) mod spinning_halves;
+pub(crate) mod stars;
 pub(crate) mod sweep;
 
 pub use animation::make_animation;
