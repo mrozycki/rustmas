@@ -117,6 +117,8 @@ impl Capturer {
                 warn!("Failed to update the lights, retrying...");
                 attempts += 1;
                 thread::sleep(DELAY * attempts);
+            } else {
+                break;
             }
         }
     }
