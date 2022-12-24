@@ -11,9 +11,7 @@ use serde_json::json;
 struct Parameters {
     color_wrap: lightfx::Color,
     color_ribbon: lightfx::Color,
-    x: f64,
-    y: f64,
-    z: f64,
+    height: f64,
     width: f64,
 }
 
@@ -32,9 +30,7 @@ impl Present {
             parameters: Parameters {
                 color_wrap: lightfx::Color::rgb(255, 255, 255),
                 color_ribbon: lightfx::Color::rgb(255, 0, 0),
-                x: 0.0,
-                y: 0.0,
-                z: 0.0,
+                height: 0.0,
                 width: 0.1,
             },
         })))
@@ -49,9 +45,9 @@ impl Animation for Present {
             .iter()
             .map(|p| rotation * p)
             .map(|p| {
-                let dist_x = (p.x - &self.parameters.x).abs();
-                let dist_y = (p.y - &self.parameters.y).abs();
-                let dist_z = (p.z - &self.parameters.z).abs();
+                let dist_x = p.x.abs();
+                let dist_y = (p.y - &self.parameters.height).abs();
+                let dist_z = p.z.abs();
 
                 if dist_x < self.parameters.width / 2.0
                     || dist_y < self.parameters.width / 2.0
@@ -87,29 +83,9 @@ impl AnimationParameters for Present {
                     value: ParameterValue::Color,
                 },
                 Parameter {
-                    id: "x".to_owned(),
-                    name: "Center X".to_owned(),
-                    description: Some("Position of the center in the left-right axis".to_owned()),
-                    value: ParameterValue::Number {
-                        min: -1.0,
-                        max: 1.0,
-                        step: 0.05,
-                    },
-                },
-                Parameter {
-                    id: "y".to_owned(),
-                    name: "Center Y".to_owned(),
-                    description: Some("Position of the center in the bottom-top axis".to_owned()),
-                    value: ParameterValue::Number {
-                        min: -1.0,
-                        max: 1.0,
-                        step: 0.05,
-                    },
-                },
-                Parameter {
-                    id: "z".to_owned(),
-                    name: "Center Z".to_owned(),
-                    description: Some("Position of the center in the front-back axis".to_owned()),
+                    id: "height".to_owned(),
+                    name: "Height".to_owned(),
+                    description: Some("Position of the horizontal ribbon".to_owned()),
                     value: ParameterValue::Number {
                         min: -1.0,
                         max: 1.0,

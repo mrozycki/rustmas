@@ -9,9 +9,7 @@ use serde_json::json;
 #[derive(Serialize, Deserialize)]
 struct Parameters {
     density: f64,
-    x: f64,
-    y: f64,
-    z: f64,
+    height: f64,
 }
 
 pub struct RainbowSphere {
@@ -25,12 +23,7 @@ impl RainbowSphere {
         self.points_radius = self
             .points
             .iter()
-            .map(|(x, y, z)| {
-                ((x - self.parameters.x).powi(2)
-                    + (y - self.parameters.y).powi(2)
-                    + (z - self.parameters.z).powi(2))
-                .sqrt()
-            })
+            .map(|(x, y, z)| (x.powi(2) + (y - self.parameters.height).powi(2) + z.powi(2)).sqrt())
             .collect();
     }
 
@@ -40,9 +33,7 @@ impl RainbowSphere {
             points: points.clone(),
             parameters: Parameters {
                 density: 1.0,
-                x: 0.0,
-                y: 0.0,
-                z: 0.0,
+                height: 0.0,
             },
         };
         result.reset();
@@ -78,29 +69,9 @@ impl AnimationParameters for RainbowSphere {
                     },
                 },
                 Parameter {
-                    id: "x".to_owned(),
-                    name: "Center X".to_owned(),
-                    description: Some("Position of the center in the left-right axis".to_owned()),
-                    value: ParameterValue::Number {
-                        min: -1.0,
-                        max: 1.0,
-                        step: 0.05,
-                    },
-                },
-                Parameter {
-                    id: "y".to_owned(),
-                    name: "Center Y".to_owned(),
-                    description: Some("Position of the center in the bottom-top axis".to_owned()),
-                    value: ParameterValue::Number {
-                        min: -1.0,
-                        max: 1.0,
-                        step: 0.05,
-                    },
-                },
-                Parameter {
-                    id: "z".to_owned(),
-                    name: "Center Z".to_owned(),
-                    description: Some("Position of the center in the front-back axis".to_owned()),
+                    id: "height".to_owned(),
+                    name: "Height".to_owned(),
+                    description: Some("Height of the center of the sphere".to_owned()),
                     value: ParameterValue::Number {
                         min: -1.0,
                         max: 1.0,

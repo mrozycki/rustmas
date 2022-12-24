@@ -79,3 +79,22 @@ e.g. to skip front and left:
 cargo run --bin rustmas-configurator -- capture -n <count> -l <pico_url> -i <camera_url> -s \
     --front captures/2022-12-05T19:23:07/front.csv --left captures/2022-12-05T19:29:12/left.csv
 ```
+
+### Centering the lights
+
+Light positions are normalized to fall between -1 and 1 on each axis, which should put the center
+of the coordinate system in the center of all the lights. However, since the lights will likely
+not be located perfectly symmetrically on the tree, their center does not necessarily have to align
+with the center of the tree.
+
+In order to align the center of the lights with the center of the tree, you can use
+the `Testing: Manual Sweep` animation to find the alignment, and then run the `configurator center`
+command on your lights CSV file:
+
+```
+cargo run --bin rustmas-configurator -- center -x 0.08 -z -0.12
+```
+
+The coordinates passed as arguments are where the center of the tree is currently located in the
+lights coordinate system. This means you can just provide the values found using Manual Sweep.
+You can omit an axis, if the alignment in that direction already matches.

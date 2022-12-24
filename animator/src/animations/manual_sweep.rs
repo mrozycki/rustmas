@@ -11,8 +11,16 @@ enum Axis {
 }
 
 #[derive(Serialize, Deserialize)]
+enum Alignment {
+    Before,
+    Center,
+    After,
+}
+
+#[derive(Serialize, Deserialize)]
 struct Parameters {
     axis: Axis,
+    band_alignment: Alignment,
     band_size: f64,
     band_position: f64,
     color: lightfx::Color,
@@ -29,6 +37,7 @@ impl ManualSweep {
             points: points.clone(),
             parameters: Parameters {
                 axis: Axis::Y,
+                band_alignment: Alignment::Center,
                 band_size: 0.1,
                 band_position: 0.0,
                 color: lightfx::Color::white(),
@@ -47,9 +56,21 @@ impl Animation for ManualSweep {
                 Axis::Z => *z,
             })
             .map(|h| {
-                if h > self.parameters.band_position
-                    && h < self.parameters.band_position + self.parameters.band_size
-                {
+                let (start, end) = match self.parameters.band_alignment {
+                    Alignment::Before => (
+                        self.parameters.band_position - self.parameters.band_size,
+                        self.parameters.band_position,
+                    ),
+                    Alignment::Center => (
+                        self.parameters.band_position - self.parameters.band_size / 2.0,
+                        self.parameters.band_position + self.parameters.band_size / 2.0,
+                    ),
+                    Alignment::After => (
+                        self.parameters.band_position,
+                        self.parameters.band_position + self.parameters.band_size,
+                    ),
+                };
+                if h > start && h < end {
                     self.parameters.color
                 } else {
                     lightfx::Color::black()
@@ -104,7 +125,7 @@ impl AnimationParameters for ManualSweep {
                     value: ParameterValue::Number {
                         min: -1.0,
                         max: 1.0,
-                        step: 0.05,
+                        step: 0.01,
                     },
                 },
                 Parameter {
@@ -114,7 +135,31 @@ impl AnimationParameters for ManualSweep {
                     value: ParameterValue::Number {
                         min: 0.0,
                         max: 2.0,
-                        step: 0.1,
+                        step: 0.01,
+                    },
+                },
+                Parameter {
+                    id: "band_alignment".to_owned(),
+                    name: "Band alignment".to_owned(),
+                    description: None,
+                    value: ParameterValue::Enum {
+                        values: vec![
+                            EnumOption {
+                                name: "Before".into(),
+                                description: None,
+                                value: "Before".into(),
+                            },
+                            EnumOption {
+                                name: "Center".into(),
+                                description: None,
+                                value: "Center".into(),
+                            },
+                            EnumOption {
+                                name: "After".into(),
+                                description: None,
+                                value: "After".into(),
+                            },
+                        ],
                     },
                 },
                 Parameter {
