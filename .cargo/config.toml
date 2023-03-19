@@ -1,0 +1,18 @@
+# Enable max optimizations for dependencies, but not for our code:
+[profile.dev.package."*"]
+opt-level = 's'
+[profile.release.package."*"]
+opt-level = 's'
+# Enable only a small amount of optimization in debug mode
+[profile.dev]
+opt-level = 1
+[profile.release]
+opt-level = 's'
+lto = "fat"
+
+# Set wasm32 runner:
+# Prerequisite:
+# cargo install wasm-server-runner
+
+[target.wasm32-unknown-unknown]
+runner = "wasm-server-runner"
