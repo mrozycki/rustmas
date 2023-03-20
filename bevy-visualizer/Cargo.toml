@@ -5,5 +5,4 @@ edition = "2021"
 
 [dependencies]
 bevy = { version = "0.10.0", features = ["bevy_asset"] }
-bevy_common_assets = { version = "0.6.0", features = ["json"] }
-serde = { version = "1.0.157", features = ["derive", "serde_derive"] }
+csv = "1.2.1"
