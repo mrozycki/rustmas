@@ -74,12 +74,26 @@ fn add_lights(
 }
 
 fn animate(
+    time: Res<Time>,
     query: Query<(&Handle<StandardMaterial>, &Led)>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
     for (material, led) in query.iter() {
-        materials.get_mut(material).unwrap().base_color =
-            Color::hsl(led.0 as f32 / 500.0 * 360.0, 1.0, 0.5);
+        let color = materials.get(material).unwrap().base_color;
+
+        materials.get_mut(material).unwrap().base_color = match color {
+            Color::Hsla {
+                hue,
+                saturation,
+                lightness,
+                ..
+            } => Color::hsl(
+                (hue + time.delta_seconds() * 180.0) % 360.0,
+                saturation,
+                lightness,
+            ),
+            _ => Color::hsl(led.0 as f32 % 360.0, 1.0, 0.5),
+        };
     }
 }
 
