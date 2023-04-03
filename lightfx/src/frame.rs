@@ -1,6 +1,8 @@
+use serde::{Deserialize, Serialize};
+
 use crate::Color;
 
-#[derive(Clone)]
+#[derive(Clone, Serialize, Deserialize)]
 pub struct Frame {
     pixels: Vec<Color>,
 }

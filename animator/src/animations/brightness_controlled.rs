@@ -1,4 +1,4 @@
-use super::{Animation, AnimationParameters};
+use animation_api::{Animation, AnimationParameters};
 use lightfx::{parameter_schema::Parameter, schema::ParametersSchema};
 use serde::{Deserialize, Serialize};
 use serde_json::json;

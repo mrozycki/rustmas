@@ -1,15 +1,16 @@
 use std::f64::consts::PI;
 
-use super::{
-    brightness_controlled::BrightnessControlled, speed_controlled::SpeedControlled, utils,
-    Animation, AnimationParameters,
-};
+use animation_api::{Animation, AnimationParameters};
 use lightfx::{
     parameter_schema::EnumOption,
     schema::{Parameter, ParameterValue, ParametersSchema},
 };
 use serde::{Deserialize, Serialize};
 use serde_json::json;
+
+use super::{
+    brightness_controlled::BrightnessControlled, speed_controlled::SpeedControlled, utils,
+};
 
 #[derive(Serialize, Deserialize)]
 enum Axis {

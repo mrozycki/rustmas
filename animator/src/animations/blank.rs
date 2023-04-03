@@ -1,4 +1,4 @@
-use super::{Animation, AnimationParameters};
+use animation_api::{Animation, AnimationParameters};
 
 pub struct Blank {
     frame: lightfx::Frame,

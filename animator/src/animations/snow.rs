@@ -1,9 +1,4 @@
-use super::{
-    animation::{StepAnimation, StepAnimationDecorator},
-    brightness_controlled::BrightnessControlled,
-    speed_controlled::SpeedControlled,
-    utils, Animation, AnimationParameters,
-};
+use animation_api::{Animation, AnimationParameters, StepAnimation};
 use lightfx::{
     schema::{Parameter, ParameterValue, ParametersSchema},
     Color,
@@ -11,6 +6,11 @@ use lightfx::{
 use nalgebra::Vector3;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
+
+use super::{
+    animation::StepAnimationDecorator, brightness_controlled::BrightnessControlled,
+    speed_controlled::SpeedControlled, utils,
+};
 
 #[derive(Serialize, Deserialize)]
 struct Parameters {

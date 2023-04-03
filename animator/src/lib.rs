@@ -3,6 +3,7 @@ mod animations;
 use std::error::Error;
 use std::sync::Arc;
 
+use animation_api::Animation;
 use chrono::{DateTime, Duration, Utc};
 use log::{info, warn};
 use rustmas_light_client as client;
@@ -10,8 +11,6 @@ use rustmas_light_client::LightClientError;
 use serde_json::json;
 use tokio::sync::Mutex;
 use tokio::task::JoinHandle;
-
-use animations::Animation;
 
 #[derive(PartialEq)]
 enum ConnectionStatus {

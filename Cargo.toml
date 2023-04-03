@@ -1,5 +1,7 @@
 [workspace]
 members = [
+    "animation-api",
+    "animation-template",
     "light-client",
     "configurator",
     "animator",
