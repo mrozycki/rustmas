@@ -1,3 +1,4 @@
+use animation_api::{Animation, AnimationParameters};
 use lightfx::parameter_schema::Parameter;
 use lightfx::parameter_schema::ParameterValue;
 use lightfx::parameter_schema::ParametersSchema;
@@ -7,7 +8,6 @@ use serde_json::json;
 
 use super::{
     brightness_controlled::BrightnessControlled, speed_controlled::SpeedControlled, utils,
-    Animation, AnimationParameters,
 };
 
 #[derive(Serialize, Deserialize)]

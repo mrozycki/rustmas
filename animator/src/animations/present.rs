@@ -1,11 +1,10 @@
-use super::{
-    brightness_controlled::BrightnessControlled, speed_controlled::SpeedControlled, Animation,
-    AnimationParameters,
-};
+use animation_api::{Animation, AnimationParameters};
 use lightfx::schema::{Parameter, ParameterValue, ParametersSchema};
 use nalgebra::{Rotation3, Vector3};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
+
+use super::{brightness_controlled::BrightnessControlled, speed_controlled::SpeedControlled};
 
 #[derive(Serialize, Deserialize)]
 struct Parameters {

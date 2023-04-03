@@ -1,12 +1,12 @@
 use std::f64::consts::PI;
 
+use animation_api::{Animation, AnimationParameters};
 use lightfx::parameter_schema::{Parameter, ParameterValue, ParametersSchema};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 
 use super::{
     brightness_controlled::BrightnessControlled, speed_controlled::SpeedControlled, utils,
-    Animation, AnimationParameters,
 };
 
 #[derive(Serialize, Deserialize)]

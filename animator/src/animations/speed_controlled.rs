@@ -1,9 +1,7 @@
-use crate::Animation;
+use animation_api::{Animation, AnimationParameters};
 use lightfx::{parameter_schema::Parameter, schema::ParametersSchema};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
-
-use super::AnimationParameters;
 
 #[derive(Serialize, Deserialize)]
 struct Parameters {

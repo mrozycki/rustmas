@@ -9,6 +9,7 @@ pub(crate) mod check;
 pub(crate) mod classic;
 pub(crate) mod detection_status;
 pub(crate) mod indexing;
+pub(crate) mod jsonrpc_animation;
 pub(crate) mod manual_sweep;
 pub(crate) mod present;
 pub(crate) mod rainbow_cable;
@@ -24,5 +25,3 @@ pub(crate) mod stars;
 pub(crate) mod sweep;
 
 pub use animation::make_animation;
-pub use animation::Animation;
-pub use animation::AnimationParameters;

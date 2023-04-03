@@ -10,6 +10,7 @@ path = "src/cli.rs"
 [dependencies]
 rustmas-light-client = { path = "../light-client", default-features = false }
 lightfx = { path = "../lightfx" }
+animation-api = { path = "../animation-api" }
 
 csv = "1.1.6"
 chrono = "0.4.23"

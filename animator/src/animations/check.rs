@@ -1,7 +1,5 @@
-use super::{
-    brightness_controlled::BrightnessControlled, speed_controlled::SpeedControlled, Animation,
-    AnimationParameters,
-};
+use super::{brightness_controlled::BrightnessControlled, speed_controlled::SpeedControlled};
+use animation_api::{Animation, AnimationParameters};
 use log::debug;
 
 pub struct Check {
