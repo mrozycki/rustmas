@@ -1,6 +1,7 @@
 use std::f64::consts::{FRAC_PI_2, PI};
 
 use animation_api::{Animation, AnimationParameters};
+use animation_utils::decorators::{BrightnessControlled, SpeedControlled};
 use itertools::Itertools;
 use lightfx::{
     parameter_schema::{EnumOption, Parameter, ParameterValue, ParametersSchema},
@@ -8,8 +9,6 @@ use lightfx::{
 };
 use serde::{Deserialize, Serialize};
 use serde_json::json;
-
-use super::{brightness_controlled::BrightnessControlled, speed_controlled::SpeedControlled};
 
 #[derive(Serialize, Deserialize)]
 enum Mode {

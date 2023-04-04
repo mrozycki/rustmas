@@ -1,5 +1,5 @@
-use super::brightness_controlled::BrightnessControlled;
 use animation_api::{Animation, AnimationParameters};
+use animation_utils::decorators::BrightnessControlled;
 
 pub struct DetectionStatus {
     points: Vec<bool>,

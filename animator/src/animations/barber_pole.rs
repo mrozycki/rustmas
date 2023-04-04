@@ -1,9 +1,7 @@
 use std::f64::consts::PI;
 
-use super::{
-    brightness_controlled::BrightnessControlled, speed_controlled::SpeedControlled, utils,
-};
 use animation_api::{Animation, AnimationParameters};
+use animation_utils::decorators::{BrightnessControlled, SpeedControlled};
 use lightfx::schema::{Parameter, ParameterValue, ParametersSchema};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
@@ -23,7 +21,7 @@ pub struct BarberPole {
 impl BarberPole {
     pub fn new(points: &Vec<(f64, f64, f64)>) -> Box<dyn Animation> {
         SpeedControlled::new(BrightnessControlled::new(Box::new(Self {
-            points_polar: points.iter().map(utils::to_polar).collect(),
+            points_polar: points.iter().map(animation_utils::to_polar).collect(),
             parameters: Parameters {
                 color_a: lightfx::Color::rgb(255, 0, 0),
                 color_b: lightfx::Color::rgb(255, 255, 255),
@@ -38,7 +36,8 @@ impl Animation for BarberPole {
         self.points_polar
             .iter()
             .map(|(_, a, h)| {
-                if utils::cycle(a / PI + time + h * self.parameters.twistiness, 2.0) < 1.0 {
+                if animation_utils::cycle(a / PI + time + h * self.parameters.twistiness, 2.0) < 1.0
+                {
                     self.parameters.color_a
                 } else {
                     self.parameters.color_b

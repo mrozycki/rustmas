@@ -1,5 +1,5 @@
-use super::{brightness_controlled::BrightnessControlled, speed_controlled::SpeedControlled};
 use animation_api::{Animation, AnimationParameters};
+use animation_utils::decorators::{BrightnessControlled, SpeedControlled};
 use log::debug;
 
 pub struct Check {

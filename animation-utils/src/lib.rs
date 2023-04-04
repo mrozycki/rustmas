@@ -1,3 +1,6 @@
+pub mod decorators;
+
+pub use animation_plugin_macro::plugin;
 use nalgebra::{Rotation3, Vector3};
 use rand::Rng;
 

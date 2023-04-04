@@ -1,14 +1,11 @@
 use animation_api::{Animation, AnimationParameters};
+use animation_utils::decorators::{BrightnessControlled, SpeedControlled};
 use lightfx::parameter_schema::Parameter;
 use lightfx::parameter_schema::ParameterValue;
 use lightfx::parameter_schema::ParametersSchema;
 use serde::Deserialize;
 use serde::Serialize;
 use serde_json::json;
-
-use super::{
-    brightness_controlled::BrightnessControlled, speed_controlled::SpeedControlled, utils,
-};
 
 #[derive(Serialize, Deserialize)]
 struct Parameters {
@@ -25,7 +22,7 @@ impl RainbowCylinder {
         SpeedControlled::new(BrightnessControlled::new(Box::new(Self {
             points_alpha: points
                 .iter()
-                .map(utils::to_polar)
+                .map(animation_utils::to_polar)
                 .map(|(_, a, _)| a)
                 .collect(),
             parameters: Parameters { density: 1.0 },

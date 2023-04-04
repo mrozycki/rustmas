@@ -1,9 +1,8 @@
 use animation_api::{Animation, AnimationParameters};
+use animation_utils::decorators::BrightnessControlled;
 use lightfx::schema::{EnumOption, Parameter, ParameterValue, ParametersSchema};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
-
-use super::brightness_controlled::BrightnessControlled;
 
 #[derive(Serialize, Deserialize)]
 enum Axis {
