@@ -1,6 +1,7 @@
 use std::f64::consts::PI;
 
 use animation_api::{Animation, AnimationParameters, StepAnimation};
+use animation_utils::decorators::{BrightnessControlled, SpeedControlled};
 use lightfx::{
     schema::{Parameter, ParameterValue, ParametersSchema},
     Color,
@@ -10,10 +11,7 @@ use rand::Rng;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 
-use super::{
-    animation::StepAnimationDecorator, brightness_controlled::BrightnessControlled,
-    speed_controlled::SpeedControlled, utils,
-};
+use super::animation::StepAnimationDecorator;
 
 #[derive(Serialize, Deserialize)]
 struct Parameters {
@@ -36,9 +34,9 @@ pub struct Stars {
 fn random_star() -> Star {
     Star {
         position: Vector3::new(
-            utils::random_component(),
-            utils::random_component(),
-            utils::random_component(),
+            animation_utils::random_component(),
+            animation_utils::random_component(),
+            animation_utils::random_component(),
         ),
         age: rand::thread_rng().gen::<f64>().fract(),
     }

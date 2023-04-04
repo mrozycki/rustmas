@@ -1,13 +1,10 @@
 use std::f64::consts::PI;
 
 use animation_api::{Animation, AnimationParameters};
+use animation_utils::decorators::{BrightnessControlled, SpeedControlled};
 use lightfx::parameter_schema::{Parameter, ParameterValue, ParametersSchema};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
-
-use super::{
-    brightness_controlled::BrightnessControlled, speed_controlled::SpeedControlled, utils,
-};
 
 #[derive(Serialize, Deserialize)]
 struct Parameters {
@@ -22,7 +19,7 @@ pub struct RainbowSpiral {
 impl RainbowSpiral {
     pub fn new(points: &Vec<(f64, f64, f64)>) -> Box<dyn Animation> {
         SpeedControlled::new(BrightnessControlled::new(Box::new(Self {
-            points_polar: points.iter().map(utils::to_polar).collect(),
+            points_polar: points.iter().map(animation_utils::to_polar).collect(),
             parameters: Parameters { twistiness: 1.0 },
         })))
     }

@@ -1,16 +1,13 @@
 use std::f64::consts::PI;
 
 use animation_api::{Animation, AnimationParameters};
+use animation_utils::decorators::{BrightnessControlled, SpeedControlled};
 use lightfx::{
     parameter_schema::EnumOption,
     schema::{Parameter, ParameterValue, ParametersSchema},
 };
 use serde::{Deserialize, Serialize};
 use serde_json::json;
-
-use super::{
-    brightness_controlled::BrightnessControlled, speed_controlled::SpeedControlled, utils,
-};
 
 #[derive(Serialize, Deserialize)]
 enum Axis {
@@ -54,7 +51,7 @@ impl Animation for SpinningHalves {
                 Axis::Z => (*x, *y),
             })
             .map(|(x, y)| {
-                if utils::cycle(y.atan2(x) / PI + time, 2.0) < 1.0 {
+                if animation_utils::cycle(y.atan2(x) / PI + time, 2.0) < 1.0 {
                     self.parameters.color_a
                 } else {
                     self.parameters.color_b

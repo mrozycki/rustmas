@@ -1,14 +1,12 @@
 use animation_api::{Animation, AnimationParameters, StepAnimation};
+use animation_utils::decorators::{BrightnessControlled, SpeedControlled};
 use itertools::Itertools;
 use lightfx::schema::{Parameter, ParameterValue, ParametersSchema};
 use nalgebra::Vector3;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 
-use super::{
-    animation::StepAnimationDecorator, brightness_controlled::BrightnessControlled,
-    speed_controlled::SpeedControlled, utils,
-};
+use super::animation::StepAnimationDecorator;
 
 #[derive(Serialize, Deserialize)]
 struct Parameters {
@@ -54,14 +52,14 @@ impl RandomSweep {
 impl StepAnimation for RandomSweep {
     fn update(&mut self, delta: f64) {
         if self.current_height > self.max_height + self.parameters.tail_length {
-            let rotation = utils::random_rotation();
+            let rotation = animation_utils::random_rotation();
             self.heights = self
                 .points
                 .iter()
                 .map(|p| p.map(|p| rotation * p))
                 .map(|p| p.map(|p| p.y))
                 .collect();
-            self.color = utils::random_hue(1.0, 1.0);
+            self.color = animation_utils::random_hue(1.0, 1.0);
             (self.current_height, self.max_height) =
                 match self.heights.iter().filter_map(|x| x.as_ref()).minmax() {
                     itertools::MinMaxResult::MinMax(min, max) => (*min, *max),

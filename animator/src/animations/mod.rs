@@ -1,7 +1,4 @@
 mod animation;
-mod brightness_controlled;
-mod speed_controlled;
-mod utils;
 
 pub(crate) mod barber_pole;
 pub(crate) mod blank;
