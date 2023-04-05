@@ -273,7 +273,17 @@ dependencies = [
 name = "animation-api"
 version = "0.1.0"
 dependencies = [
- "lightfx",
+ "lightfx 0.1.0",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "animation-api"
+version = "0.1.0"
+source = "git+https://github.com/mrozycki/rustmas#ff1c473bbfdfe063a5862a27ba6f8bf315771c5d"
+dependencies = [
+ "lightfx 0.1.0 (git+https://github.com/mrozycki/rustmas)",
  "serde",
  "serde_json",
 ]
@@ -288,12 +298,22 @@ dependencies = [
 ]
 
 [[package]]
+name = "animation-plugin-macro"
+version = "0.1.0"
+source = "git+https://github.com/mrozycki/rustmas#ff1c473bbfdfe063a5862a27ba6f8bf315771c5d"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 1.0.107",
+]
+
+[[package]]
 name = "animation-template"
 version = "0.1.0"
 dependencies = [
- "animation-api",
- "animation-utils",
- "lightfx",
+ "animation-api 0.1.0 (git+https://github.com/mrozycki/rustmas)",
+ "animation-utils 0.1.0 (git+https://github.com/mrozycki/rustmas)",
+ "lightfx 0.1.0 (git+https://github.com/mrozycki/rustmas)",
  "serde",
  "serde_json",
 ]
@@ -302,9 +322,23 @@ dependencies = [
 name = "animation-utils"
 version = "0.1.0"
 dependencies = [
- "animation-api",
- "animation-plugin-macro",
- "lightfx",
+ "animation-api 0.1.0",
+ "animation-plugin-macro 0.1.0",
+ "lightfx 0.1.0",
+ "nalgebra",
+ "rand 0.8.5",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "animation-utils"
+version = "0.1.0"
+source = "git+https://github.com/mrozycki/rustmas#ff1c473bbfdfe063a5862a27ba6f8bf315771c5d"
+dependencies = [
+ "animation-api 0.1.0 (git+https://github.com/mrozycki/rustmas)",
+ "animation-plugin-macro 0.1.0 (git+https://github.com/mrozycki/rustmas)",
+ "lightfx 0.1.0 (git+https://github.com/mrozycki/rustmas)",
  "nalgebra",
  "rand 0.8.5",
  "serde",
@@ -1467,6 +1501,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "lightfx"
+version = "0.1.0"
+source = "git+https://github.com/mrozycki/rustmas#ff1c473bbfdfe063a5862a27ba6f8bf315771c5d"
+dependencies = [
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "link-cplusplus"
 version = "1.0.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2308,13 +2351,13 @@ dependencies = [
 name = "rustmas-animator"
 version = "0.1.0"
 dependencies = [
- "animation-api",
- "animation-utils",
+ "animation-api 0.1.0",
+ "animation-utils 0.1.0",
  "chrono",
  "clap",
  "csv",
  "itertools",
- "lightfx",
+ "lightfx 0.1.0",
  "log",
  "nalgebra",
  "rand 0.8.5",
@@ -2334,7 +2377,7 @@ dependencies = [
  "csv",
  "indicatif",
  "itertools",
- "lightfx",
+ "lightfx 0.1.0",
  "log",
  "nalgebra",
  "opencv",
@@ -2351,7 +2394,7 @@ version = "0.1.0"
 dependencies = [
  "async-trait",
  "csv",
- "lightfx",
+ "lightfx 0.1.0",
  "log",
  "reqwest",
  "rustmas-visualiser",
@@ -2393,7 +2436,7 @@ dependencies = [
  "gloo-net",
  "gloo-utils",
  "instant",
- "lightfx",
+ "lightfx 0.1.0",
  "serde",
  "serde_json",
  "wasm-bindgen",
