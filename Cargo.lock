@@ -300,7 +300,7 @@ dependencies = [
 [[package]]
 name = "animation-plugin-macro"
 version = "0.1.0"
-source = "git+https://github.com/mrozycki/rustmas#ff1c473bbfdfe063a5862a27ba6f8bf315771c5d"
+source = "git+https://github.com/mrozycki/rustmas#7f3fbe48916b99d92c2bf2a6155f47c090dba37f"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -334,7 +334,7 @@ dependencies = [
 [[package]]
 name = "animation-utils"
 version = "0.1.0"
-source = "git+https://github.com/mrozycki/rustmas#ff1c473bbfdfe063a5862a27ba6f8bf315771c5d"
+source = "git+https://github.com/mrozycki/rustmas#7f3fbe48916b99d92c2bf2a6155f47c090dba37f"
 dependencies = [
  "animation-api 0.1.0 (git+https://github.com/mrozycki/rustmas)",
  "animation-plugin-macro 0.1.0 (git+https://github.com/mrozycki/rustmas)",

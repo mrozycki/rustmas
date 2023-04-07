@@ -18,13 +18,13 @@ pub struct MyAnimation {
 }
 
 impl MyAnimation {
-    pub fn new(points: Vec<(f64, f64, f64)>) -> Box<dyn StepAnimation> {
+    pub fn new(points: Vec<(f64, f64, f64)>) -> Self {
         // TODO: Initialize animation state from a set of light locations
-        Box::new(Self {
+        Self {
             points_count: points.len(),
             time: 0.0,
             parameters: Parameters { tail_length: 3 },
-        })
+        }
     }
 }
 
