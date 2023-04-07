@@ -43,26 +43,51 @@ pub fn plugin(_attr: TokenStream, item: TokenStream) -> TokenStream {
                     })
                 );
             }
-            let mut animation = <#name>::new(Vec::new());
+            let mut animation: Option<#name> = None;
             let mut stdin = BufReader::new(std::io::stdin());
 
             loop {
                 match receive(&mut stdin) {
                     Ok(Some(message)) => match message.payload {
                         JsonRpcMethod::Initialize { points } => {
-                            animation = <#name>::new(points)
+                            animation = None;
+                            animation = Some(<#name>::new(points));
                         }
-                        JsonRpcMethod::AnimationName => respond(message.id, animation.animation_name()),
-                        JsonRpcMethod::ParameterSchema => respond(message.id, animation.parameter_schema()),
+                        JsonRpcMethod::AnimationName => {
+                            if let Some(animation) = animation.as_ref() {
+                                respond(message.id, animation.animation_name());
+                            }
+                        },
+                        JsonRpcMethod::ParameterSchema => {
+                            if let Some(animation) = animation.as_ref() {
+                                respond(message.id, animation.parameter_schema());
+                            }
+                        },
                         JsonRpcMethod::SetParameters { params } => {
-                            let _ = animation.set_parameters(params);
-                        }
-                        JsonRpcMethod::GetParameters => respond(message.id, animation.get_parameters()),
-                        JsonRpcMethod::GetFps => respond(message.id, animation.get_fps()),
+                            if let Some(mut animation) = animation.as_mut() {
+                                let _ = animation.set_parameters(params);
+                            }
+                        },
+                        JsonRpcMethod::GetParameters => {
+                            if let Some(animation) = animation.as_ref() {
+                                respond(message.id, animation.get_parameters());
+                            }
+                        },
+                        JsonRpcMethod::GetFps => {
+                            if let Some(animation) = animation.as_ref() {
+                                respond(message.id, animation.get_fps());
+                            }
+                        },
                         JsonRpcMethod::Update { time_delta } => {
-                            animation.update(time_delta);
-                        }
-                        JsonRpcMethod::Render => respond(message.id, animation.render()),
+                            if let Some(mut animation) = animation.as_mut() {
+                                animation.update(time_delta);
+                            }
+                        },
+                        JsonRpcMethod::Render => {
+                            if let Some(animation) = animation.as_ref() {
+                                respond(message.id, animation.render());
+                            }
+                        },
                     },
                     Ok(None) => {
                         break;
