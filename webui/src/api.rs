@@ -112,6 +112,18 @@ impl Gateway {
             .await
             .map_err(|_| GatewayError::InvalidResponse)?)
     }
+
+    pub async fn reload_animation(&self) -> Result<GetParamsResponse> {
+        Ok(Request::post(&self.url("reload"))
+            .send()
+            .await
+            .map_err(|e| GatewayError::RequestError {
+                reason: e.to_string(),
+            })?
+            .json::<GetParamsResponse>()
+            .await
+            .map_err(|_| GatewayError::InvalidResponse)?)
+    }
 }
 
 impl Default for Gateway {

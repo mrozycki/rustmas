@@ -140,6 +140,19 @@ impl Controller {
         Ok(())
     }
 
+    pub async fn reload_animation(&self) -> Result<(), Box<dyn Error>> {
+        let mut state = self.state.lock().await;
+        let name = state.animation.animation_name();
+
+        info!("Reloading animation \"{}\"", name);
+        state.animation = animations::make_animation(name, &state.points);
+
+        let new_fps = state.animation.get_fps();
+        state.fps = new_fps;
+        state.next_frame = Utc::now();
+        Ok(())
+    }
+
     pub async fn parameters(&self) -> serde_json::Value {
         let animation = &self.state.lock().await.animation;
         json!({
