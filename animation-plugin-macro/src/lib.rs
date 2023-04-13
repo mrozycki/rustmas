@@ -8,7 +8,7 @@ pub fn plugin(_attr: TokenStream, item: TokenStream) -> TokenStream {
     let output = quote! {
         #ast
 
-        fn main() {
+        fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
             use std::{
                 error::Error,
                 io::{BufRead, BufReader},
@@ -65,7 +65,7 @@ pub fn plugin(_attr: TokenStream, item: TokenStream) -> TokenStream {
                         },
                         JsonRpcMethod::SetParameters { params } => {
                             if let Some(mut animation) = animation.as_mut() {
-                                let _ = animation.set_parameters(params);
+                                animation.set_parameters(params)?;
                             }
                         },
                         JsonRpcMethod::GetParameters => {
@@ -98,6 +98,7 @@ pub fn plugin(_attr: TokenStream, item: TokenStream) -> TokenStream {
                     }
                 }
             }
+            Ok(())
         }
     };
 

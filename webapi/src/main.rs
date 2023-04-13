@@ -18,24 +18,34 @@ struct SwitchForm {
     animation: String,
 }
 
-#[post("/switch")]
-async fn switch(form: web::Json<SwitchForm>, app_state: web::Data<AppState>) -> HttpResponse {
+async fn switch_inner(animation_name: &str, app_state: web::Data<AppState>) -> HttpResponse {
     let mut controller = app_state.animation_controller.lock().unwrap();
-    if let Err(e) = controller.switch_animation(&form.animation).await {
+    if let Err(e) = controller.switch_animation(animation_name).await {
         return HttpResponse::InternalServerError().json(json!({"error": e.to_string()}));
     }
 
-    if let Ok(Some(params)) = app_state.db.get_parameters(&form.animation).await {
+    if let Ok(Some(params)) = app_state.db.get_parameters(animation_name).await {
         let _ = controller.set_parameters(params).await;
     } else {
         let _ = app_state
             .db
-            .set_parameters(&form.animation, &controller.parameter_values().await)
+            .set_parameters(animation_name, &controller.parameter_values().await)
             .await;
     }
 
-    *app_state.animation_name.lock().unwrap() = form.animation.clone();
+    *app_state.animation_name.lock().unwrap() = animation_name.to_owned();
     HttpResponse::Ok().json(controller.parameters().await)
+}
+
+#[post("/reload")]
+async fn reload(app_state: web::Data<AppState>) -> HttpResponse {
+    let name = app_state.animation_name.lock().unwrap().clone();
+    switch_inner(&name, app_state).await
+}
+
+#[post("/switch")]
+async fn switch(form: web::Json<SwitchForm>, app_state: web::Data<AppState>) -> HttpResponse {
+    switch_inner(&form.animation, app_state).await
 }
 
 #[get("/params")]
@@ -194,6 +204,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
         let cors = Cors::permissive();
         App::new()
             .wrap(cors)
+            .service(reload)
             .service(switch)
             .service(list)
             .service(get_params)

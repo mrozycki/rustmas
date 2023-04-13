@@ -63,6 +63,7 @@ pub enum ParameterControlListMsg {
         force: bool,
     },
     RestoreParams,
+    ReloadAnimation,
 }
 
 impl Component for ParameterControlList {
@@ -132,6 +133,16 @@ impl Component for ParameterControlList {
 
                 false
             }
+            ParameterControlListMsg::ReloadAnimation => {
+                let update_values = ctx.props().update_values.clone();
+                wasm_bindgen_futures::spawn_local(async move {
+                    update_values.emit(api.reload_animation().await.ok());
+                });
+
+                self.dummy_update += 1;
+
+                false
+            }
         }
     }
 
@@ -178,6 +189,7 @@ impl Component for ParameterControlList {
                                 }}).collect::<Html>()
                             }
                             <div class="parameter-control buttons">
+                                <input type="button" value="Reload" onclick={ctx.link().callback(|_| Self::Message::ReloadAnimation)} />
                                 <input type="button" value="Reset" onclick={ctx.link().callback(|_| Self::Message::RestoreParams)} />
                                 <input type="submit" value="Save" />
                             </div>

@@ -2,6 +2,7 @@ use std::error::Error;
 
 use animation_api::{Animation, AnimationParameters, StepAnimation};
 use lightfx::schema::ParametersSchema;
+use log::info;
 
 pub struct StepAnimationDecorator {
     last_time: f64,
@@ -50,6 +51,11 @@ impl AnimationParameters for StepAnimationDecorator {
 
 pub fn make_animation(name: &str, points: &Vec<(f64, f64, f64)>) -> Box<dyn Animation> {
     if let Some((_proto, path)) = name.split_once(":") {
+        info!(
+            "Trying to start plugin app {} from working directory {:?}",
+            path,
+            std::env::current_dir()
+        );
         StepAnimationDecorator::new(super::jsonrpc_animation::AnimationPlugin::new(
             super::jsonrpc_animation::JsonRpcEndpoint::new(path).unwrap(),
             points.clone(),
