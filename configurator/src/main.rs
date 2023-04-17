@@ -42,6 +42,18 @@ enum Commands {
         #[arg(long = "back")]
         back_coordinates: Option<String>,
     },
+    Capture2d {
+        #[arg(short, long, default_value = "lights_2d.csv")]
+        output: String,
+        #[arg(short, long)]
+        lights_endpoint: Option<String>,
+        #[arg(short, long)]
+        ip_camera: Option<String>,
+        #[arg(short, long, default_value_t = 500)]
+        number_of_lights: usize,
+        #[arg(short, long, default_value_t = false)]
+        save_pictures: bool,
+    },
     Center {
         #[arg(short, long, default_value = "lights.csv")]
         input: String,
@@ -173,6 +185,28 @@ async fn main() -> Result<(), Box<dyn Error>> {
             debug!("Mapped 3D light positions: {:?}", &light_positions);
             Capturer::save_3d_coordinates(output, &light_positions)?;
 
+            Ok(())
+        }
+        Commands::Capture2d {
+            output,
+            lights_endpoint,
+            ip_camera,
+            number_of_lights,
+            save_pictures,
+        } => {
+            let mut capturer = capturer_from_options(lights_endpoint, ip_camera, number_of_lights)?;
+            let coords = capturer.capture_perspective("2d", save_pictures).await?;
+            let light_positions = coords
+                .iter()
+                .map(|x| WithConfidence::<Vector3<f64>> {
+                    inner: Vector3::<f64>::new(x.inner.0, x.inner.1, 0.0),
+                    confidence: x.confidence,
+                })
+                .collect();
+            let light_positions = Capturer::interpolate_gaps(light_positions);
+            let light_positions = Capturer::extrapolate_ends(light_positions);
+
+            Capturer::save_3d_coordinates(output, &light_positions)?;
             Ok(())
         }
         Commands::Center {
