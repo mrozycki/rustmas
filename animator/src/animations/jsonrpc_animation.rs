@@ -1,3 +1,4 @@
+use core::fmt;
 use std::{
     error::Error,
     ffi::OsStr,
@@ -10,8 +11,24 @@ use animation_api::{
     AnimationError, AnimationParameters, JsonRpcMessage, JsonRpcMethod, JsonRpcResponse,
     JsonRpcResult, StepAnimation,
 };
+use log::error;
 use serde::de::DeserializeOwned;
 use serde_json::json;
+
+#[derive(Debug)]
+pub enum JsonRpcEndpointError {
+    ProcessExited,
+    InvalidResponse(Box<dyn Error>),
+    Other(Box<dyn Error>),
+}
+
+impl fmt::Display for JsonRpcEndpointError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{:?}", self)
+    }
+}
+
+impl Error for JsonRpcEndpointError {}
 
 pub struct JsonRpcEndpoint {
     child_process: Mutex<Child>,
@@ -19,13 +36,14 @@ pub struct JsonRpcEndpoint {
 }
 
 impl JsonRpcEndpoint {
-    pub fn new<P: AsRef<OsStr>>(executable_path: P) -> Result<Self, Box<dyn Error>> {
+    pub fn new<P: AsRef<OsStr>>(executable_path: P) -> Result<Self, JsonRpcEndpointError> {
         let mut command = Command::new(executable_path);
 
         let child_process = command
             .stdout(Stdio::piped())
             .stdin(Stdio::piped())
-            .spawn()?;
+            .spawn()
+            .map_err(|e| JsonRpcEndpointError::Other(Box::new(e)))?;
 
         Ok(Self {
             child_process: Mutex::new(child_process),
@@ -45,44 +63,49 @@ impl JsonRpcEndpoint {
 
     fn receive<Res>(
         reader: &mut impl std::io::Read,
-    ) -> Result<JsonRpcResponse<Res, AnimationError>, Box<dyn Error>>
+    ) -> Result<JsonRpcResponse<Res, AnimationError>, JsonRpcEndpointError>
     where
         Res: DeserializeOwned,
     {
         let mut reader = BufReader::new(reader);
         let mut buffer = String::new();
-        reader.read_line(&mut buffer)?;
-        Ok(serde_json::from_str(&buffer)?)
+        reader
+            .read_line(&mut buffer)
+            .map_err(|_| JsonRpcEndpointError::ProcessExited)?;
+        Ok(serde_json::from_str(&buffer)
+            .map_err(|e| JsonRpcEndpointError::InvalidResponse(Box::new(e)))?)
     }
 
     pub fn send_message<Res>(
         &self,
         payload: JsonRpcMethod,
-    ) -> Result<JsonRpcResponse<Res, AnimationError>, Box<dyn Error>>
+    ) -> Result<JsonRpcResult<Res, AnimationError>, JsonRpcEndpointError>
     where
         Res: DeserializeOwned,
     {
-        let mut lock = self.child_process.lock().unwrap();
+        let mut child = self.child_process.lock().unwrap();
+
         let mut id = self.id.lock().unwrap();
         *id += 1;
         Self::send(
-            lock.stdin.as_mut().unwrap(),
+            child.stdin.as_mut().unwrap(),
             JsonRpcMessage {
                 id: Some(*id),
                 payload,
             },
-        )?;
-        Self::receive(lock.stdout.as_mut().unwrap())
+        )
+        .map_err(|_| JsonRpcEndpointError::ProcessExited)?;
+
+        Self::receive(child.stdout.as_mut().unwrap()).map(|response| response.result)
     }
 
-    pub fn send_notification(&self, payload: JsonRpcMethod) -> Result<(), Box<dyn Error>> {
-        let mut lock = self.child_process.lock().unwrap();
+    pub fn send_notification(&self, payload: JsonRpcMethod) -> Result<(), JsonRpcEndpointError> {
+        let mut child = self.child_process.lock().unwrap();
         Self::send(
-            lock.stdin.as_mut().unwrap(),
+            child.stdin.as_mut().unwrap(),
             JsonRpcMessage { id: None, payload },
-        )?;
-
-        Ok(())
+        )
+        .map_err(|_| JsonRpcEndpointError::ProcessExited)
     }
 }
 
@@ -105,15 +128,16 @@ impl StepAnimation for AnimationPlugin {
     }
 
     fn render(&self) -> lightfx::Frame {
-        if let JsonRpcResult::Result(frame) = self
-            .endpoint
-            .send_message(JsonRpcMethod::Render)
-            .unwrap()
-            .result
-        {
-            frame
-        } else {
-            lightfx::Frame::new_black(0)
+        match self.endpoint.send_message(JsonRpcMethod::Render) {
+            Ok(JsonRpcResult::Result(frame)) => frame,
+            Ok(JsonRpcResult::Error(e)) => {
+                error!("Plugin returned an error: {:?}", e);
+                lightfx::Frame::new_black(0)
+            }
+            Err(e) => {
+                error!("Plugin failed to respond: {:?}", e);
+                lightfx::Frame::new_black(0)
+            }
         }
     }
 }
@@ -124,46 +148,50 @@ impl AnimationParameters for AnimationPlugin {
     }
 
     fn parameter_schema(&self) -> lightfx::parameter_schema::ParametersSchema {
-        if let JsonRpcResult::Result(schema) = self
-            .endpoint
-            .send_message(JsonRpcMethod::ParameterSchema)
-            .unwrap()
-            .result
-        {
-            schema
-        } else {
-            Default::default()
+        match self.endpoint.send_message(JsonRpcMethod::ParameterSchema) {
+            Ok(JsonRpcResult::Result(schema)) => schema,
+            Ok(JsonRpcResult::Error(e)) => {
+                error!("Plugin returned an error: {:?}", e);
+                Default::default()
+            }
+            Err(e) => {
+                error!("Plugin failed to respond: {:?}", e);
+                Default::default()
+            }
         }
     }
 
     fn set_parameters(&mut self, params: serde_json::Value) -> Result<(), Box<dyn Error>> {
         self.endpoint
-            .send_notification(JsonRpcMethod::SetParameters { params })
+            .send_notification(JsonRpcMethod::SetParameters { params })?;
+        Ok(())
     }
 
     fn get_parameters(&self) -> serde_json::Value {
-        if let JsonRpcResult::Result(parameters) = self
-            .endpoint
-            .send_message(JsonRpcMethod::GetParameters)
-            .unwrap()
-            .result
-        {
-            parameters
-        } else {
-            json!({})
+        match self.endpoint.send_message(JsonRpcMethod::GetParameters) {
+            Ok(JsonRpcResult::Result(parameters)) => parameters,
+            Ok(JsonRpcResult::Error(e)) => {
+                error!("Plugin returned an error: {:?}", e);
+                json!({})
+            }
+            Err(e) => {
+                error!("Plugin failed to respond: {:?}", e);
+                json!({})
+            }
         }
     }
 
     fn get_fps(&self) -> f64 {
-        if let JsonRpcResult::Result(fps) = self
-            .endpoint
-            .send_message(JsonRpcMethod::GetFps)
-            .unwrap()
-            .result
-        {
-            fps
-        } else {
-            30.0
+        match self.endpoint.send_message(JsonRpcMethod::GetFps) {
+            Ok(JsonRpcResult::Result(fps)) => fps,
+            Ok(JsonRpcResult::Error(e)) => {
+                error!("Plugin returned an error: {:?}", e);
+                30.0
+            }
+            Err(e) => {
+                error!("Plugin failed to respond: {:?}", e);
+                30.0
+            }
         }
     }
 }

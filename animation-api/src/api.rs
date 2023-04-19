@@ -4,7 +4,7 @@ use lightfx::parameter_schema::ParametersSchema;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct AnimationError {
     message: String,
 }

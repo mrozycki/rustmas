@@ -24,7 +24,7 @@ pub struct JsonRpcResponse<T, E> {
 
 #[repr(i16)]
 #[non_exhaustive]
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub enum ErrorType {
     ParseError = -32700,
     InvalidRequest = -32600,
@@ -33,7 +33,7 @@ pub enum ErrorType {
     InternalError = -32603,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct JsonRpcError<T> {
     pub code: ErrorType,
     pub message: String,
