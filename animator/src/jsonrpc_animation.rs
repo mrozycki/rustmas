@@ -56,7 +56,7 @@ impl JsonRpcEndpoint {
     ) -> std::io::Result<()> {
         let mut writer = BufWriter::new(writer);
         serde_json::to_writer(&mut writer, &message)?;
-        writer.write(b"\n")?;
+        writer.write_all(b"\n")?;
         Ok(())
     }
 
@@ -71,8 +71,8 @@ impl JsonRpcEndpoint {
         reader
             .read_line(&mut buffer)
             .map_err(|_| JsonRpcEndpointError::ProcessExited)?;
-        Ok(serde_json::from_str(&buffer)
-            .map_err(|e| JsonRpcEndpointError::InvalidResponse(Box::new(e)))?)
+        serde_json::from_str(&buffer)
+            .map_err(|e| JsonRpcEndpointError::InvalidResponse(Box::new(e)))
     }
 
     pub fn send_message<Res>(

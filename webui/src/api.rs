@@ -60,7 +60,7 @@ impl Gateway {
     }
 
     pub async fn switch_animation(&self, animation_id: String) -> Result<GetParamsResponse> {
-        Ok(Request::post(&self.url("switch"))
+        Request::post(&self.url("switch"))
             .json(&json!({ "animation": animation_id }))
             .map_err(|_| GatewayError::InvalidRequest)?
             .send()
@@ -70,11 +70,11 @@ impl Gateway {
             })?
             .json::<GetParamsResponse>()
             .await
-            .map_err(|_| GatewayError::InvalidResponse)?)
+            .map_err(|_| GatewayError::InvalidResponse)
     }
 
     pub async fn get_params(&self) -> Result<GetParamsResponse> {
-        Ok(Request::get(&self.url("params"))
+        Request::get(&self.url("params"))
             .send()
             .await
             .map_err(|e| GatewayError::RequestError {
@@ -82,7 +82,7 @@ impl Gateway {
             })?
             .json::<GetParamsResponse>()
             .await
-            .map_err(|_| GatewayError::InvalidResponse)?)
+            .map_err(|_| GatewayError::InvalidResponse)
     }
 
     pub async fn set_params(&self, params: &serde_json::Value) -> Result<()> {
@@ -102,7 +102,7 @@ impl Gateway {
     }
 
     pub async fn reset_params(&self) -> Result<GetParamsResponse> {
-        Ok(Request::post(&self.url("params/reset"))
+        Request::post(&self.url("params/reset"))
             .send()
             .await
             .map_err(|e| GatewayError::RequestError {
@@ -110,11 +110,11 @@ impl Gateway {
             })?
             .json::<GetParamsResponse>()
             .await
-            .map_err(|_| GatewayError::InvalidResponse)?)
+            .map_err(|_| GatewayError::InvalidResponse)
     }
 
     pub async fn reload_animation(&self) -> Result<GetParamsResponse> {
-        Ok(Request::post(&self.url("reload"))
+        Request::post(&self.url("reload"))
             .send()
             .await
             .map_err(|e| GatewayError::RequestError {
@@ -122,7 +122,7 @@ impl Gateway {
             })?
             .json::<GetParamsResponse>()
             .await
-            .map_err(|_| GatewayError::InvalidResponse)?)
+            .map_err(|_| GatewayError::InvalidResponse)
     }
 }
 

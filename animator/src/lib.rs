@@ -216,7 +216,7 @@ impl ControllerBuilder {
 
     pub fn remote_lights(mut self, path: &str) -> Result<Self, Box<dyn Error>> {
         info!("Using remote light client with endpoint {}", path);
-        self.client = Some(Box::new(client::RemoteLightClient::new(&path)));
+        self.client = Some(Box::new(client::RemoteLightClient::new(path)));
         Ok(self)
     }
 

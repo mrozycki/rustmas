@@ -39,7 +39,6 @@ impl StepAnimation for MyAnimation {
         let index = ((self.time * 8.0) % self.points_count as f64) as usize;
 
         (0..self.points_count)
-            .into_iter()
             .map(|i| {
                 if i + self.parameters.tail_length > index && i <= index {
                     lightfx::Color::white()

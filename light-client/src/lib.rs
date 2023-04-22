@@ -33,15 +33,14 @@ pub trait LightClient {
     async fn display_frame(&self, frame: &Frame) -> Result<(), LightClientError>;
 }
 
+#[derive(Default)]
 pub struct MockLightClient {
     frames: Mutex<Vec<Frame>>,
 }
 
 impl MockLightClient {
     pub fn new() -> Self {
-        Self {
-            frames: Mutex::new(Vec::new()),
-        }
+        Default::default()
     }
 
     pub fn get_frames(&self) -> MutexGuard<Vec<Frame>> {

@@ -6,7 +6,7 @@ pub struct Blank {
 }
 
 impl Blank {
-    pub fn new(points: Vec<(f64, f64, f64)>) -> Self {
+    pub fn create(points: Vec<(f64, f64, f64)>) -> Self {
         Self {
             frame: lightfx::Frame::new_black(points.len()),
         }

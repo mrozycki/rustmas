@@ -1,10 +1,7 @@
-use std::{
-    error::Error,
-    str::FromStr,
-    sync::{Arc, Mutex},
-};
+use std::{error::Error, str::FromStr, sync::Arc};
 
 use sqlx::{sqlite::SqliteConnectOptions, ConnectOptions, Executor, Row, SqliteConnection};
+use tokio::sync::Mutex;
 
 pub struct Db {
     conn: Arc<Mutex<SqliteConnection>>,
@@ -31,7 +28,7 @@ impl Db {
             sqlx::query("INSERT INTO animation_parameters(animation, parameters) VALUES (?, ?) ON CONFLICT(animation) DO UPDATE SET parameters=excluded.parameters;")
                 .bind(animation_name)
                 .bind(parameters.to_string());
-        self.conn.lock().unwrap().execute(query).await?;
+        self.conn.lock().await.execute(query).await?;
         Ok(())
     }
 
@@ -45,7 +42,7 @@ impl Db {
         let result = self
             .conn
             .lock()
-            .unwrap()
+            .await
             .fetch_optional(query)
             .await?
             .map(|row| row.try_get::<String, &str>("parameters"))

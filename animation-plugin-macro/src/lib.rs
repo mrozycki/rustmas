@@ -3,7 +3,7 @@ use quote::quote;
 
 #[proc_macro_attribute]
 pub fn plugin(_attr: TokenStream, item: TokenStream) -> TokenStream {
-    let ast: syn::ItemStruct = syn::parse2(item.clone().into()).unwrap();
+    let ast: syn::ItemStruct = syn::parse2(item.into()).unwrap();
     let name = &ast.ident;
     let output = quote! {
         #ast
@@ -51,7 +51,7 @@ pub fn plugin(_attr: TokenStream, item: TokenStream) -> TokenStream {
                     Ok(Some(message)) => match message.payload {
                         JsonRpcMethod::Initialize { points } => {
                             animation = None;
-                            animation = Some(<#name>::new(points));
+                            animation = Some(<#name>::create(points));
                         }
                         JsonRpcMethod::AnimationName => {
                             if let Some(animation) = animation.as_ref() {

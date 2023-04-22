@@ -17,7 +17,7 @@ pub struct RainbowWaterfall {
 }
 
 impl RainbowWaterfall {
-    pub fn new(points: Vec<(f64, f64, f64)>) -> impl Animation {
+    pub fn create(points: Vec<(f64, f64, f64)>) -> impl Animation {
         SpeedControlled::new(BrightnessControlled::new(Self {
             parameters: Parameters { density: 1.0 },
             time: 0.0,

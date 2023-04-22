@@ -52,9 +52,8 @@ impl Component for SelectParameterControl {
             .and_then(|elem| elem.get_attribute("data-selected-index"))
             .and_then(|attr| attr.parse::<i32>().ok())
             .and_then(|index| {
-                self.node_ref.cast::<HtmlSelectElement>().and_then(|elem| {
+                self.node_ref.cast::<HtmlSelectElement>().map(|elem| {
                     elem.set_selected_index(index);
-                    Some(())
                 })
             });
     }

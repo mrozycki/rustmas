@@ -28,17 +28,16 @@ impl Component for ColorParameterControl {
     fn update(&mut self, _ctx: &Context<Self>, msg: Self::Message) -> bool {
         match msg {
             Msg::ValueChanged => {
-                match (
+                if let (Some(node), Some(hidden)) = (
                     self.node_ref.cast::<HtmlInputElement>(),
                     self.hidden_ref.cast::<HtmlInputElement>(),
                 ) {
-                    (Some(node), Some(hidden)) => hidden.set_value(
+                    hidden.set_value(
                         &serde_json::to_string(
                             &lightfx::Color::from_hex_str(&node.value()).unwrap(),
                         )
                         .unwrap(),
-                    ),
-                    _ => (),
+                    );
                 };
                 false
             }

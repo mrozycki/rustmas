@@ -115,7 +115,7 @@ impl Component for ParameterControlList {
                         )
                     })
                     .collect::<HashMap<_, _>>();
-                let params = serde_json::to_value(&params).unwrap();
+                let params = serde_json::to_value(params).unwrap();
 
                 ctx.props().parameters_dirty.emit(true);
                 wasm_bindgen_futures::spawn_local(async move {
@@ -156,9 +156,9 @@ impl Component for ParameterControlList {
                     }).collect::<Html>()}
                 </datalist>
                 {
-                    if ctx.props().schema.parameters.len() != 0 { html! {
+                    if !ctx.props().schema.parameters.is_empty() { html! {
                         <form
-                            onsubmit={ctx.link().callback(|e| Self::Message::SaveParams(e))}
+                            onsubmit={ctx.link().callback(Self::Message::SaveParams)}
                             oninput={ctx.link().callback(|e: InputEvent| Self::Message::ValuesChanged { form: get_form(e.target()), force: false })}
                             onchange={ctx.link().callback(|e: Event| Self::Message::ValuesChanged { form: get_form(e.target()), force: true })}>
                             {

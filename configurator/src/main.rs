@@ -6,6 +6,7 @@ use std::{error::Error, fs};
 use capture::{Capturer, WithConfidence};
 use clap::{arg, Parser, Subcommand};
 use cv::Camera;
+use itertools::Itertools;
 use log::{debug, info, LevelFilter};
 use nalgebra::Vector3;
 use rustmas_light_client as light_client;
@@ -222,7 +223,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
                     inner: point - Vector3::new(x, y, z),
                     confidence: 1.0,
                 })
-                .collect();
+                .collect_vec();
             Capturer::save_3d_coordinates(output, &points)?;
 
             Ok(())

@@ -21,7 +21,7 @@ pub struct Present {
 }
 
 impl Present {
-    pub fn new(points: Vec<(f64, f64, f64)>) -> impl Animation {
+    pub fn create(points: Vec<(f64, f64, f64)>) -> impl Animation {
         SpeedControlled::new(BrightnessControlled::new(Self {
             points: points
                 .into_iter()
@@ -51,7 +51,7 @@ impl Animation for Present {
             .map(|p| rotation * p)
             .map(|p| {
                 let dist_x = p.x.abs();
-                let dist_y = (p.y - &self.parameters.height).abs();
+                let dist_y = (p.y - self.parameters.height).abs();
                 let dist_z = p.z.abs();
 
                 if dist_x < self.parameters.width / 2.0

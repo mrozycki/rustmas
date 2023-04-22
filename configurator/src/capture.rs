@@ -17,6 +17,8 @@ use serde::{Deserialize, Serialize};
 
 use crate::cv;
 
+type Point2 = (f64, f64);
+
 trait UnzipOption<T, U> {
     fn unzip_option(self) -> (Option<T>, Option<U>);
 }
@@ -37,7 +39,7 @@ pub struct WithConfidence<T: Default> {
 
 impl<T: Default> WithConfidence<T> {
     pub fn confident(&self) -> bool {
-        return self.confidence > 0.3;
+        self.confidence > 0.3
     }
 
     pub fn with_confidence(mut self, new_confidence: f64) -> Self {
@@ -61,7 +63,7 @@ fn pause() {
     print!("Press return to continue...");
     io::stdout().flush().expect("Can't flush to stdout");
     let mut stdin = io::stdin();
-    stdin.read(&mut [0u8]).expect("Can't read from stdin");
+    stdin.read_exact(&mut [0u8]).expect("Can't read from stdin");
 }
 
 impl Capturer {
@@ -91,7 +93,7 @@ impl Capturer {
 
     pub fn read_coordinates_from_file(
         path: &str,
-    ) -> Result<Vec<WithConfidence<(f64, f64)>>, Box<dyn Error>> {
+    ) -> Result<Vec<WithConfidence<Point2>>, Box<dyn Error>> {
         let mut reader = csv::ReaderBuilder::new()
             .has_headers(false)
             .from_path(path)?;
@@ -113,7 +115,7 @@ impl Capturer {
                 pause();
                 attempts = 0;
             }
-            if let Err(_) = self.light_client.display_frame(frame).await {
+            if self.light_client.display_frame(frame).await.is_err() {
                 warn!("Failed to update the lights, retrying...");
                 attempts += 1;
                 thread::sleep(DELAY * attempts);
@@ -151,7 +153,7 @@ impl Capturer {
         &mut self,
         perspective_name: &str,
         save_pictures: bool,
-    ) -> Result<Vec<WithConfidence<(f64, f64)>>, Box<dyn Error>> {
+    ) -> Result<Vec<WithConfidence<Point2>>, Box<dyn Error>> {
         let mut coords = Vec::new();
         let timestamp = chrono::offset::Local::now().format("%FT%X");
         let dir = format!("captures/{}", timestamp);
@@ -179,7 +181,7 @@ impl Capturer {
             let base_picture = self.camera.capture()?;
 
             let frame = self.single_light_on(i);
-            if let Err(_) = self.light_client.display_frame(&frame).await {
+            if self.light_client.display_frame(&frame).await.is_err() {
                 warn!("Failed to light up light #{}, skipping", i);
                 continue;
             }
@@ -269,9 +271,7 @@ impl Capturer {
             .collect()
     }
 
-    fn normalize(
-        raw_points: Vec<WithConfidence<(usize, usize)>>,
-    ) -> Vec<WithConfidence<(f64, f64)>> {
+    fn normalize(raw_points: Vec<WithConfidence<(usize, usize)>>) -> Vec<WithConfidence<Point2>> {
         let (xs, ys): (Vec<_>, Vec<_>) = raw_points
             .iter()
             .cloned()
@@ -291,7 +291,7 @@ impl Capturer {
 
         raw_points
             .into_iter()
-            .map(|a| WithConfidence::<(f64, f64)> {
+            .map(|a| WithConfidence::<Point2> {
                 inner: (
                     (a.inner.0 as isize - x_min as isize - x_span as isize / 2) as f64
                         * scaling_factor,
@@ -304,10 +304,10 @@ impl Capturer {
     }
 
     fn merge_point(
-        front: WithConfidence<(f64, f64)>,
-        right: WithConfidence<(f64, f64)>,
-        back: WithConfidence<(f64, f64)>,
-        left: WithConfidence<(f64, f64)>,
+        front: WithConfidence<Point2>,
+        right: WithConfidence<Point2>,
+        back: WithConfidence<Point2>,
+        left: WithConfidence<Point2>,
     ) -> WithConfidence<Vector3<f64>> {
         let (x_positive, y_negative_front) = if front.confident() {
             (Some(front.inner.0), Some(front.inner.1))
@@ -337,9 +337,9 @@ impl Capturer {
             y_negative_left,
         ]
         .into_iter()
-        .filter_map(|a| a)
+        .flatten()
         .collect_vec();
-        if yns.len() == 0 {
+        if yns.is_empty() {
             return NOT_FOUND_3D;
         }
         let y = -yns.iter().sum::<f64>() / yns.len() as f64;
@@ -365,10 +365,10 @@ impl Capturer {
     }
 
     pub fn merge_perspectives(
-        front: Vec<WithConfidence<(f64, f64)>>,
-        right: Vec<WithConfidence<(f64, f64)>>,
-        back: Vec<WithConfidence<(f64, f64)>>,
-        left: Vec<WithConfidence<(f64, f64)>>,
+        front: Vec<WithConfidence<Point2>>,
+        right: Vec<WithConfidence<Point2>>,
+        back: Vec<WithConfidence<Point2>>,
+        left: Vec<WithConfidence<Point2>>,
     ) -> Vec<WithConfidence<Vector3<f64>>> {
         front
             .into_iter()
@@ -467,7 +467,7 @@ impl Capturer {
 
     pub fn save_3d_coordinates<P: AsRef<Path>>(
         path: P,
-        coordinates: &Vec<WithConfidence<Vector3<f64>>>,
+        coordinates: &[WithConfidence<Vector3<f64>>],
     ) -> Result<(), Box<dyn Error>> {
         let mut writer = csv::Writer::from_path(path)?;
         coordinates

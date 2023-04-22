@@ -42,8 +42,7 @@ impl Shader {
             if status != (gl::TRUE as GLint) {
                 let mut len = 0;
                 gl::GetShaderiv(shader, gl::INFO_LOG_LENGTH, &mut len);
-                let mut buf = Vec::with_capacity(len as usize);
-                buf.set_len((len as usize) - 1); // subtract 1 to skip the trailing null character
+                let mut buf = vec![0; len as usize];
                 gl::GetShaderInfoLog(
                     shader,
                     len,
@@ -92,8 +91,7 @@ impl Program {
             if status != (gl::TRUE as GLint) {
                 let mut len: GLint = 0;
                 gl::GetProgramiv(program, gl::INFO_LOG_LENGTH, &mut len);
-                let mut buf = Vec::with_capacity(len as usize);
-                buf.set_len((len as usize) - 1); // subtract 1 to skip the trailing null character
+                let mut buf = vec![0; len as usize];
                 gl::GetProgramInfoLog(
                     program,
                     len,
@@ -373,14 +371,13 @@ pub fn visualise(
 
         let mvp = projection_matrix * view_matrix * model_matrix;
 
-        match colors_recv.try_recv() {
-            Ok(new_colors) => vdata.update_col_buffer(
+        if let Ok(new_colors) = colors_recv.try_recv() {
+            vdata.update_col_buffer(
                 &new_colors
                     .into_iter()
                     .map(|(x, y, z)| glm::vec3(x, y, z))
                     .collect(),
-            ),
-            _ => (),
+            );
         };
 
         unsafe {

@@ -29,7 +29,7 @@ pub struct Sweep {
 }
 
 impl Sweep {
-    pub fn new(points: Vec<(f64, f64, f64)>) -> impl Animation {
+    pub fn create(points: Vec<(f64, f64, f64)>) -> impl Animation {
         SpeedControlled::new(BrightnessControlled::new(Self {
             points,
             time: 0.0,

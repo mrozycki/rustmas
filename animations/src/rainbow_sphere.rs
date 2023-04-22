@@ -27,7 +27,7 @@ impl RainbowSphere {
             .collect();
     }
 
-    pub fn new(points: Vec<(f64, f64, f64)>) -> impl Animation {
+    pub fn create(points: Vec<(f64, f64, f64)>) -> impl Animation {
         let mut result = Self {
             points,
             points_radius: vec![],
