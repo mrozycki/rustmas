@@ -26,15 +26,18 @@ struct Parameters {
     mode: Mode,
 }
 
+#[animation_utils::plugin]
 pub struct Classic {
     points_count: usize,
+    time: f64,
     parameters: Parameters,
 }
 
 impl Classic {
-    pub fn new(points: &Vec<(f64, f64, f64)>) -> Box<dyn Animation> {
-        SpeedControlled::new(BrightnessControlled::new(Box::new(Self {
+    pub fn new(points: Vec<(f64, f64, f64)>) -> impl Animation {
+        SpeedControlled::new(BrightnessControlled::new(Self {
             points_count: points.len(),
+            time: 0.0,
             parameters: Parameters {
                 color_red: lightfx::Color::rgb(255, 0, 0),
                 color_green: lightfx::Color::rgb(0, 255, 0),
@@ -42,12 +45,16 @@ impl Classic {
                 color_blue: lightfx::Color::rgb(0, 0, 255),
                 mode: Mode::Static,
             },
-        })))
+        }))
     }
 }
 
 impl Animation for Classic {
-    fn frame(&mut self, time: f64) -> lightfx::Frame {
+    fn update(&mut self, delta: f64) {
+        self.time += delta;
+    }
+
+    fn render(&self) -> lightfx::Frame {
         let base = (0..self.points_count)
             .into_iter()
             .map(|i| match i % 4 {
@@ -61,11 +68,11 @@ impl Animation for Classic {
         let mask = (0..self.points_count)
             .into_iter()
             .map(|i| match self.parameters.mode {
-                Mode::FlowingSingles => ((time / 4.0).fract() * 2.0 * PI
+                Mode::FlowingSingles => ((self.time / 4.0).fract() * 2.0 * PI
                     + (i % 4) as f64 * FRAC_PI_2)
                     .sin()
                     .clamp(0.0, 1.0),
-                Mode::FlowingPairs => ((time / 4.0).fract() * 2.0 * PI
+                Mode::FlowingPairs => ((self.time / 4.0).fract() * 2.0 * PI
                     + (i % 2) as f64 * FRAC_PI_2)
                     .sin()
                     .abs(),

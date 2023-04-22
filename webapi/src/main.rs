@@ -174,20 +174,21 @@ async fn main() -> Result<(), Box<dyn Error>> {
     let controller = rustmas_animator::Controller::builder()
         .points_from_file(&env::var("RUSTMAS_POINTS_PATH").unwrap_or("lights.csv".to_owned()))?
         .remote_lights(&env::var("RUSTMAS_LIGHTS_URL").unwrap_or("http://127.0.0.1/".to_owned()))?
-        .build()?;
+        .plugin_dir(&env::var("RUSTMAS_PLUGIN_DIR").unwrap_or(".".to_owned()))
+        .build();
 
     #[cfg(feature = "visualiser")]
     let controller = {
-        let mut builder = rustmas_animator::Controller::builder().points_from_file(
-            &env::var("RUSTMAS_POINTS_PATH").unwrap_or("lights.csv".to_owned()),
-        )?;
+        let mut builder = rustmas_animator::Controller::builder()
+            .points_from_file(&env::var("RUSTMAS_POINTS_PATH").unwrap_or("lights.csv".to_owned()))?
+            .plugin_dir(&env::var("RUSTMAS_PLUGIN_DIR").unwrap_or(".".to_owned()));
         builder = if let Ok(url) = env::var("RUSTMAS_LIGHTS_URL") {
             builder.remote_lights(&url)?
         } else {
             builder.visualiser_lights()?
         };
 
-        builder.build()?
+        builder.build()
     };
 
     info!("Establishing database connection");

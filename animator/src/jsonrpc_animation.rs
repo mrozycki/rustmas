@@ -8,8 +8,7 @@ use std::{
 };
 
 use animation_api::{
-    AnimationError, AnimationParameters, JsonRpcMessage, JsonRpcMethod, JsonRpcResponse,
-    JsonRpcResult, StepAnimation,
+    AnimationError, JsonRpcMessage, JsonRpcMethod, JsonRpcResponse, JsonRpcResult,
 };
 use log::error;
 use serde::de::DeserializeOwned;
@@ -114,20 +113,18 @@ pub struct AnimationPlugin {
 }
 
 impl AnimationPlugin {
-    pub fn new(endpoint: JsonRpcEndpoint, points: Vec<(f64, f64, f64)>) -> Box<dyn StepAnimation> {
+    pub fn new(endpoint: JsonRpcEndpoint, points: Vec<(f64, f64, f64)>) -> Self {
         let _ = endpoint.send_notification(JsonRpcMethod::Initialize { points });
-        Box::new(Self { endpoint })
+        Self { endpoint }
     }
-}
 
-impl StepAnimation for AnimationPlugin {
-    fn update(&mut self, time_delta: f64) {
+    pub fn update(&mut self, time_delta: f64) {
         let _ = self
             .endpoint
             .send_notification(JsonRpcMethod::Update { time_delta });
     }
 
-    fn render(&self) -> lightfx::Frame {
+    pub fn render(&self) -> lightfx::Frame {
         match self.endpoint.send_message(JsonRpcMethod::Render) {
             Ok(JsonRpcResult::Result(frame)) => frame,
             Ok(JsonRpcResult::Error(e)) => {
@@ -140,14 +137,22 @@ impl StepAnimation for AnimationPlugin {
             }
         }
     }
-}
 
-impl AnimationParameters for AnimationPlugin {
-    fn animation_name(&self) -> &str {
-        "animation plugin"
+    pub fn animation_name(&self) -> String {
+        match self.endpoint.send_message(JsonRpcMethod::AnimationName) {
+            Ok(JsonRpcResult::Result(name)) => name,
+            Ok(JsonRpcResult::Error(e)) => {
+                error!("Plugin returned an error: {:?}", e);
+                "Animation Plugin".into()
+            }
+            Err(e) => {
+                error!("Plugin failed to respond: {:?}", e);
+                "Animation Plugin".into()
+            }
+        }
     }
 
-    fn parameter_schema(&self) -> lightfx::parameter_schema::ParametersSchema {
+    pub fn parameter_schema(&self) -> lightfx::parameter_schema::ParametersSchema {
         match self.endpoint.send_message(JsonRpcMethod::ParameterSchema) {
             Ok(JsonRpcResult::Result(schema)) => schema,
             Ok(JsonRpcResult::Error(e)) => {
@@ -161,13 +166,13 @@ impl AnimationParameters for AnimationPlugin {
         }
     }
 
-    fn set_parameters(&mut self, params: serde_json::Value) -> Result<(), Box<dyn Error>> {
+    pub fn set_parameters(&mut self, params: serde_json::Value) -> Result<(), Box<dyn Error>> {
         self.endpoint
             .send_notification(JsonRpcMethod::SetParameters { params })?;
         Ok(())
     }
 
-    fn get_parameters(&self) -> serde_json::Value {
+    pub fn get_parameters(&self) -> serde_json::Value {
         match self.endpoint.send_message(JsonRpcMethod::GetParameters) {
             Ok(JsonRpcResult::Result(parameters)) => parameters,
             Ok(JsonRpcResult::Error(e)) => {
@@ -181,7 +186,7 @@ impl AnimationParameters for AnimationPlugin {
         }
     }
 
-    fn get_fps(&self) -> f64 {
+    pub fn get_fps(&self) -> f64 {
         match self.endpoint.send_message(JsonRpcMethod::GetFps) {
             Ok(JsonRpcResult::Result(fps)) => fps,
             Ok(JsonRpcResult::Error(e)) => {

@@ -27,15 +27,16 @@ struct Parameters {
     color: lightfx::Color,
 }
 
+#[animation_utils::plugin]
 pub struct ManualSweep {
     points: Vec<(f64, f64, f64)>,
     parameters: Parameters,
 }
 
 impl ManualSweep {
-    pub fn new(points: &Vec<(f64, f64, f64)>) -> Box<dyn Animation> {
-        BrightnessControlled::new(Box::new(Self {
-            points: points.clone(),
+    pub fn new(points: Vec<(f64, f64, f64)>) -> impl Animation {
+        BrightnessControlled::new(Self {
+            points,
             parameters: Parameters {
                 axis: Axis::Y,
                 band_alignment: Alignment::Center,
@@ -43,12 +44,14 @@ impl ManualSweep {
                 band_position: 0.0,
                 color: lightfx::Color::white(),
             },
-        }))
+        })
     }
 }
 
 impl Animation for ManualSweep {
-    fn frame(&mut self, _time: f64) -> lightfx::Frame {
+    fn update(&mut self, _delta: f64) {}
+
+    fn render(&self) -> lightfx::Frame {
         self.points
             .iter()
             .map(|(x, y, z)| match self.parameters.axis {

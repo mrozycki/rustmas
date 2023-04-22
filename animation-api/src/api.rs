@@ -30,10 +30,6 @@ pub trait AnimationParameters {
 }
 
 pub trait Animation: AnimationParameters + Sync + Send {
-    fn frame(&mut self, time: f64) -> lightfx::Frame;
-}
-
-pub trait StepAnimation: AnimationParameters + Sync + Send {
     fn update(&mut self, delta: f64);
     fn render(&self) -> lightfx::Frame;
 }

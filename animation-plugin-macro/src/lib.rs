@@ -43,7 +43,7 @@ pub fn plugin(_attr: TokenStream, item: TokenStream) -> TokenStream {
                     })
                 );
             }
-            let mut animation: Option<#name> = None;
+            let mut animation = None;
             let mut stdin = BufReader::new(std::io::stdin());
 
             loop {

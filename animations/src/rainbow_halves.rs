@@ -21,22 +21,28 @@ struct Parameters {
     axis: Axis,
 }
 
+#[animation_utils::plugin]
 pub struct RainbowHalves {
     points: Vec<(f64, f64, f64)>,
+    time: f64,
     parameters: Parameters,
 }
 
 impl RainbowHalves {
-    pub fn new(points: &Vec<(f64, f64, f64)>) -> Box<dyn Animation> {
-        SpeedControlled::new(BrightnessControlled::new(Box::new(Self {
-            points: points.clone(),
+    pub fn new(points: Vec<(f64, f64, f64)>) -> impl Animation {
+        SpeedControlled::new(BrightnessControlled::new(Self {
+            points,
+            time: 0.0,
             parameters: Parameters { axis: Axis::Z },
-        })))
+        }))
     }
 }
 
 impl Animation for RainbowHalves {
-    fn frame(&mut self, time: f64) -> lightfx::Frame {
+    fn update(&mut self, delta: f64) {
+        self.time += delta;
+    }
+    fn render(&self) -> lightfx::Frame {
         self.points
             .iter()
             .map(|(x, y, z)| match self.parameters.axis {
@@ -45,10 +51,10 @@ impl Animation for RainbowHalves {
                 Axis::Z => (*x, *y),
             })
             .map(|(x, y)| {
-                if animation_utils::cycle(y.atan2(x) / PI + time, 2.0) < 1.0 {
-                    lightfx::Color::hsv(time / (2.0 * std::f64::consts::PI), 1.0, 1.0)
+                if animation_utils::cycle(y.atan2(x) / PI + self.time, 2.0) < 1.0 {
+                    lightfx::Color::hsv(self.time / (2.0 * std::f64::consts::PI), 1.0, 1.0)
                 } else {
-                    lightfx::Color::hsv(time / (2.0 * std::f64::consts::PI) + 0.5, 1.0, 1.0)
+                    lightfx::Color::hsv(self.time / (2.0 * std::f64::consts::PI) + 0.5, 1.0, 1.0)
                 }
             })
             .into()

@@ -1,14 +1,15 @@
-use animation_api::{Animation, AnimationParameters, StepAnimation};
+use std::f64::consts::PI;
+
+use animation_api::{Animation, AnimationParameters};
 use animation_utils::decorators::{BrightnessControlled, SpeedControlled};
 use lightfx::{
     schema::{Parameter, ParameterValue, ParametersSchema},
     Color,
 };
 use nalgebra::Vector3;
+use rand::Rng;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
-
-use super::animation::StepAnimationDecorator;
 
 #[derive(Serialize, Deserialize)]
 struct Parameters {
@@ -17,52 +18,55 @@ struct Parameters {
     color: lightfx::Color,
 }
 
-pub struct Snow {
+struct Star {
+    position: Vector3<f64>,
+    age: f64,
+}
+
+#[animation_utils::plugin]
+pub struct Stars {
     points: Vec<Vector3<f64>>,
-    centers: Vec<Vector3<f64>>,
+    stars: Vec<Star>,
     parameters: Parameters,
 }
 
-fn random_new_center(size: f64) -> Vector3<f64> {
-    Vector3::new(
-        animation_utils::random_component(),
-        animation_utils::random_component() + 2.0 + size,
-        animation_utils::random_component(),
-    )
-}
-
-impl Snow {
-    pub fn new(points: &Vec<(f64, f64, f64)>) -> Box<dyn Animation> {
-        let starting_size = 0.2;
-        let mut result = Self {
-            points: points
-                .iter()
-                .map(|(x, y, z)| Vector3::new(*x, *y, *z))
-                .collect(),
-            centers: vec![],
-            parameters: Parameters {
-                count: 20.0,
-                size: starting_size,
-                color: Color::white(),
-            },
-        };
-        result
-            .centers
-            .resize_with(20, || random_new_center(starting_size));
-
-        SpeedControlled::new(BrightnessControlled::new(StepAnimationDecorator::new(
-            Box::new(result),
-        )))
+fn random_star() -> Star {
+    Star {
+        position: Vector3::new(
+            animation_utils::random_component(),
+            animation_utils::random_component(),
+            animation_utils::random_component(),
+        ),
+        age: rand::thread_rng().gen::<f64>().fract(),
     }
 }
 
-impl StepAnimation for Snow {
+impl Stars {
+    pub fn new(points: Vec<(f64, f64, f64)>) -> impl Animation {
+        let mut result = Self {
+            points: points
+                .into_iter()
+                .map(|(x, y, z)| Vector3::new(x, y, z))
+                .collect(),
+            stars: vec![],
+            parameters: Parameters {
+                count: 20.0,
+                size: 0.2,
+                color: Color::white(),
+            },
+        };
+        result.stars.resize_with(20, random_star);
+        SpeedControlled::new(BrightnessControlled::new(result))
+    }
+}
+
+impl Animation for Stars {
     fn update(&mut self, delta: f64) {
-        for center in self.centers.iter_mut() {
-            center.y -= delta;
-            if center.y < -1.0 - self.parameters.size {
-                *center = random_new_center(self.parameters.size);
-                center.y = 1.0 + self.parameters.size;
+        for star in self.stars.iter_mut() {
+            star.age += delta;
+            if star.age > 1.0 {
+                *star = random_star();
+                star.age = 0.0;
             }
         }
     }
@@ -71,11 +75,9 @@ impl StepAnimation for Snow {
         self.points
             .iter()
             .map(|point| {
-                if self
-                    .centers
-                    .iter()
-                    .any(|center| (center - point).norm() < self.parameters.size)
-                {
+                if self.stars.iter().any(|star| {
+                    (star.position - point).norm() < self.parameters.size * (star.age * PI).sin()
+                }) {
                     self.parameters.color
                 } else {
                     Color::black()
@@ -85,9 +87,9 @@ impl StepAnimation for Snow {
     }
 }
 
-impl AnimationParameters for Snow {
+impl AnimationParameters for Stars {
     fn animation_name(&self) -> &str {
-        "Snow"
+        "Stars"
     }
 
     fn parameter_schema(&self) -> ParametersSchema {
@@ -98,8 +100,8 @@ impl AnimationParameters for Snow {
                     name: "Count".to_owned(),
                     description: None,
                     value: ParameterValue::Number {
-                        min: 50.0,
-                        max: 150.0,
+                        min: 10.0,
+                        max: 120.0,
                         step: 10.0,
                     },
                 },
@@ -128,10 +130,8 @@ impl AnimationParameters for Snow {
         parameters: serde_json::Value,
     ) -> Result<(), Box<dyn std::error::Error>> {
         self.parameters = serde_json::from_value(parameters)?;
-        self.centers
-            .resize_with(self.parameters.count as usize, || {
-                random_new_center(self.parameters.size)
-            });
+        self.stars
+            .resize_with(self.parameters.count as usize, random_star);
         Ok(())
     }
 

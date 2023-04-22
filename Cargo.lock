@@ -346,6 +346,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "animations"
+version = "0.1.0"
+dependencies = [
+ "animation-api 0.1.0",
+ "animation-utils 0.1.0",
+ "itertools",
+ "lightfx 0.1.0",
+ "log",
+ "nalgebra",
+ "rand 0.8.5",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "approx"
 version = "0.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2352,15 +2367,11 @@ name = "rustmas-animator"
 version = "0.1.0"
 dependencies = [
  "animation-api 0.1.0",
- "animation-utils 0.1.0",
  "chrono",
  "clap",
  "csv",
- "itertools",
  "lightfx 0.1.0",
  "log",
- "nalgebra",
- "rand 0.8.5",
  "rustmas-light-client",
  "serde",
  "serde_json",

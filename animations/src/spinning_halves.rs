@@ -23,26 +23,33 @@ struct Parameters {
     axis: Axis,
 }
 
+#[animation_utils::plugin]
 pub struct SpinningHalves {
     points: Vec<(f64, f64, f64)>,
+    time: f64,
     parameters: Parameters,
 }
 
 impl SpinningHalves {
-    pub fn new(points: &Vec<(f64, f64, f64)>) -> Box<dyn Animation> {
-        SpeedControlled::new(BrightnessControlled::new(Box::new(Self {
-            points: points.clone(),
+    pub fn new(points: Vec<(f64, f64, f64)>) -> impl Animation {
+        SpeedControlled::new(BrightnessControlled::new(Self {
+            points,
+            time: 0.0,
             parameters: Parameters {
                 color_a: lightfx::Color::rgb(255, 0, 0),
                 color_b: lightfx::Color::rgb(0, 255, 0),
                 axis: Axis::Z,
             },
-        })))
+        }))
     }
 }
 
 impl Animation for SpinningHalves {
-    fn frame(&mut self, time: f64) -> lightfx::Frame {
+    fn update(&mut self, delta: f64) {
+        self.time += delta;
+    }
+
+    fn render(&self) -> lightfx::Frame {
         self.points
             .iter()
             .map(|(x, y, z)| match self.parameters.axis {
@@ -51,7 +58,7 @@ impl Animation for SpinningHalves {
                 Axis::Z => (*x, *y),
             })
             .map(|(x, y)| {
-                if animation_utils::cycle(y.atan2(x) / PI + time, 2.0) < 1.0 {
+                if animation_utils::cycle(y.atan2(x) / PI + self.time, 2.0) < 1.0 {
                     self.parameters.color_a
                 } else {
                     self.parameters.color_b

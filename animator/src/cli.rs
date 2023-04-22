@@ -55,7 +55,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
         }
     };
 
-    let controller = builder.build()?;
+    let controller = builder.build();
     controller.switch_animation(&cli.animation).await?;
     controller.join().await?;
 

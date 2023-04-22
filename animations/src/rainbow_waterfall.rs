@@ -1,6 +1,6 @@
 use animation_api::{Animation, AnimationParameters};
 use animation_utils::decorators::{BrightnessControlled, SpeedControlled};
-use lightfx::parameter_schema::{Parameter, ParameterValue, ParametersSchema};
+use lightfx::schema::{Parameter, ParameterValue, ParametersSchema};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 
@@ -9,38 +9,42 @@ struct Parameters {
     density: f64,
 }
 
-pub struct RainbowCable {
-    points_count: usize,
+#[animation_utils::plugin]
+pub struct RainbowWaterfall {
+    points_height: Vec<f64>,
+    time: f64,
     parameters: Parameters,
 }
 
-impl RainbowCable {
-    pub fn new(points: &Vec<(f64, f64, f64)>) -> Box<dyn Animation> {
-        SpeedControlled::new(BrightnessControlled::new(Box::new(Self {
-            points_count: points.len(),
+impl RainbowWaterfall {
+    pub fn new(points: Vec<(f64, f64, f64)>) -> impl Animation {
+        SpeedControlled::new(BrightnessControlled::new(Self {
             parameters: Parameters { density: 1.0 },
-        })))
+            time: 0.0,
+            points_height: points
+                .into_iter()
+                .map(|(_, h, _)| (h + 1.0) / 2.0)
+                .collect(),
+        }))
     }
 }
 
-impl Animation for RainbowCable {
-    fn frame(&mut self, time: f64) -> lightfx::Frame {
-        (0..self.points_count)
-            .into_iter()
-            .map(|i| {
-                lightfx::Color::hsv(
-                    i as f64 / self.points_count as f64 * self.parameters.density + time,
-                    1.0,
-                    1.0,
-                )
-            })
+impl Animation for RainbowWaterfall {
+    fn update(&mut self, delta: f64) {
+        self.time += delta;
+    }
+
+    fn render(&self) -> lightfx::Frame {
+        self.points_height
+            .iter()
+            .map(|h| lightfx::Color::hsv(h * self.parameters.density + self.time, 1.0, 1.0))
             .into()
     }
 }
 
-impl AnimationParameters for RainbowCable {
+impl AnimationParameters for RainbowWaterfall {
     fn animation_name(&self) -> &str {
-        "Rainbow Cable"
+        "Rainbow Waterfall"
     }
 
     fn parameter_schema(&self) -> ParametersSchema {
@@ -58,15 +62,15 @@ impl AnimationParameters for RainbowCable {
         }
     }
 
-    fn get_parameters(&self) -> serde_json::Value {
-        json!(self.parameters)
-    }
-
     fn set_parameters(
         &mut self,
         parameters: serde_json::Value,
     ) -> Result<(), Box<dyn std::error::Error>> {
         self.parameters = serde_json::from_value(parameters)?;
         Ok(())
+    }
+
+    fn get_parameters(&self) -> serde_json::Value {
+        json!(self.parameters)
     }
 }
