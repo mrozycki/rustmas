@@ -17,7 +17,7 @@ pub struct RainbowCable {
 }
 
 impl RainbowCable {
-    pub fn new(points: Vec<(f64, f64, f64)>) -> impl Animation {
+    pub fn create(points: Vec<(f64, f64, f64)>) -> impl Animation {
         SpeedControlled::new(BrightnessControlled::new(Self {
             points_count: points.len(),
             time: 0.0,
@@ -33,7 +33,6 @@ impl Animation for RainbowCable {
 
     fn render(&self) -> lightfx::Frame {
         (0..self.points_count)
-            .into_iter()
             .map(|i| {
                 lightfx::Color::hsv(
                     i as f64 / self.points_count as f64 * self.parameters.density + self.time,

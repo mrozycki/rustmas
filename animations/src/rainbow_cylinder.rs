@@ -21,7 +21,7 @@ pub struct RainbowCylinder {
 }
 
 impl RainbowCylinder {
-    pub fn new(points: Vec<(f64, f64, f64)>) -> impl Animation {
+    pub fn create(points: Vec<(f64, f64, f64)>) -> impl Animation {
         SpeedControlled::new(BrightnessControlled::new(Self {
             points_alpha: points
                 .into_iter()

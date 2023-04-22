@@ -19,7 +19,7 @@ pub struct RainbowSpiral {
 }
 
 impl RainbowSpiral {
-    pub fn new(points: Vec<(f64, f64, f64)>) -> impl Animation {
+    pub fn create(points: Vec<(f64, f64, f64)>) -> impl Animation {
         SpeedControlled::new(BrightnessControlled::new(Self {
             points_polar: points.into_iter().map(animation_utils::to_polar).collect(),
             time: 0.0,

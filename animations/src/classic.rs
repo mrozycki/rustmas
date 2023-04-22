@@ -34,7 +34,7 @@ pub struct Classic {
 }
 
 impl Classic {
-    pub fn new(points: Vec<(f64, f64, f64)>) -> impl Animation {
+    pub fn create(points: Vec<(f64, f64, f64)>) -> impl Animation {
         SpeedControlled::new(BrightnessControlled::new(Self {
             points_count: points.len(),
             time: 0.0,
@@ -56,7 +56,6 @@ impl Animation for Classic {
 
     fn render(&self) -> lightfx::Frame {
         let base = (0..self.points_count)
-            .into_iter()
             .map(|i| match i % 4 {
                 0 => self.parameters.color_red,
                 1 => self.parameters.color_green,
@@ -65,19 +64,17 @@ impl Animation for Classic {
             })
             .collect_vec();
 
-        let mask = (0..self.points_count)
-            .into_iter()
-            .map(|i| match self.parameters.mode {
-                Mode::FlowingSingles => ((self.time / 4.0).fract() * 2.0 * PI
-                    + (i % 4) as f64 * FRAC_PI_2)
-                    .sin()
-                    .clamp(0.0, 1.0),
-                Mode::FlowingPairs => ((self.time / 4.0).fract() * 2.0 * PI
-                    + (i % 2) as f64 * FRAC_PI_2)
-                    .sin()
-                    .abs(),
-                Mode::Static => 1.0,
-            });
+        let mask = (0..self.points_count).map(|i| match self.parameters.mode {
+            Mode::FlowingSingles => ((self.time / 4.0).fract() * 2.0 * PI
+                + (i % 4) as f64 * FRAC_PI_2)
+                .sin()
+                .clamp(0.0, 1.0),
+            Mode::FlowingPairs => ((self.time / 4.0).fract() * 2.0 * PI
+                + (i % 2) as f64 * FRAC_PI_2)
+                .sin()
+                .abs(),
+            Mode::Static => 1.0,
+        });
 
         base.into_iter()
             .zip(mask)

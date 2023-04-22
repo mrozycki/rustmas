@@ -16,7 +16,7 @@ pub struct Indexing {
 }
 
 impl Indexing {
-    pub fn new(points: Vec<(f64, f64, f64)>) -> impl Animation {
+    pub fn create(points: Vec<(f64, f64, f64)>) -> impl Animation {
         BrightnessControlled::new(Self {
             points_count: points.len(),
             parameters: Parameters { bit: 0 },
@@ -29,7 +29,6 @@ impl Animation for Indexing {
 
     fn render(&self) -> lightfx::Frame {
         (0..self.points_count)
-            .into_iter()
             .map(|x| match (x >> self.parameters.bit) % 2 {
                 0 => lightfx::Color::black(),
                 _ => lightfx::Color::white(),
@@ -55,7 +54,6 @@ impl AnimationParameters for Indexing {
                 description: None,
                 value: ParameterValue::Enum {
                     values: (0..10)
-                        .into_iter()
                         .map(|i| EnumOption {
                             name: format!("{}s", 1 << i),
                             description: None,
@@ -76,7 +74,7 @@ impl AnimationParameters for Indexing {
             .and_then(|obj| obj.get("bit"))
             .and_then(|value| value.as_str())
             .and_then(|s| s.parse::<usize>().ok())
-            .ok_or_else(|| "Incorrect parameters")?;
+            .ok_or("Incorrect parameters")?;
         Ok(())
     }
 

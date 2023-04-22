@@ -9,7 +9,8 @@ use serde_json::json;
 use simplelog::{
     ColorChoice, CombinedLogger, Config, ConfigBuilder, TermLogger, TerminalMode, WriteLogger,
 };
-use std::{env, error::Error, fs, sync::Mutex};
+use std::{env, error::Error, fs};
+use tokio::sync::Mutex;
 
 use actix_web::{get, post, web, App, HttpResponse, HttpServer};
 
@@ -19,7 +20,7 @@ struct SwitchForm {
 }
 
 async fn switch_inner(animation_name: &str, app_state: web::Data<AppState>) -> HttpResponse {
-    let mut controller = app_state.animation_controller.lock().unwrap();
+    let mut controller = app_state.animation_controller.lock().await;
     if let Err(e) = controller.switch_animation(animation_name).await {
         return HttpResponse::InternalServerError().json(json!({"error": e.to_string()}));
     }
@@ -33,13 +34,13 @@ async fn switch_inner(animation_name: &str, app_state: web::Data<AppState>) -> H
             .await;
     }
 
-    *app_state.animation_name.lock().unwrap() = animation_name.to_owned();
+    *app_state.animation_name.lock().await = animation_name.to_owned();
     HttpResponse::Ok().json(controller.parameters().await)
 }
 
 #[post("/reload")]
 async fn reload(app_state: web::Data<AppState>) -> HttpResponse {
-    let name = app_state.animation_name.lock().unwrap().clone();
+    let name = app_state.animation_name.lock().await.clone();
     switch_inner(&name, app_state).await
 }
 
@@ -54,7 +55,7 @@ async fn get_params(app_state: web::Data<AppState>) -> HttpResponse {
         app_state
             .animation_controller
             .lock()
-            .unwrap()
+            .await
             .parameters()
             .await,
     )
@@ -65,11 +66,11 @@ async fn save_params(app_state: web::Data<AppState>) -> HttpResponse {
     match app_state
         .db
         .set_parameters(
-            &app_state.animation_name.lock().unwrap(),
+            &app_state.animation_name.lock().await,
             &app_state
                 .animation_controller
                 .lock()
-                .unwrap()
+                .await
                 .parameter_values()
                 .await,
         )
@@ -84,10 +85,10 @@ async fn save_params(app_state: web::Data<AppState>) -> HttpResponse {
 async fn reset_params(app_state: web::Data<AppState>) -> HttpResponse {
     if let Ok(Some(params)) = app_state
         .db
-        .get_parameters(&app_state.animation_name.lock().unwrap())
+        .get_parameters(&app_state.animation_name.lock().await)
         .await
     {
-        let mut controller = app_state.animation_controller.lock().unwrap();
+        let mut controller = app_state.animation_controller.lock().await;
         let _ = controller.set_parameters(params).await;
         HttpResponse::Ok().json(controller.parameters().await)
     } else {
@@ -103,7 +104,7 @@ async fn post_params(
     match app_state
         .animation_controller
         .lock()
-        .unwrap()
+        .await
         .set_parameters(params.0)
         .await
     {
@@ -174,14 +175,14 @@ async fn main() -> Result<(), Box<dyn Error>> {
     let controller = rustmas_animator::Controller::builder()
         .points_from_file(&env::var("RUSTMAS_POINTS_PATH").unwrap_or("lights.csv".to_owned()))?
         .remote_lights(&env::var("RUSTMAS_LIGHTS_URL").unwrap_or("http://127.0.0.1/".to_owned()))?
-        .plugin_dir(&env::var("RUSTMAS_PLUGIN_DIR").unwrap_or(".".to_owned()))
+        .plugin_dir(env::var("RUSTMAS_PLUGIN_DIR").unwrap_or(".".to_owned()))
         .build();
 
     #[cfg(feature = "visualiser")]
     let controller = {
         let mut builder = rustmas_animator::Controller::builder()
             .points_from_file(&env::var("RUSTMAS_POINTS_PATH").unwrap_or("lights.csv".to_owned()))?
-            .plugin_dir(&env::var("RUSTMAS_PLUGIN_DIR").unwrap_or(".".to_owned()));
+            .plugin_dir(env::var("RUSTMAS_PLUGIN_DIR").unwrap_or(".".to_owned()));
         builder = if let Ok(url) = env::var("RUSTMAS_LIGHTS_URL") {
             builder.remote_lights(&url)?
         } else {

@@ -34,7 +34,7 @@ pub struct ManualSweep {
 }
 
 impl ManualSweep {
-    pub fn new(points: Vec<(f64, f64, f64)>) -> impl Animation {
+    pub fn create(points: Vec<(f64, f64, f64)>) -> impl Animation {
         BrightnessControlled::new(Self {
             points,
             parameters: Parameters {

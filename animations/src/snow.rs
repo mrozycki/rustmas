@@ -31,7 +31,7 @@ fn random_new_center(size: f64) -> Vector3<f64> {
 }
 
 impl Snow {
-    pub fn new(points: Vec<(f64, f64, f64)>) -> impl Animation {
+    pub fn create(points: Vec<(f64, f64, f64)>) -> impl Animation {
         let starting_size = 0.2;
         let mut result = Self {
             points: points
