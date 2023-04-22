@@ -7,22 +7,26 @@ use serde_json::json;
 struct Parameters {
     brightness_factor: f64,
 }
-pub struct BrightnessControlled {
-    animation: Box<dyn Animation>,
+pub struct BrightnessControlled<T: Animation> {
+    animation: T,
     parameters: Parameters,
 }
 
-impl Animation for BrightnessControlled {
-    fn frame(&mut self, time: f64) -> lightfx::Frame {
+impl<T: Animation> Animation for BrightnessControlled<T> {
+    fn update(&mut self, delta: f64) {
+        self.animation.update(delta)
+    }
+
+    fn render(&self) -> lightfx::Frame {
         self.animation
-            .frame(time)
+            .render()
             .pixels_iter()
             .map(|x| x.dim(self.parameters.brightness_factor))
             .into()
     }
 }
 
-impl AnimationParameters for BrightnessControlled {
+impl<T: Animation> AnimationParameters for BrightnessControlled<T> {
     fn animation_name(&self) -> &str {
         self.animation.animation_name()
     }
@@ -70,13 +74,13 @@ impl AnimationParameters for BrightnessControlled {
     }
 }
 
-impl BrightnessControlled {
-    pub fn new(animation: Box<dyn Animation>) -> Box<dyn Animation> {
-        Box::new(Self {
+impl<T: Animation> BrightnessControlled<T> {
+    pub fn new(animation: T) -> Self {
+        Self {
             animation,
             parameters: Parameters {
                 brightness_factor: 1.0,
             },
-        })
+        }
     }
 }

@@ -21,28 +21,35 @@ struct Parameters {
     color: lightfx::Color,
 }
 
+#[animation_utils::plugin]
 pub struct Sweep {
     points: Vec<(f64, f64, f64)>,
+    time: f64,
     parameters: Parameters,
 }
 
 impl Sweep {
-    pub fn new(points: &Vec<(f64, f64, f64)>) -> Box<dyn Animation> {
-        SpeedControlled::new(BrightnessControlled::new(Box::new(Self {
-            points: points.clone(),
+    pub fn new(points: Vec<(f64, f64, f64)>) -> impl Animation {
+        SpeedControlled::new(BrightnessControlled::new(Self {
+            points,
+            time: 0.0,
             parameters: Parameters {
                 direction: Direction::BottomToTop,
                 band_size: 0.2,
                 color: lightfx::Color::white(),
             },
-        })))
+        }))
     }
 }
 
 impl Animation for Sweep {
-    fn frame(&mut self, time: f64) -> lightfx::Frame {
+    fn update(&mut self, delta: f64) {
+        self.time += delta;
+    }
+
+    fn render(&self) -> lightfx::Frame {
         let time =
-            time % (2.0 + self.parameters.band_size) - (1.0 + self.parameters.band_size / 2.0);
+            self.time % (2.0 + self.parameters.band_size) - (1.0 + self.parameters.band_size / 2.0);
         self.points
             .iter()
             .map(|(x, y, z)| match self.parameters.direction {

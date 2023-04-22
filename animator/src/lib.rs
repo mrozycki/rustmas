@@ -1,10 +1,13 @@
-mod animations;
+mod factory;
+mod jsonrpc_animation;
 
 use std::error::Error;
+use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
-use animation_api::Animation;
 use chrono::{DateTime, Duration, Utc};
+use factory::AnimationFactory;
+use jsonrpc_animation::AnimationPlugin;
 use log::{info, warn};
 use rustmas_light_client as client;
 use rustmas_light_client::LightClientError;
@@ -20,8 +23,7 @@ enum ConnectionStatus {
 }
 
 pub struct ControllerState {
-    points: Vec<(f64, f64, f64)>,
-    animation: Box<dyn Animation>,
+    animation: AnimationPlugin,
     next_frame: DateTime<Utc>,
     fps: f64,
 }
@@ -29,23 +31,29 @@ pub struct ControllerState {
 pub struct Controller {
     join_handle: JoinHandle<()>,
     state: Arc<Mutex<ControllerState>>,
+    animation_factory: AnimationFactory,
 }
 
 impl Controller {
-    pub fn new(
+    pub fn new<P: AsRef<Path>>(
         points: Vec<(f64, f64, f64)>,
+        plugin_dir: P,
         client: Box<dyn rustmas_light_client::LightClient + Sync + Send>,
-    ) -> Result<Self, Box<dyn Error>> {
-        let animation = animations::make_animation("blank", &points);
+    ) -> Self {
+        let animation_factory = AnimationFactory::new(plugin_dir, points);
+        let animation = animation_factory.make("blank");
         let state = Arc::new(Mutex::new(ControllerState {
-            points,
             next_frame: Utc::now(),
             fps: animation.get_fps(),
             animation,
         }));
         let join_handle = tokio::spawn(Self::run(state.clone(), client));
 
-        Ok(Self { state, join_handle })
+        Self {
+            state,
+            join_handle,
+            animation_factory,
+        }
     }
 
     async fn run(
@@ -58,7 +66,7 @@ impl Controller {
         let mut backoff_delay = start_backoff_delay;
         let mut status = ConnectionStatus::Healthy;
         let now = Utc::now();
-        let first_frame = now;
+        let mut last_frame = now;
         let mut next_check = now;
 
         loop {
@@ -85,7 +93,9 @@ impl Controller {
 
                 state
                     .animation
-                    .frame((now - first_frame).num_milliseconds() as f64 / 1000.0)
+                    .update((now - last_frame).num_milliseconds() as f64 / 1000.0);
+                last_frame = now;
+                state.animation.render()
             };
 
             match client.display_frame(&frame).await {
@@ -125,6 +135,7 @@ impl Controller {
     pub fn builder() -> ControllerBuilder {
         ControllerBuilder {
             points: None,
+            plugin_dir_: None,
             client: None,
         }
     }
@@ -132,7 +143,7 @@ impl Controller {
     pub async fn switch_animation(&self, name: &str) -> Result<(), Box<dyn Error>> {
         info!("Trying to switch animation to \"{}\"", name);
         let mut state = self.state.lock().await;
-        state.animation = animations::make_animation(name, &state.points);
+        state.animation = self.animation_factory.make(name);
 
         let new_fps = state.animation.get_fps();
         state.fps = new_fps;
@@ -145,7 +156,7 @@ impl Controller {
         let name = state.animation.animation_name();
 
         info!("Reloading animation \"{}\"", name);
-        state.animation = animations::make_animation(name, &state.points);
+        state.animation = self.animation_factory.make(&name);
 
         let new_fps = state.animation.get_fps();
         state.fps = new_fps;
@@ -185,6 +196,7 @@ impl Controller {
 
 pub struct ControllerBuilder {
     points: Option<Vec<(f64, f64, f64)>>,
+    plugin_dir_: Option<PathBuf>,
     client: Option<Box<dyn rustmas_light_client::LightClient + Sync + Send>>,
 }
 
@@ -217,7 +229,16 @@ impl ControllerBuilder {
         Ok(self)
     }
 
-    pub fn build(self) -> Result<Controller, Box<dyn Error>> {
-        Controller::new(self.points.unwrap(), self.client.unwrap())
+    pub fn plugin_dir<P: AsRef<Path>>(mut self, path: P) -> Self {
+        self.plugin_dir_ = Some(path.as_ref().into());
+        self
+    }
+
+    pub fn build(self) -> Controller {
+        Controller::new(
+            self.points.unwrap(),
+            self.plugin_dir_.unwrap(),
+            self.client.unwrap(),
+        )
     }
 }

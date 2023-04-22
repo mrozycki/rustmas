@@ -4,6 +4,7 @@ members = [
     "animation-plugin-macro",
     "animation-template",
     "animation-utils",
+    "animations",
     "light-client",
     "configurator",
     "animator",

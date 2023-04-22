@@ -9,22 +9,25 @@ struct Parameters {
     bit: usize,
 }
 
+#[animation_utils::plugin]
 pub struct Indexing {
     points_count: usize,
     parameters: Parameters,
 }
 
 impl Indexing {
-    pub fn new(points: &Vec<(f64, f64, f64)>) -> Box<dyn Animation> {
-        BrightnessControlled::new(Box::new(Self {
+    pub fn new(points: Vec<(f64, f64, f64)>) -> impl Animation {
+        BrightnessControlled::new(Self {
             points_count: points.len(),
             parameters: Parameters { bit: 0 },
-        }))
+        })
     }
 }
 
 impl Animation for Indexing {
-    fn frame(&mut self, _time: f64) -> lightfx::Frame {
+    fn update(&mut self, _delta: f64) {}
+
+    fn render(&self) -> lightfx::Frame {
         (0..self.points_count)
             .into_iter()
             .map(|x| match (x >> self.parameters.bit) % 2 {

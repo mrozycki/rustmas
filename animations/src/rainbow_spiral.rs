@@ -11,27 +11,34 @@ struct Parameters {
     twistiness: f64,
 }
 
+#[animation_utils::plugin]
 pub struct RainbowSpiral {
     points_polar: Vec<(f64, f64, f64)>,
+    time: f64,
     parameters: Parameters,
 }
 
 impl RainbowSpiral {
-    pub fn new(points: &Vec<(f64, f64, f64)>) -> Box<dyn Animation> {
-        SpeedControlled::new(BrightnessControlled::new(Box::new(Self {
-            points_polar: points.iter().map(animation_utils::to_polar).collect(),
+    pub fn new(points: Vec<(f64, f64, f64)>) -> impl Animation {
+        SpeedControlled::new(BrightnessControlled::new(Self {
+            points_polar: points.into_iter().map(animation_utils::to_polar).collect(),
+            time: 0.0,
             parameters: Parameters { twistiness: 1.0 },
-        })))
+        }))
     }
 }
 
 impl Animation for RainbowSpiral {
-    fn frame(&mut self, time: f64) -> lightfx::Frame {
+    fn update(&mut self, delta: f64) {
+        self.time += delta;
+    }
+
+    fn render(&self) -> lightfx::Frame {
         self.points_polar
             .iter()
             .map(|(_, a, h)| {
                 lightfx::Color::hsv(
-                    (a / PI + time + h * self.parameters.twistiness) / 2.0,
+                    (a / PI + self.time + h * self.parameters.twistiness) / 2.0,
                     1.0,
                     1.0,
                 )

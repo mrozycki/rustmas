@@ -1,4 +1,4 @@
-use animation_api::{Animation, AnimationParameters, StepAnimation};
+use animation_api::{Animation, AnimationParameters};
 use animation_utils::decorators::{BrightnessControlled, SpeedControlled};
 use itertools::Itertools;
 use lightfx::schema::{Parameter, ParameterValue, ParametersSchema};
@@ -6,13 +6,12 @@ use nalgebra::Vector3;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 
-use super::animation::StepAnimationDecorator;
-
 #[derive(Serialize, Deserialize)]
 struct Parameters {
     tail_length: f64,
 }
 
+#[animation_utils::plugin]
 pub struct RandomSweep {
     points: Vec<Option<Vector3<f64>>>,
     heights: Vec<Option<f64>>,
@@ -23,33 +22,31 @@ pub struct RandomSweep {
 }
 
 impl RandomSweep {
-    pub fn new(points: &Vec<(f64, f64, f64)>) -> Box<dyn Animation> {
-        SpeedControlled::new(BrightnessControlled::new(StepAnimationDecorator::new(
-            Box::new(Self {
-                points: points
-                    .iter()
-                    .map(|(x, y, z)| {
-                        if x.to_bits() == (-1.0_f64).to_bits()
-                            && y.to_bits() == (-1.0_f64).to_bits()
-                            && z.to_bits() == (-1.0_f64).to_bits()
-                        {
-                            None
-                        } else {
-                            Some(Vector3::new(*x, *y, *z))
-                        }
-                    })
-                    .collect(),
-                heights: Vec::new(),
-                color: lightfx::Color::black(),
-                current_height: 0.0,
-                max_height: 0.0,
-                parameters: Parameters { tail_length: 0.5 },
-            }),
-        )))
+    pub fn new(points: Vec<(f64, f64, f64)>) -> impl Animation {
+        SpeedControlled::new(BrightnessControlled::new(Self {
+            points: points
+                .into_iter()
+                .map(|(x, y, z)| {
+                    if x.to_bits() == (-1.0_f64).to_bits()
+                        && y.to_bits() == (-1.0_f64).to_bits()
+                        && z.to_bits() == (-1.0_f64).to_bits()
+                    {
+                        None
+                    } else {
+                        Some(Vector3::new(x, y, z))
+                    }
+                })
+                .collect(),
+            heights: Vec::new(),
+            color: lightfx::Color::black(),
+            current_height: 0.0,
+            max_height: 0.0,
+            parameters: Parameters { tail_length: 0.5 },
+        }))
     }
 }
 
-impl StepAnimation for RandomSweep {
+impl Animation for RandomSweep {
     fn update(&mut self, delta: f64) {
         if self.current_height > self.max_height + self.parameters.tail_length {
             let rotation = animation_utils::random_rotation();

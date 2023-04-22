@@ -13,31 +13,38 @@ struct Parameters {
     width: f64,
 }
 
+#[animation_utils::plugin]
 pub struct Present {
     points: Vec<Vector3<f64>>,
+    time: f64,
     parameters: Parameters,
 }
 
 impl Present {
-    pub fn new(points: &Vec<(f64, f64, f64)>) -> Box<dyn Animation> {
-        SpeedControlled::new(BrightnessControlled::new(Box::new(Self {
+    pub fn new(points: Vec<(f64, f64, f64)>) -> impl Animation {
+        SpeedControlled::new(BrightnessControlled::new(Self {
             points: points
-                .iter()
-                .map(|(x, y, z)| Vector3::new(*x, *y, *z))
+                .into_iter()
+                .map(|(x, y, z)| Vector3::new(x, y, z))
                 .collect(),
+            time: 0.0,
             parameters: Parameters {
                 color_wrap: lightfx::Color::rgb(255, 255, 255),
                 color_ribbon: lightfx::Color::rgb(255, 0, 0),
                 height: 0.0,
                 width: 0.1,
             },
-        })))
+        }))
     }
 }
 
 impl Animation for Present {
-    fn frame(&mut self, time: f64) -> lightfx::Frame {
-        let rotation = Rotation3::new(Vector3::y() * 2.0 * std::f64::consts::PI * time);
+    fn update(&mut self, delta: f64) {
+        self.time += delta;
+    }
+
+    fn render(&self) -> lightfx::Frame {
+        let rotation = Rotation3::new(Vector3::y() * 2.0 * std::f64::consts::PI * self.time);
 
         self.points
             .iter()

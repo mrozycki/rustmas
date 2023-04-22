@@ -7,23 +7,22 @@ use serde_json::json;
 struct Parameters {
     speed_factor: f64,
 }
-pub struct SpeedControlled {
-    animation: Box<dyn Animation>,
+pub struct SpeedControlled<T: Animation> {
+    animation: T,
     parameters: Parameters,
-    reference_real_time: f64,
-    reference_fake_time: f64,
 }
 
-impl Animation for SpeedControlled {
-    fn frame(&mut self, time: f64) -> lightfx::Frame {
-        self.reference_fake_time +=
-            (time - self.reference_real_time) * self.parameters.speed_factor;
-        self.reference_real_time = time;
-        self.animation.frame(self.reference_fake_time)
+impl<T: Animation> Animation for SpeedControlled<T> {
+    fn update(&mut self, delta: f64) {
+        self.animation.update(delta * self.parameters.speed_factor);
+    }
+
+    fn render(&self) -> lightfx::Frame {
+        self.animation.render()
     }
 }
 
-impl AnimationParameters for SpeedControlled {
+impl<T: Animation> AnimationParameters for SpeedControlled<T> {
     fn animation_name(&self) -> &str {
         self.animation.animation_name()
     }
@@ -71,13 +70,11 @@ impl AnimationParameters for SpeedControlled {
     }
 }
 
-impl SpeedControlled {
-    pub fn new(animation: Box<dyn Animation>) -> Box<dyn Animation> {
-        Box::new(Self {
+impl<T: Animation> SpeedControlled<T> {
+    pub fn new(animation: T) -> Self {
+        Self {
             animation,
             parameters: Parameters { speed_factor: 1.0 },
-            reference_fake_time: 0.0,
-            reference_real_time: 0.0,
-        })
+        }
     }
 }

@@ -10,9 +10,11 @@ struct Parameters {
     height: f64,
 }
 
+#[animation_utils::plugin]
 pub struct RainbowSphere {
     points: Vec<(f64, f64, f64)>,
     points_radius: Vec<f64>,
+    time: f64,
     parameters: Parameters,
 }
 
@@ -25,25 +27,30 @@ impl RainbowSphere {
             .collect();
     }
 
-    pub fn new(points: &Vec<(f64, f64, f64)>) -> Box<dyn Animation> {
+    pub fn new(points: Vec<(f64, f64, f64)>) -> impl Animation {
         let mut result = Self {
+            points,
             points_radius: vec![],
-            points: points.clone(),
+            time: 0.0,
             parameters: Parameters {
                 density: 1.0,
                 height: 0.0,
             },
         };
         result.reset();
-        SpeedControlled::new(BrightnessControlled::new(Box::new(result)))
+        SpeedControlled::new(BrightnessControlled::new(result))
     }
 }
 
 impl Animation for RainbowSphere {
-    fn frame(&mut self, time: f64) -> lightfx::Frame {
+    fn update(&mut self, delta: f64) {
+        self.time += delta;
+    }
+
+    fn render(&self) -> lightfx::Frame {
         self.points_radius
             .iter()
-            .map(|r| lightfx::Color::hsv(r / 2.0 * self.parameters.density + time, 1.0, 1.0))
+            .map(|r| lightfx::Color::hsv(r / 2.0 * self.parameters.density + self.time, 1.0, 1.0))
             .into()
     }
 }

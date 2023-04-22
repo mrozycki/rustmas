@@ -1,0 +1,92 @@
+[package]
+name = "animations"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "blank"
+path = "src/blank.rs"
+
+[[bin]]
+name = "barber_pole"
+path = "src/barber_pole.rs"
+
+[[bin]]
+name = "check"
+path = "src/check.rs"
+
+[[bin]]
+name = "classic"
+path = "src/classic.rs"
+
+[[bin]]
+name = "detection_status"
+path = "src/detection_status.rs"
+
+[[bin]]
+name = "indexing"
+path = "src/indexing.rs"
+
+[[bin]]
+name = "manual_sweep"
+path = "src/manual_sweep.rs"
+
+[[bin]]
+name = "present"
+path = "src/present.rs"
+
+[[bin]]
+name = "rainbow_cable"
+path = "src/rainbow_cable.rs"
+
+[[bin]]
+name = "rainbow_cylinder"
+path = "src/rainbow_cylinder.rs"
+
+[[bin]]
+name = "rainbow_halves"
+path = "src/rainbow_halves.rs"
+
+[[bin]]
+name = "rainbow_sphere"
+path = "src/rainbow_sphere.rs"
+
+[[bin]]
+name = "rainbow_spiral"
+path = "src/rainbow_spiral.rs"
+
+[[bin]]
+name = "rainbow_waterfall"
+path = "src/rainbow_waterfall.rs"
+
+[[bin]]
+name = "random_sweep"
+path = "src/random_sweep.rs"
+
+[[bin]]
+name = "snow"
+path = "src/snow.rs"
+
+[[bin]]
+name = "spinning_halves"
+path = "src/spinning_halves.rs"
+
+[[bin]]
+name = "stars"
+path = "src/stars.rs"
+
+[[bin]]
+name = "sweep"
+path = "src/sweep.rs"
+
+[dependencies]
+animation-utils = { path = "../animation-utils" }
+animation-api = { path = "../animation-api" }
+lightfx = { path = "../lightfx" }
+
+log = "0.4.17"
+serde = { version = "1.0.152", features = ["derive"] }
+serde_json = "1.0.93"
+itertools = "0.10.5"
+nalgebra = "0.31"
+rand = "0.8.5"

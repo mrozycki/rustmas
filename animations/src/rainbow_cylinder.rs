@@ -1,4 +1,5 @@
-use animation_api::{Animation, AnimationParameters};
+use animation_api::Animation;
+use animation_api::AnimationParameters;
 use animation_utils::decorators::{BrightnessControlled, SpeedControlled};
 use lightfx::parameter_schema::Parameter;
 use lightfx::parameter_schema::ParameterValue;
@@ -12,31 +13,38 @@ struct Parameters {
     density: f64,
 }
 
+#[animation_utils::plugin]
 pub struct RainbowCylinder {
     points_alpha: Vec<f64>,
+    time: f64,
     parameters: Parameters,
 }
 
 impl RainbowCylinder {
-    pub fn new(points: &Vec<(f64, f64, f64)>) -> Box<dyn Animation> {
-        SpeedControlled::new(BrightnessControlled::new(Box::new(Self {
+    pub fn new(points: Vec<(f64, f64, f64)>) -> impl Animation {
+        SpeedControlled::new(BrightnessControlled::new(Self {
             points_alpha: points
-                .iter()
+                .into_iter()
                 .map(animation_utils::to_polar)
                 .map(|(_, a, _)| a)
                 .collect(),
+            time: 0.0,
             parameters: Parameters { density: 1.0 },
-        })))
+        }))
     }
 }
 
 impl Animation for RainbowCylinder {
-    fn frame(&mut self, time: f64) -> lightfx::Frame {
+    fn update(&mut self, delta: f64) {
+        self.time += delta;
+    }
+
+    fn render(&self) -> lightfx::Frame {
         self.points_alpha
             .iter()
             .map(|a| {
                 lightfx::Color::hsv(
-                    time + a / (2.0 * std::f64::consts::PI) * self.parameters.density,
+                    self.time + a / (2.0 * std::f64::consts::PI) * self.parameters.density,
                     1.0,
                     1.0,
                 )
