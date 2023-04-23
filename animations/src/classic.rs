@@ -1,12 +1,10 @@
 use std::f64::consts::{FRAC_PI_2, PI};
 
+use animation_api::parameter_schema::{EnumOption, Parameter, ParameterValue, ParametersSchema};
 use animation_api::{Animation, AnimationParameters};
 use animation_utils::decorators::{BrightnessControlled, SpeedControlled};
 use itertools::Itertools;
-use lightfx::{
-    parameter_schema::{EnumOption, Parameter, ParameterValue, ParametersSchema},
-    Color,
-};
+use lightfx::Color;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 
@@ -92,7 +90,7 @@ impl AnimationParameters for Classic {
         30.0
     }
 
-    fn parameter_schema(&self) -> lightfx::parameter_schema::ParametersSchema {
+    fn parameter_schema(&self) -> ParametersSchema {
         ParametersSchema {
             parameters: vec![
                 Parameter {

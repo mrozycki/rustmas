@@ -1,8 +1,9 @@
 use std::error::Error;
 
-use lightfx::parameter_schema::ParametersSchema;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
+
+use crate::parameter_schema::ParametersSchema;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct AnimationError {

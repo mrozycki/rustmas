@@ -1,4 +1,4 @@
-use lightfx::parameter_schema::ParameterValue;
+use animation_api::parameter_schema::ParameterValue;
 use web_sys::HtmlInputElement;
 use yew::{html, Component, Context, Html, NodeRef};
 

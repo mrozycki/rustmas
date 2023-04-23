@@ -2451,6 +2451,7 @@ dependencies = [
 name = "rustmas-webui"
 version = "0.1.0"
 dependencies = [
+ "animation-api 0.1.0",
  "gloo-net",
  "gloo-utils",
  "instant",

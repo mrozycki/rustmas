@@ -6,10 +6,7 @@ mod speed_control;
 
 use std::{collections::HashMap, time::Duration};
 
-use lightfx::{
-    parameter_schema::{ParameterValue, ParametersSchema},
-    schema::Parameter,
-};
+use animation_api::parameter_schema::{Parameter, ParameterValue, ParametersSchema};
 use wasm_bindgen::JsCast;
 use web_sys::{
     Event, EventTarget, FocusEvent, FormData, HtmlFormElement, HtmlInputElement, HtmlSelectElement,

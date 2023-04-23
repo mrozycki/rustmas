@@ -152,7 +152,7 @@ impl AnimationPlugin {
         }
     }
 
-    pub fn parameter_schema(&self) -> lightfx::parameter_schema::ParametersSchema {
+    pub fn parameter_schema(&self) -> animation_api::parameter_schema::ParametersSchema {
         match self.endpoint.send_message(JsonRpcMethod::ParameterSchema) {
             Ok(JsonRpcResult::Result(schema)) => schema,
             Ok(JsonRpcResult::Error(e)) => {

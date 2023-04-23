@@ -1,5 +1,5 @@
+use animation_api::parameter_schema::{Parameter, ParameterValue, ParametersSchema};
 use animation_api::{Animation, AnimationParameters};
-use lightfx::{parameter_schema::Parameter, schema::ParametersSchema};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 
@@ -32,7 +32,7 @@ impl<T: Animation> AnimationParameters for SpeedControlled<T> {
             id: "speed_factor".to_owned(),
             name: "Speed Factor".to_owned(),
             description: None,
-            value: lightfx::parameter_schema::ParameterValue::Speed,
+            value: ParameterValue::Speed,
         }];
         parameters.extend(self.animation.parameter_schema().parameters);
         ParametersSchema { parameters }
