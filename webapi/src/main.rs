@@ -3,13 +3,10 @@ mod db;
 use actix_cors::Cors;
 use db::Db;
 use dotenvy::dotenv;
-use log::{info, LevelFilter};
+use log::info;
 use serde::Deserialize;
 use serde_json::json;
-use simplelog::{
-    ColorChoice, CombinedLogger, Config, ConfigBuilder, TermLogger, TerminalMode, WriteLogger,
-};
-use std::{env, error::Error, fs};
+use std::{env, error::Error};
 use tokio::sync::Mutex;
 
 use actix_web::{get, post, web, App, HttpResponse, HttpServer};
@@ -148,27 +145,8 @@ struct AppState {
 
 #[actix_web::main]
 async fn main() -> Result<(), Box<dyn Error>> {
-    CombinedLogger::init(vec![
-        TermLogger::new(
-            LevelFilter::Info,
-            Config::default(),
-            TerminalMode::Mixed,
-            ColorChoice::Auto,
-        ),
-        WriteLogger::new(
-            #[cfg(debug_assertions)]
-            LevelFilter::Debug,
-            #[cfg(not(debug_assertions))]
-            LevelFilter::Info,
-            ConfigBuilder::new().set_time_format_rfc3339().build(),
-            fs::OpenOptions::new()
-                .append(true)
-                .create(true)
-                .open("webapi.log")?,
-        ),
-    ])?;
-
     dotenv().ok();
+    env_logger::init();
 
     info!("Starting controller");
     #[cfg(not(feature = "visualiser"))]

@@ -13,10 +13,10 @@ dotenvy = "0.15.6"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 sqlx = { version = "0.6", features = [ "runtime-actix-rustls", "sqlite" ] }
+tokio = "1.27.0"
 
 log = "0.4.17"
-simplelog = "0.12.0"
-tokio = "1.27.0"
+env_logger = "0.10.0"
 
 [features]
 default = []
