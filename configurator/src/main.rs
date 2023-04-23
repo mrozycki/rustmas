@@ -1,18 +1,15 @@
 mod capture;
 mod cv;
 
-use std::{error::Error, fs};
+use std::error::Error;
 
 use capture::{Capturer, WithConfidence};
 use clap::{arg, Parser, Subcommand};
 use cv::Camera;
 use itertools::Itertools;
-use log::{debug, info, LevelFilter};
+use log::{debug, info};
 use nalgebra::Vector3;
 use rustmas_light_client as light_client;
-use simplelog::{
-    ColorChoice, CombinedLogger, Config, ConfigBuilder, TermLogger, TerminalMode, WriteLogger,
-};
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
@@ -120,25 +117,7 @@ async fn capture_or_read_coordinates(
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
-    CombinedLogger::init(vec![
-        TermLogger::new(
-            LevelFilter::Warn,
-            Config::default(),
-            TerminalMode::Mixed,
-            ColorChoice::Auto,
-        ),
-        WriteLogger::new(
-            #[cfg(debug_assertions)]
-            LevelFilter::Debug,
-            #[cfg(not(debug_assertions))]
-            LevelFilter::Info,
-            ConfigBuilder::new().set_time_format_rfc3339().build(),
-            fs::OpenOptions::new()
-                .append(true)
-                .create(true)
-                .open("configurator.log")?,
-        ),
-    ])?;
+    env_logger::init();
 
     let cli = Cli::parse();
 
