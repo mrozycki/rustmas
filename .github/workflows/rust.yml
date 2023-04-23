@@ -5,6 +5,9 @@ on:
     branches: [ "main" ]
   pull_request:
     branches: [ "main" ]
+
+env:
+  RUSTFLAGS: "-Dwarnings"
     
 jobs:
   build:
@@ -35,14 +38,14 @@ jobs:
           ~/.cargo/git/db/
           target/
         key: ${{ runner.os }}-${{ hashFiles('**/Cargo.lock') }}-rust-${{ steps.toolchain.outputs.rustc_hash }}
-    - name: Check 
+    - name: Clippy
       uses: actions-rs/cargo@v1
       with:
-        command: check
-    - name: Check without default features
+        command: clippy
+    - name: Clippy without default features
       uses: actions-rs/cargo@v1
       with:
-        command: check
+        command: clippy
         args: --no-default-features
     - name: Test
       uses: actions-rs/cargo@v1
