@@ -19,18 +19,6 @@ use crate::cv;
 
 type Point2 = (f64, f64);
 
-trait UnzipOption<T, U> {
-    fn unzip_option(self) -> (Option<T>, Option<U>);
-}
-
-impl<T, U> UnzipOption<T, U> for Option<(T, U)> {
-    fn unzip_option(self) -> (Option<T>, Option<U>) {
-        match self {
-            Some((a, b)) => (Some(a), Some(b)),
-            None => (None, None),
-        }
-    }
-}
 #[derive(Debug, Default, Clone, Serialize, Deserialize)]
 pub struct WithConfidence<T: Default> {
     pub inner: T,
