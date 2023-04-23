@@ -1,7 +1,7 @@
 use std::f64::consts::PI;
 
 use animation_api::parameter_schema::{Parameter, ParameterValue, ParametersSchema};
-use animation_api::{Animation, AnimationParameters};
+use animation_api::Animation;
 use animation_utils::decorators::{BrightnessControlled, SpeedControlled};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
@@ -53,9 +53,7 @@ impl Animation for BarberPole {
             })
             .into()
     }
-}
 
-impl AnimationParameters for BarberPole {
     fn animation_name(&self) -> &str {
         "Barber Pole"
     }

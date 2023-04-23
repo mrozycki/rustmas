@@ -1,5 +1,5 @@
 use animation_api::parameter_schema::{Parameter, ParameterValue, ParametersSchema};
-use animation_api::{Animation, AnimationParameters};
+use animation_api::Animation;
 use animation_utils::decorators::{BrightnessControlled, SpeedControlled};
 use itertools::Itertools;
 use nalgebra::Vector3;
@@ -86,9 +86,7 @@ impl Animation for RandomSweep {
             })
             .into()
     }
-}
 
-impl AnimationParameters for RandomSweep {
     fn animation_name(&self) -> &str {
         "Rainbow Sweep"
     }

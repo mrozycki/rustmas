@@ -1,5 +1,5 @@
 use animation_api::parameter_schema::{EnumOption, Parameter, ParameterValue, ParametersSchema};
-use animation_api::{Animation, AnimationParameters};
+use animation_api::Animation;
 use animation_utils::decorators::BrightnessControlled;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
@@ -35,9 +35,7 @@ impl Animation for Indexing {
             })
             .into()
     }
-}
 
-impl AnimationParameters for Indexing {
     fn animation_name(&self) -> &str {
         "Testing: Indexing"
     }

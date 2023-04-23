@@ -1,5 +1,5 @@
 use animation_api::parameter_schema::{Parameter, ParameterValue, ParametersSchema};
-use animation_api::{Animation, AnimationParameters};
+use animation_api::Animation;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 
@@ -24,9 +24,7 @@ impl<T: Animation> Animation for BrightnessControlled<T> {
             .map(|x| x.dim(self.parameters.brightness_factor))
             .into()
     }
-}
 
-impl<T: Animation> AnimationParameters for BrightnessControlled<T> {
     fn animation_name(&self) -> &str {
         self.animation.animation_name()
     }

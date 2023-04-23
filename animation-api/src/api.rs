@@ -10,7 +10,7 @@ pub struct AnimationError {
     message: String,
 }
 
-pub trait AnimationParameters {
+pub trait Animation: Sync + Send {
     fn animation_name(&self) -> &str;
 
     fn parameter_schema(&self) -> ParametersSchema {
@@ -28,9 +28,7 @@ pub trait AnimationParameters {
     fn get_fps(&self) -> f64 {
         30.0
     }
-}
 
-pub trait Animation: AnimationParameters + Sync + Send {
     fn update(&mut self, delta: f64);
     fn render(&self) -> lightfx::Frame;
 }

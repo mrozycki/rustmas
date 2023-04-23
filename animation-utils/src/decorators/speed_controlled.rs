@@ -1,5 +1,5 @@
 use animation_api::parameter_schema::{Parameter, ParameterValue, ParametersSchema};
-use animation_api::{Animation, AnimationParameters};
+use animation_api::Animation;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 
@@ -20,9 +20,7 @@ impl<T: Animation> Animation for SpeedControlled<T> {
     fn render(&self) -> lightfx::Frame {
         self.animation.render()
     }
-}
 
-impl<T: Animation> AnimationParameters for SpeedControlled<T> {
     fn animation_name(&self) -> &str {
         self.animation.animation_name()
     }
