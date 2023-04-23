@@ -1,5 +1,5 @@
 use animation_api::parameter_schema::{EnumOption, Parameter, ParameterValue, ParametersSchema};
-use animation_api::{Animation, AnimationParameters};
+use animation_api::Animation;
 use animation_utils::decorators::{BrightnessControlled, SpeedControlled};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
@@ -69,9 +69,7 @@ impl Animation for Sweep {
             })
             .into()
     }
-}
 
-impl AnimationParameters for Sweep {
     fn animation_name(&self) -> &str {
         "Sweep"
     }

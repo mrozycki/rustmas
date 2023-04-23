@@ -1,4 +1,4 @@
-use animation_api::{Animation, AnimationParameters};
+use animation_api::Animation;
 
 #[animation_utils::plugin]
 pub struct Blank {
@@ -19,9 +19,7 @@ impl Animation for Blank {
     fn render(&self) -> lightfx::Frame {
         self.frame.clone()
     }
-}
 
-impl AnimationParameters for Blank {
     fn animation_name(&self) -> &str {
         "Off"
     }

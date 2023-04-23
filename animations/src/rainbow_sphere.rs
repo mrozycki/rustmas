@@ -1,5 +1,5 @@
 use animation_api::parameter_schema::{Parameter, ParameterValue, ParametersSchema};
-use animation_api::{Animation, AnimationParameters};
+use animation_api::Animation;
 use animation_utils::decorators::{BrightnessControlled, SpeedControlled};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
@@ -53,9 +53,7 @@ impl Animation for RainbowSphere {
             .map(|r| lightfx::Color::hsv(r / 2.0 * self.parameters.density + self.time, 1.0, 1.0))
             .into()
     }
-}
 
-impl AnimationParameters for RainbowSphere {
     fn animation_name(&self) -> &str {
         "Rainbow Sphere"
     }

@@ -1,4 +1,4 @@
-use animation_api::{Animation, AnimationParameters};
+use animation_api::Animation;
 use animation_utils::decorators::BrightnessControlled;
 
 #[animation_utils::plugin]
@@ -36,9 +36,7 @@ impl Animation for DetectionStatus {
             })
             .into()
     }
-}
 
-impl AnimationParameters for DetectionStatus {
     fn animation_name(&self) -> &str {
         "Testing: Detection Status"
     }

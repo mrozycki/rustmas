@@ -1,7 +1,7 @@
 use std::f64::consts::{FRAC_PI_2, PI};
 
 use animation_api::parameter_schema::{EnumOption, Parameter, ParameterValue, ParametersSchema};
-use animation_api::{Animation, AnimationParameters};
+use animation_api::Animation;
 use animation_utils::decorators::{BrightnessControlled, SpeedControlled};
 use itertools::Itertools;
 use lightfx::Color;
@@ -79,9 +79,7 @@ impl Animation for Classic {
             .map(|(color, level)| color.dim(level))
             .into()
     }
-}
 
-impl AnimationParameters for Classic {
     fn animation_name(&self) -> &str {
         "Classic"
     }

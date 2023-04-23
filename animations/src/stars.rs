@@ -1,7 +1,7 @@
 use std::f64::consts::PI;
 
 use animation_api::parameter_schema::{Parameter, ParameterValue, ParametersSchema};
-use animation_api::{Animation, AnimationParameters};
+use animation_api::Animation;
 use animation_utils::decorators::{BrightnessControlled, SpeedControlled};
 use lightfx::Color;
 use nalgebra::Vector3;
@@ -83,9 +83,7 @@ impl Animation for Stars {
             })
             .into()
     }
-}
 
-impl AnimationParameters for Stars {
     fn animation_name(&self) -> &str {
         "Stars"
     }

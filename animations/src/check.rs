@@ -1,4 +1,4 @@
-use animation_api::{Animation, AnimationParameters};
+use animation_api::Animation;
 use animation_utils::decorators::{BrightnessControlled, SpeedControlled};
 use log::debug;
 
@@ -27,9 +27,7 @@ impl Animation for Check {
         debug!("Checking light #{}", index);
         lightfx::Frame::new_black(self.points_count).with_pixel(index, lightfx::Color::white())
     }
-}
 
-impl AnimationParameters for Check {
     fn animation_name(&self) -> &str {
         "Testing: Check Lights"
     }

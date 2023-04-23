@@ -1,5 +1,5 @@
 use animation_api::parameter_schema::{Parameter, ParameterValue, ParametersSchema};
-use animation_api::{Animation, AnimationParameters};
+use animation_api::Animation;
 use animation_utils::decorators::{BrightnessControlled, SpeedControlled};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
@@ -40,9 +40,7 @@ impl Animation for RainbowWaterfall {
             .map(|h| lightfx::Color::hsv(h * self.parameters.density + self.time, 1.0, 1.0))
             .into()
     }
-}
 
-impl AnimationParameters for RainbowWaterfall {
     fn animation_name(&self) -> &str {
         "Rainbow Waterfall"
     }
