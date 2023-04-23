@@ -1,9 +1,7 @@
+use animation_api::parameter_schema::{Parameter, ParameterValue, ParametersSchema};
 use animation_api::{Animation, AnimationParameters};
 use animation_utils::decorators::{BrightnessControlled, SpeedControlled};
-use lightfx::{
-    schema::{Parameter, ParameterValue, ParametersSchema},
-    Color,
-};
+use lightfx::Color;
 use nalgebra::Vector3;
 use serde::{Deserialize, Serialize};
 use serde_json::json;

@@ -1,11 +1,7 @@
-use animation_api::Animation;
-use animation_api::AnimationParameters;
+use animation_api::parameter_schema::{Parameter, ParameterValue, ParametersSchema};
+use animation_api::{Animation, AnimationParameters};
 use animation_utils::decorators::{BrightnessControlled, SpeedControlled};
-use lightfx::parameter_schema::Parameter;
-use lightfx::parameter_schema::ParameterValue;
-use lightfx::parameter_schema::ParametersSchema;
-use serde::Deserialize;
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use serde_json::json;
 
 #[derive(Serialize, Deserialize)]

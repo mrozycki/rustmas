@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
+use animation_api::parameter_schema::ParametersSchema;
 use gloo_net::http::Request;
-use lightfx::schema::ParametersSchema;
 use serde::Deserialize;
 use serde_json::json;
 

@@ -5,6 +5,7 @@ edition = "2021"
 
 [dependencies]
 lightfx = { path = "../lightfx" }
+animation-api = { path = "../animation-api" }
 
 gloo-net = "0.2"
 gloo-utils = "0.1"

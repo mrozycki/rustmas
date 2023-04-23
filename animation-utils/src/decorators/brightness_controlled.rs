@@ -1,5 +1,5 @@
+use animation_api::parameter_schema::{Parameter, ParameterValue, ParametersSchema};
 use animation_api::{Animation, AnimationParameters};
-use lightfx::{parameter_schema::Parameter, schema::ParametersSchema};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 
@@ -36,7 +36,7 @@ impl<T: Animation> AnimationParameters for BrightnessControlled<T> {
             id: "brightness_factor".to_owned(),
             name: "Brightness".to_owned(),
             description: None,
-            value: lightfx::parameter_schema::ParameterValue::Percentage,
+            value: ParameterValue::Percentage,
         }];
         parameters.extend(self.animation.parameter_schema().parameters);
         ParametersSchema { parameters }
