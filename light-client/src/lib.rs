@@ -1,7 +1,10 @@
-use core::fmt;
+pub mod combined;
+pub mod feedback;
+
 #[cfg(feature = "visualiser")]
 use std::{error::Error, sync::mpsc};
 use std::{
+    fmt,
     sync::{Mutex, MutexGuard},
     time::Duration,
 };
@@ -13,7 +16,7 @@ use log::debug;
 use log::{error, info};
 use reqwest::header::CONNECTION;
 
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone, PartialEq)]
 pub enum LightClientError {
     Unlikely,
     ConnectionLost,
