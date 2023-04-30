@@ -9,6 +9,7 @@ lightfx = { path = "../lightfx" }
 
 async-trait = "0.1.57"
 csv = "1.1.6"
+futures-util = "0.3.28"
 log = "0.4.17"
 reqwest = "0.11.12"
 serde = { version = "1.0", features = ["derive"] }

@@ -6,13 +6,14 @@ use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
 use chrono::{DateTime, Duration, Utc};
+use client::combined::{CombinedLightClient, CombinedLightClientBuilder};
 use factory::AnimationFactory;
 use jsonrpc_animation::AnimationPlugin;
 use log::{info, warn};
 use rustmas_light_client as client;
 use rustmas_light_client::LightClientError;
 use serde_json::json;
-use tokio::sync::Mutex;
+use tokio::sync::{mpsc, Mutex};
 use tokio::task::JoinHandle;
 
 #[derive(PartialEq)]
@@ -136,7 +137,7 @@ impl Controller {
         ControllerBuilder {
             points: None,
             plugin_dir_: None,
-            client: None,
+            client_builder: CombinedLightClient::builder(),
         }
     }
 
@@ -197,7 +198,7 @@ impl Controller {
 pub struct ControllerBuilder {
     points: Option<Vec<(f64, f64, f64)>>,
     plugin_dir_: Option<PathBuf>,
-    client: Option<Box<dyn rustmas_light_client::LightClient + Sync + Send>>,
+    client_builder: CombinedLightClientBuilder,
 }
 
 impl ControllerBuilder {
@@ -216,17 +217,28 @@ impl ControllerBuilder {
 
     pub fn remote_lights(mut self, path: &str) -> Result<Self, Box<dyn Error>> {
         info!("Using remote light client with endpoint {}", path);
-        self.client = Some(Box::new(client::RemoteLightClient::new(path)));
+        self.client_builder = self
+            .client_builder
+            .with(Box::new(client::RemoteLightClient::new(path)));
         Ok(self)
     }
 
     #[cfg(feature = "visualiser")]
     pub fn visualiser_lights(mut self) -> Result<Self, Box<dyn Error>> {
         info!("Using local visualiser");
-        self.client = Some(Box::new(client::VisualiserLightClient::new(
-            self.points.as_ref().unwrap().clone(),
-        )?));
+        self.client_builder =
+            self.client_builder
+                .with(Box::new(client::VisualiserLightClient::new(
+                    self.points.as_ref().unwrap().clone(),
+                )?));
         Ok(self)
+    }
+
+    pub fn lights_feedback(mut self, sender: mpsc::Sender<lightfx::Frame>) -> Self {
+        self.client_builder = self
+            .client_builder
+            .with(Box::new(client::feedback::FeedbackLightClient::new(sender)));
+        self
     }
 
     pub fn plugin_dir<P: AsRef<Path>>(mut self, path: P) -> Self {
@@ -238,7 +250,7 @@ impl ControllerBuilder {
         Controller::new(
             self.points.unwrap(),
             self.plugin_dir_.unwrap(),
-            self.client.unwrap(),
+            self.client_builder.build(),
         )
     }
 }

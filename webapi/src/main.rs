@@ -1,15 +1,20 @@
 mod db;
+mod frame_broadcaster;
 
+use actix::{Actor, Addr};
 use actix_cors::Cors;
+use actix_web_actors::ws;
 use db::Db;
 use dotenvy::dotenv;
 use log::info;
 use serde::Deserialize;
 use serde_json::json;
 use std::{env, error::Error};
-use tokio::sync::Mutex;
+use tokio::sync::{mpsc, Mutex};
 
-use actix_web::{get, post, web, App, HttpResponse, HttpServer};
+use actix_web::{get, post, web, App, HttpRequest, HttpResponse, HttpServer};
+
+use crate::frame_broadcaster::{FrameBroadcaster, FrameBroadcasterSession};
 
 #[derive(Deserialize)]
 struct SwitchForm {
@@ -137,6 +142,19 @@ async fn list() -> HttpResponse {
     }))
 }
 
+#[get("/frames")]
+async fn frames(
+    req: HttpRequest,
+    stream: web::Payload,
+    server: web::Data<Addr<FrameBroadcaster>>,
+) -> Result<HttpResponse, actix_web::Error> {
+    ws::start(
+        FrameBroadcasterSession::new(server.get_ref().clone()),
+        &req,
+        stream,
+    )
+}
+
 struct AppState {
     animation_controller: Mutex<rustmas_animator::Controller>,
     animation_name: Mutex<String>,
@@ -148,11 +166,14 @@ async fn main() -> Result<(), Box<dyn Error>> {
     dotenv().ok();
     env_logger::init();
 
+    let (sender, receiver) = mpsc::channel::<lightfx::Frame>(1);
+
     info!("Starting controller");
     #[cfg(not(feature = "visualiser"))]
     let controller = rustmas_animator::Controller::builder()
         .points_from_file(&env::var("RUSTMAS_POINTS_PATH").unwrap_or("lights.csv".to_owned()))?
         .remote_lights(&env::var("RUSTMAS_LIGHTS_URL").unwrap_or("http://127.0.0.1/".to_owned()))?
+        .lights_feedback(sender)
         .plugin_dir(env::var("RUSTMAS_PLUGIN_DIR").unwrap_or(".".to_owned()))
         .build();
 
@@ -160,7 +181,8 @@ async fn main() -> Result<(), Box<dyn Error>> {
     let controller = {
         let mut builder = rustmas_animator::Controller::builder()
             .points_from_file(&env::var("RUSTMAS_POINTS_PATH").unwrap_or("lights.csv".to_owned()))?
-            .plugin_dir(env::var("RUSTMAS_PLUGIN_DIR").unwrap_or(".".to_owned()));
+            .plugin_dir(env::var("RUSTMAS_PLUGIN_DIR").unwrap_or(".".to_owned()))
+            .lights_feedback(sender);
         builder = if let Ok(url) = env::var("RUSTMAS_LIGHTS_URL") {
             builder.remote_lights(&url)?
         } else {
@@ -180,6 +202,8 @@ async fn main() -> Result<(), Box<dyn Error>> {
         db,
     });
 
+    let frame_broadcaster = web::Data::new(FrameBroadcaster::new(receiver).start());
+
     HttpServer::new(move || {
         let cors = Cors::permissive();
         App::new()
@@ -191,7 +215,9 @@ async fn main() -> Result<(), Box<dyn Error>> {
             .service(post_params)
             .service(save_params)
             .service(reset_params)
+            .service(frames)
             .app_data(app_state.clone())
+            .app_data(frame_broadcaster.clone())
     })
     .bind(("0.0.0.0", 8081))?
     .run()
