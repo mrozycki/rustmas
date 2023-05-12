@@ -234,6 +234,14 @@ impl ControllerBuilder {
         Ok(self)
     }
 
+    pub fn local_lights(mut self, path: &str) -> Result<Self, Box<dyn Error>> {
+        info!("Using tty lights client with endpoint {}", path);
+        self.client_builder = self
+            .client_builder
+            .with(Box::new(client::tty::TtyLightClient::new(path)?));
+        Ok(self)
+    }
+
     pub fn lights_feedback(mut self, sender: mpsc::Sender<lightfx::Frame>) -> Self {
         self.client_builder = self
             .client_builder

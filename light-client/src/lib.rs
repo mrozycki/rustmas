@@ -1,5 +1,6 @@
 pub mod combined;
 pub mod feedback;
+pub mod tty;
 
 #[cfg(feature = "visualiser")]
 use std::{error::Error, sync::mpsc};
