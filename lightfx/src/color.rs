@@ -171,6 +171,20 @@ impl Color {
             b: blend_component(self.b, other.b),
         }
     }
+
+    /// Returns a color which is a linear interpolation between self and the other
+    /// provided color. The second parameter determines where the result lies between
+    /// self and other, 0.0 meaning the result will be equal to self,
+    /// and 1.0 meaning the result will be equal to other.
+    pub fn lerp(self, other: &Self, d: f64) -> Self {
+        let lerp_component = |a, b| ((a as f64) * (1.0 - d) + (b as f64) * d) as u8;
+
+        Self {
+            r: lerp_component(self.r, other.r),
+            g: lerp_component(self.g, other.g),
+            b: lerp_component(self.b, other.b),
+        }
+    }
 }
 
 #[cfg(test)]
