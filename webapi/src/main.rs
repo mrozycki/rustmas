@@ -169,25 +169,23 @@ async fn main() -> Result<(), Box<dyn Error>> {
     let (sender, receiver) = mpsc::channel::<lightfx::Frame>(1);
 
     info!("Starting controller");
-    #[cfg(not(feature = "visualiser"))]
-    let controller = rustmas_animator::Controller::builder()
-        .points_from_file(&env::var("RUSTMAS_POINTS_PATH").unwrap_or("lights.csv".to_owned()))?
-        .remote_lights(&env::var("RUSTMAS_LIGHTS_URL").unwrap_or("http://127.0.0.1/".to_owned()))?
-        .lights_feedback(sender)
-        .plugin_dir(env::var("RUSTMAS_PLUGIN_DIR").unwrap_or(".".to_owned()))
-        .build();
-
-    #[cfg(feature = "visualiser")]
     let controller = {
         let mut builder = rustmas_animator::Controller::builder()
             .points_from_file(&env::var("RUSTMAS_POINTS_PATH").unwrap_or("lights.csv".to_owned()))?
-            .plugin_dir(env::var("RUSTMAS_PLUGIN_DIR").unwrap_or(".".to_owned()))
-            .lights_feedback(sender);
-        builder = if let Ok(url) = env::var("RUSTMAS_LIGHTS_URL") {
-            builder.remote_lights(&url)?
-        } else {
-            builder.visualiser_lights()?
-        };
+            .lights_feedback(sender)
+            .plugin_dir(env::var("RUSTMAS_PLUGIN_DIR").unwrap_or(".".to_owned()));
+
+        if let Ok(url) = env::var("RUSTMAS_LIGHTS_URL") {
+            builder = builder.remote_lights(&url)?;
+        }
+        if let Ok(path) = env::var("RUSTMAS_TTY_PATH") {
+            builder = builder.local_lights(&path)?;
+        }
+
+        #[cfg(feature = "visualiser")]
+        {
+            builder = builder.visualiser_lights()?;
+        }
 
         builder.build()
     };
