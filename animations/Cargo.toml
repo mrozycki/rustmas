@@ -24,6 +24,10 @@ name = "doom_fire"
 path = "src/doom_fire.rs"
 
 [[bin]]
+name = "particle_fire"
+path = "src/particle_fire.rs"
+
+[[bin]]
 name = "detection_status"
 path = "src/detection_status.rs"
 
