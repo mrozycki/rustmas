@@ -179,7 +179,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
             let light_positions = coords
                 .iter()
                 .map(|x| WithConfidence::<Vector3<f64>> {
-                    inner: Vector3::<f64>::new(x.inner.0, x.inner.1, 0.0),
+                    inner: Vector3::<f64>::new(x.inner.0, -x.inner.1, 0.0),
                     confidence: x.confidence,
                 })
                 .collect();
