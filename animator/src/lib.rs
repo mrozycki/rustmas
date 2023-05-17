@@ -25,6 +25,7 @@ enum ConnectionStatus {
 
 pub struct ControllerState {
     animation: AnimationPlugin,
+    last_frame: DateTime<Utc>,
     next_frame: DateTime<Utc>,
     fps: f64,
 }
@@ -43,8 +44,10 @@ impl Controller {
     ) -> Self {
         let animation_factory = AnimationFactory::new(plugin_dir, points);
         let animation = animation_factory.make("blank");
+        let now = Utc::now();
         let state = Arc::new(Mutex::new(ControllerState {
-            next_frame: Utc::now(),
+            last_frame: now,
+            next_frame: now,
             fps: animation.get_fps(),
             animation,
         }));
@@ -67,7 +70,6 @@ impl Controller {
         let mut backoff_delay = start_backoff_delay;
         let mut status = ConnectionStatus::Healthy;
         let now = Utc::now();
-        let mut last_frame = now;
         let mut next_check = now;
 
         loop {
@@ -92,10 +94,11 @@ impl Controller {
                     now + Duration::days(1)
                 };
 
+                let delta = now - state.last_frame;
                 state
                     .animation
-                    .update((now - last_frame).num_milliseconds() as f64 / 1000.0);
-                last_frame = now;
+                    .update(delta.num_milliseconds() as f64 / 1000.0);
+                state.last_frame = now;
                 state.animation.render()
             };
 
@@ -146,9 +149,11 @@ impl Controller {
         let mut state = self.state.lock().await;
         state.animation = self.animation_factory.make(name);
 
+        let now = Utc::now();
         let new_fps = state.animation.get_fps();
         state.fps = new_fps;
-        state.next_frame = Utc::now();
+        state.last_frame = now;
+        state.next_frame = now;
         Ok(())
     }
 
@@ -159,9 +164,11 @@ impl Controller {
         info!("Reloading animation \"{}\"", name);
         state.animation = self.animation_factory.make(&name);
 
+        let now = Utc::now();
         let new_fps = state.animation.get_fps();
         state.fps = new_fps;
-        state.next_frame = Utc::now();
+        state.last_frame = now;
+        state.next_frame = now;
         Ok(())
     }
 
