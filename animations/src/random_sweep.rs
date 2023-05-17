@@ -1,4 +1,4 @@
-use animation_api::parameter_schema::{Parameter, ParameterValue, ParametersSchema};
+use animation_api::parameter_schema::{EnumOption, Parameter, ParameterValue, ParametersSchema};
 use animation_api::Animation;
 use animation_utils::decorators::{BrightnessControlled, SpeedControlled};
 use itertools::Itertools;
@@ -7,8 +7,15 @@ use serde::{Deserialize, Serialize};
 use serde_json::json;
 
 #[derive(Serialize, Deserialize)]
+enum SweepType {
+    Sweep2D,
+    Sweep3D,
+}
+
+#[derive(Serialize, Deserialize)]
 struct Parameters {
     tail_length: f64,
+    sweep_type: SweepType,
 }
 
 #[animation_utils::plugin]
@@ -41,7 +48,10 @@ impl RandomSweep {
             color: lightfx::Color::black(),
             current_height: 0.0,
             max_height: 0.0,
-            parameters: Parameters { tail_length: 0.5 },
+            parameters: Parameters {
+                tail_length: 0.5,
+                sweep_type: SweepType::Sweep3D,
+            },
         }))
     }
 }
@@ -49,7 +59,10 @@ impl RandomSweep {
 impl Animation for RandomSweep {
     fn update(&mut self, delta: f64) {
         if self.current_height > self.max_height + self.parameters.tail_length {
-            let rotation = animation_utils::random_rotation();
+            let rotation = match self.parameters.sweep_type {
+                SweepType::Sweep2D => animation_utils::random_rotation_around(&Vector3::z_axis()),
+                SweepType::Sweep3D => animation_utils::random_rotation(),
+            };
             self.heights = self
                 .points
                 .iter()
@@ -88,21 +101,42 @@ impl Animation for RandomSweep {
     }
 
     fn animation_name(&self) -> &str {
-        "Rainbow Sweep"
+        "Random Sweep"
     }
 
     fn parameter_schema(&self) -> ParametersSchema {
         ParametersSchema {
-            parameters: vec![Parameter {
-                id: "tail_length".to_owned(),
-                name: "Tail length".to_owned(),
-                description: Some("Length of the sweep tail".to_owned()),
-                value: ParameterValue::Number {
-                    min: 0.0,
-                    max: 2.0,
-                    step: 0.05,
+            parameters: vec![
+                Parameter {
+                    id: "tail_length".to_owned(),
+                    name: "Tail length".to_owned(),
+                    description: Some("Length of the sweep tail".to_owned()),
+                    value: ParameterValue::Number {
+                        min: 0.0,
+                        max: 2.0,
+                        step: 0.05,
+                    },
                 },
-            }],
+                Parameter {
+                    id: "sweep_type".to_owned(),
+                    name: "Sweep type".to_owned(),
+                    description: None,
+                    value: ParameterValue::Enum {
+                        values: vec![
+                            EnumOption {
+                                name: "2D".to_owned(),
+                                description: None,
+                                value: "Sweep2D".to_owned(),
+                            },
+                            EnumOption {
+                                name: "3D".to_owned(),
+                                description: None,
+                                value: "Sweep3D".to_owned(),
+                            },
+                        ],
+                    },
+                },
+            ],
         }
     }
 
