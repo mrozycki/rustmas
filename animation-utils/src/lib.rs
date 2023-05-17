@@ -1,7 +1,9 @@
 pub mod decorators;
 
+use std::f64::consts::TAU;
+
 pub use animation_plugin_macro::plugin;
-use nalgebra::{Rotation3, Vector3};
+use nalgebra::{Rotation3, Unit, Vector3};
 use rand::Rng;
 
 pub fn to_polar((x, y, z): (f64, f64, f64)) -> (f64, f64, f64) {
@@ -20,6 +22,10 @@ pub fn random_rotation() -> Rotation3<f64> {
     }
 
     Rotation3::rotation_between(&Vector3::new(0.0, 1.0, 0.0), &Vector3::new(x, y, z)).unwrap()
+}
+
+pub fn random_rotation_around(axis: &Unit<Vector3<f64>>) -> Rotation3<f64> {
+    Rotation3::from_axis_angle(axis, rand::thread_rng().gen_range(0.0..TAU))
 }
 
 pub fn random_hue(saturation: f64, value: f64) -> lightfx::Color {
