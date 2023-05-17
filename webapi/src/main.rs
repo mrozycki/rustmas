@@ -121,6 +121,7 @@ async fn list() -> HttpResponse {
         "animations": [
             { "id": "blank", "name": "Off" },
             { "id": "doom_fire", "name": "Doom Fire" },
+            { "id": "particle_fire", "name": "Particle Fire" },
             { "id": "classic", "name": "Classic" },
             { "id": "rainbow_waterfall", "name": "Rainbow Waterfall" },
             { "id": "rainbow_cylinder", "name": "Rainbow Cylinder" },

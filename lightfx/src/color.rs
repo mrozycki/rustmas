@@ -187,6 +187,45 @@ impl Color {
     }
 }
 
+pub struct ColorWithAlpha {
+    color: Color,
+    alpha: f64,
+}
+
+impl ColorWithAlpha {
+    pub fn new(color: Color, alpha: f64) -> Self {
+        Self { color, alpha }
+    }
+
+    pub fn blend_with_gamma(&self, other: &Self, gamma: f64) -> Self {
+        let alpha_0 = self.alpha + other.alpha * (1.0 - self.alpha);
+        let blend_component = |a, b| {
+            let a = (a as f64) / 255.0;
+            let b = (b as f64) / 255.0;
+            ((a.powf(gamma) * self.alpha + b.powf(gamma) * other.alpha * (1.0 - self.alpha))
+                .powf(1.0 / gamma)
+                * 255.0) as u8
+        };
+
+        Self {
+            color: Color {
+                r: blend_component(self.color.r, other.color.r),
+                g: blend_component(self.color.g, other.color.g),
+                b: blend_component(self.color.b, other.color.b),
+            },
+            alpha: alpha_0,
+        }
+    }
+
+    pub fn blend(&self, other: &Self) -> Self {
+        self.blend_with_gamma(other, 2.0)
+    }
+
+    pub fn apply_alpha(&self) -> Color {
+        self.blend(&ColorWithAlpha::new(Color::black(), 1.0)).color
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
