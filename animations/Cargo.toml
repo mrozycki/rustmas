@@ -16,6 +16,10 @@ name = "check"
 path = "src/check.rs"
 
 [[bin]]
+name = "circle_boom"
+path = "src/circle_boom.rs"
+
+[[bin]]
 name = "classic"
 path = "src/classic.rs"
 
