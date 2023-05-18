@@ -10,7 +10,7 @@ pub struct AnimationError {
     message: String,
 }
 
-pub trait Animation: Sync + Send {
+pub trait Animation {
     fn animation_name(&self) -> &str;
 
     fn parameter_schema(&self) -> ParametersSchema {
