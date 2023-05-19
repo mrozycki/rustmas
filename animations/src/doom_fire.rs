@@ -1,10 +1,13 @@
 use std::error::Error;
 
 use animation_api::{
-    parameter_schema::{Parameter, ParameterValue, ParametersSchema},
+    parameter_schema::{get_schema, ParametersSchema},
     Animation,
 };
-use animation_utils::decorators::{BrightnessControlled, SpeedControlled};
+use animation_utils::{
+    decorators::{BrightnessControlled, SpeedControlled},
+    ParameterSchema,
+};
 use lightfx::{Color, Gradient};
 use rand::Rng;
 use serde::{Deserialize, Serialize};
@@ -96,9 +99,12 @@ impl DoomFire {
     }
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, ParameterSchema)]
 struct Parameters {
+    #[schema_field(name = "Upward spread", number(min = 0.0, max = 1.0, step = 0.05))]
     upward_spread: f64,
+
+    #[schema_field(name = "Side spread", number(min = "-5.0", max = 5.0, step = 1.0))]
     side_spread: i32,
 }
 
@@ -151,30 +157,7 @@ impl Animation for DoomFireAnimation {
     }
 
     fn parameter_schema(&self) -> ParametersSchema {
-        ParametersSchema {
-            parameters: vec![
-                Parameter {
-                    id: "upward_spread".to_owned(),
-                    name: "Upward".to_owned(),
-                    description: None,
-                    value: ParameterValue::Number {
-                        min: 0.0,
-                        max: 1.0,
-                        step: 0.05,
-                    },
-                },
-                Parameter {
-                    id: "side_spread".to_owned(),
-                    name: "Side".to_owned(),
-                    description: None,
-                    value: ParameterValue::Number {
-                        min: -5.0,
-                        max: 5.0,
-                        step: 1.0,
-                    },
-                },
-            ],
-        }
+        get_schema::<Parameters>()
     }
 
     fn get_parameters(&self) -> serde_json::Value {

@@ -1,26 +1,41 @@
 use std::f64::consts::{FRAC_PI_2, PI};
 
-use animation_api::parameter_schema::{EnumOption, Parameter, ParameterValue, ParametersSchema};
+use animation_api::parameter_schema::{get_schema, ParametersSchema};
 use animation_api::Animation;
 use animation_utils::decorators::{BrightnessControlled, SpeedControlled};
+use animation_utils::{EnumSchema, ParameterSchema};
 use itertools::Itertools;
 use lightfx::Color;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, EnumSchema)]
 enum Mode {
+    #[schema_variant(name = "Flowing one-by-one")]
     FlowingSingles,
+
+    #[schema_variant(name = "Flowing two-by-two")]
     FlowingPairs,
+
+    #[schema_variant(name = "Static")]
     Static,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, ParameterSchema)]
 struct Parameters {
+    #[schema_field(name = "Color A (Red)", color)]
     color_red: Color,
+
+    #[schema_field(name = "Color B (Green)", color)]
     color_green: Color,
+
+    #[schema_field(name = "Color C (Yellow)", color)]
     color_yellow: Color,
+
+    #[schema_field(name = "Color D (Blue)", color)]
     color_blue: Color,
+
+    #[schema_field(name = "Mode", enum_options)]
     mode: Mode,
 }
 
@@ -89,58 +104,7 @@ impl Animation for Classic {
     }
 
     fn parameter_schema(&self) -> ParametersSchema {
-        ParametersSchema {
-            parameters: vec![
-                Parameter {
-                    id: "color_red".to_owned(),
-                    name: "Color A (Red)".to_owned(),
-                    description: None,
-                    value: ParameterValue::Color,
-                },
-                Parameter {
-                    id: "color_green".to_owned(),
-                    name: "Color B (Green)".to_owned(),
-                    description: None,
-                    value: ParameterValue::Color,
-                },
-                Parameter {
-                    id: "color_yellow".to_owned(),
-                    name: "Color C (Yellow)".to_owned(),
-                    description: None,
-                    value: ParameterValue::Color,
-                },
-                Parameter {
-                    id: "color_blue".to_owned(),
-                    name: "Color D (Blue)".to_owned(),
-                    description: None,
-                    value: ParameterValue::Color,
-                },
-                Parameter {
-                    id: "mode".to_owned(),
-                    name: "Mode".to_owned(),
-                    description: None,
-                    value: ParameterValue::Enum {
-                        values: vec![
-                            EnumOption {
-                                name: "Flowing one-by-one".into(),
-                                description: None,
-                                value: "FlowingSingles".into(),
-                            },
-                            EnumOption {
-                                name: "Flowing two-by-two".into(),
-                                description: None,
-                                value: "FlowingPairs".into(),
-                            },
-                            EnumOption {
-                                name: "Static".into(),
-                                description: None,
-                                value: "Static".into(),
-                            },
-                        ],
-                    },
-                },
-            ],
-        }
+        get_schema::<Parameters>()
     }
 
     fn get_parameters(&self) -> serde_json::Value {

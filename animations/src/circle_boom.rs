@@ -1,17 +1,27 @@
 use std::f64::consts::FRAC_PI_2;
 
-use animation_api::parameter_schema::{Parameter, ParameterValue, ParametersSchema};
+use animation_api::parameter_schema::{get_schema, ParametersSchema};
 use animation_api::Animation;
 use animation_utils::decorators::BrightnessControlled;
+use animation_utils::ParameterSchema;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, ParameterSchema)]
 struct Parameters {
+    #[schema_field(name = "Center X", number(min = "-1.0", max = 1.0, step = 0.1))]
     center_x: f64,
+
+    #[schema_field(name = "Center Y", number(min = "-1.0", max = 1.0, step = 0.1))]
     center_y: f64,
+
+    #[schema_field(name = "Radius", number(min = "-1.0", max = 1.0, step = 0.1))]
     radius: f64,
+
+    #[schema_field(name = "BPM", number(min = 40.0, max = 240.0, step = 1.0))]
     bpm: f64,
+
+    #[schema_field(name = "Color cycle", number(min = 5.0, max = 60.0, step = 5.0))]
     color_cycle: f64,
 }
 
@@ -69,60 +79,7 @@ impl Animation for CircleBoom {
     }
 
     fn parameter_schema(&self) -> ParametersSchema {
-        ParametersSchema {
-            parameters: vec![
-                Parameter {
-                    id: "center_x".to_owned(),
-                    name: "Center X".to_owned(),
-                    description: None,
-                    value: ParameterValue::Number {
-                        min: -1.0,
-                        max: 1.0,
-                        step: 0.1,
-                    },
-                },
-                Parameter {
-                    id: "center_y".to_owned(),
-                    name: "Center Y".to_owned(),
-                    description: None,
-                    value: ParameterValue::Number {
-                        min: -1.0,
-                        max: 1.0,
-                        step: 0.1,
-                    },
-                },
-                Parameter {
-                    id: "radius".to_owned(),
-                    name: "Radius".to_owned(),
-                    description: None,
-                    value: ParameterValue::Number {
-                        min: 0.0,
-                        max: 2.0,
-                        step: 0.1,
-                    },
-                },
-                Parameter {
-                    id: "bpm".to_owned(),
-                    name: "BPM".to_owned(),
-                    description: None,
-                    value: ParameterValue::Number {
-                        min: 40.0,
-                        max: 240.0,
-                        step: 0.1,
-                    },
-                },
-                Parameter {
-                    id: "color_cycle".to_owned(),
-                    name: "Color cycle length".to_owned(),
-                    description: None,
-                    value: ParameterValue::Number {
-                        min: 5.0,
-                        max: 120.0,
-                        step: 5.0,
-                    },
-                },
-            ],
-        }
+        get_schema::<Parameters>()
     }
 
     fn set_parameters(

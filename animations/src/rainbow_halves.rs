@@ -1,20 +1,27 @@
 use std::f64::consts::PI;
 
-use animation_api::parameter_schema::{EnumOption, Parameter, ParameterValue, ParametersSchema};
+use animation_api::parameter_schema::{get_schema, ParametersSchema};
 use animation_api::Animation;
 use animation_utils::decorators::{BrightnessControlled, SpeedControlled};
+use animation_utils::{EnumSchema, ParameterSchema};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, EnumSchema)]
 enum Axis {
+    #[schema_variant(name = "X: Left-Right")]
     X,
+
+    #[schema_variant(name = "Y: Bottom-Top")]
     Y,
+
+    #[schema_variant(name = "Z: Front-Back")]
     Z,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, ParameterSchema)]
 struct Parameters {
+    #[schema_field(name = "Axis of rotation", enum_options)]
     axis: Axis,
 }
 
@@ -62,32 +69,7 @@ impl Animation for RainbowHalves {
     }
 
     fn parameter_schema(&self) -> ParametersSchema {
-        ParametersSchema {
-            parameters: vec![Parameter {
-                id: "axis".to_owned(),
-                name: "Rotation".to_owned(),
-                description: Some("Axis of rotation".to_owned()),
-                value: ParameterValue::Enum {
-                    values: vec![
-                        EnumOption {
-                            name: "X: Left-Right".to_owned(),
-                            description: None,
-                            value: "X".to_owned(),
-                        },
-                        EnumOption {
-                            name: "Y: Bottom-Top".to_owned(),
-                            description: None,
-                            value: "Y".to_owned(),
-                        },
-                        EnumOption {
-                            name: "Z: Front-Back".to_owned(),
-                            description: None,
-                            value: "Z".to_owned(),
-                        },
-                    ],
-                },
-            }],
-        }
+        get_schema::<Parameters>()
     }
 
     fn set_parameters(

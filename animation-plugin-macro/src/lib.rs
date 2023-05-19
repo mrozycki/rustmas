@@ -1,3 +1,4 @@
+use darling::{FromField, FromMeta, FromVariant};
 use proc_macro::TokenStream;
 use quote::quote;
 
@@ -103,4 +104,135 @@ pub fn plugin(_attr: TokenStream, item: TokenStream) -> TokenStream {
     };
 
     output.into()
+}
+
+#[derive(Debug, Clone, FromMeta)]
+struct Number {
+    min: f64,
+    max: f64,
+    step: f64,
+}
+
+#[derive(FromField, Default, Debug)]
+#[darling(default, attributes(schema_field))]
+struct FieldAttributes {
+    name: String,
+    description: Option<String>,
+    number: Option<Number>,
+    color: bool,
+    speed: bool,
+    percentage: bool,
+    enum_options: bool,
+}
+
+#[proc_macro_derive(ParameterSchema, attributes(schema_field))]
+pub fn derive_parameter_schema(input: TokenStream) -> TokenStream {
+    let ast: syn::ItemStruct = syn::parse2(input.into()).unwrap();
+    let fields: proc_macro2::TokenStream = ast
+        .fields
+        .into_iter()
+        .map(|field| {
+            let attrs = FieldAttributes::from_field(&field).unwrap();
+            let value = if let Some(number) = attrs.number {
+                let min = number.min;
+                let max = number.max;
+                let step = number.step;
+                quote! {
+                    animation_api::parameter_schema::ParameterValue::Number {
+                        min: #min,
+                        max: #max,
+                        step: #step,
+                    }
+                }
+            } else if attrs.color {
+                quote! {
+                    animation_api::parameter_schema::ParameterValue::Color
+                }
+            } else if attrs.percentage {
+                quote! {
+                    animation_api::parameter_schema::ParameterValue::Percentage
+                }
+            } else if attrs.speed {
+                quote! {
+                    animation_api::parameter_schema::ParameterValue::Speed
+                }
+            } else if attrs.enum_options {
+                let ty = field.ty;
+                quote! {
+                    animation_api::parameter_schema::ParameterValue::Enum {
+                        values: animation_api::parameter_schema::get_enum_options::<#ty>(),
+                    }
+                }
+            } else {
+                panic!("One of 'number', 'color', 'percentage', 'speed' or 'enum' required in 'schema'");
+            };
+
+            let ident = field.ident;
+            let name = attrs.name;
+            let description = if let Some(description) = &attrs.description {
+                quote! { Some(#description.to_owned()) }
+            } else {
+                quote! { None }
+            };
+            quote! {
+                animation_api::parameter_schema::Parameter {
+                    id: stringify!(#ident).to_owned(),
+                    name: #name.to_owned(),
+                    description: #description,
+                    value: #value,
+                },
+            }
+        })
+        .collect();
+
+    let ident = ast.ident;
+    quote! {
+        impl animation_api::parameter_schema::GetParametersSchema for #ident {
+            fn schema() -> animation_api::parameter_schema::ParametersSchema {
+                animation_api::parameter_schema::ParametersSchema {
+                    parameters: vec![
+                        #fields
+                    ],
+                }
+            }
+        }
+    }
+    .into()
+}
+
+#[derive(FromVariant, Debug)]
+#[darling(attributes(schema_variant))]
+struct EnumAttributes {
+    ident: syn::Ident,
+    name: String,
+}
+
+#[proc_macro_derive(EnumSchema, attributes(schema_variant))]
+pub fn derive_enum_schema(input: TokenStream) -> TokenStream {
+    let ast: syn::ItemEnum = syn::parse2(input.into()).unwrap();
+    let variants: proc_macro2::TokenStream = ast
+        .variants
+        .into_iter()
+        .map(|variant| {
+            let variant = EnumAttributes::from_variant(&variant).unwrap();
+            let name = variant.name;
+            let ident = variant.ident;
+            quote! {
+                animation_api::parameter_schema::EnumOption {
+                    name: #name.into(),
+                    description: None,
+                    value: stringify!(#ident).into(),
+                },
+            }
+        })
+        .collect();
+    let ident = ast.ident;
+    quote! {
+        impl animation_api::parameter_schema::GetEnumOptions for #ident {
+            fn enum_options() -> Vec<animation_api::parameter_schema::EnumOption> {
+                vec![#variants]
+            }
+        }
+    }
+    .into()
 }
