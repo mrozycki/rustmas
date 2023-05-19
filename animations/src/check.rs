@@ -18,6 +18,8 @@ impl Check {
 }
 
 impl Animation for Check {
+    type Parameters = ();
+
     fn update(&mut self, delta: f64) {
         self.time += delta;
     }

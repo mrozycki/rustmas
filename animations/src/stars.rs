@@ -1,6 +1,5 @@
 use std::f64::consts::PI;
 
-use animation_api::parameter_schema::{get_schema, ParametersSchema};
 use animation_api::Animation;
 use animation_utils::decorators::{BrightnessControlled, SpeedControlled};
 use animation_utils::ParameterSchema;
@@ -10,8 +9,8 @@ use rand::Rng;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 
-#[derive(Serialize, Deserialize, ParameterSchema)]
-struct Parameters {
+#[derive(Clone, Default, Serialize, Deserialize, ParameterSchema)]
+pub struct Parameters {
     #[schema_field(name = "Count", number(min = 50.0, max = 150.0, step = 10.0))]
     count: f64,
 
@@ -65,6 +64,8 @@ impl Stars {
 }
 
 impl Animation for Stars {
+    type Parameters = Parameters;
+
     fn update(&mut self, delta: f64) {
         for star in self.stars.iter_mut() {
             star.age += delta;
@@ -94,21 +95,13 @@ impl Animation for Stars {
         "Stars"
     }
 
-    fn parameter_schema(&self) -> ParametersSchema {
-        get_schema::<Parameters>()
-    }
-
-    fn set_parameters(
-        &mut self,
-        parameters: serde_json::Value,
-    ) -> Result<(), Box<dyn std::error::Error>> {
-        self.parameters = serde_json::from_value(parameters)?;
+    fn set_parameters(&mut self, parameters: Self::Parameters) {
+        self.parameters = parameters;
         self.stars
             .resize_with(self.parameters.count as usize, random_star);
-        Ok(())
     }
 
-    fn get_parameters(&self) -> serde_json::Value {
-        json!(self.parameters)
+    fn get_parameters(&self) -> Self::Parameters {
+        self.parameters.clone()
     }
 }

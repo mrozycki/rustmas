@@ -1,14 +1,13 @@
 use std::f64::consts::FRAC_PI_2;
 
-use animation_api::parameter_schema::{get_schema, ParametersSchema};
 use animation_api::Animation;
 use animation_utils::decorators::BrightnessControlled;
 use animation_utils::ParameterSchema;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 
-#[derive(Serialize, Deserialize, ParameterSchema)]
-struct Parameters {
+#[derive(Clone, Serialize, Deserialize, ParameterSchema)]
+pub struct Parameters {
     #[schema_field(name = "Center X", number(min = "-1.0", max = 1.0, step = 0.1))]
     center_x: f64,
 
@@ -25,6 +24,18 @@ struct Parameters {
     color_cycle: f64,
 }
 
+impl Default for Parameters {
+    fn default() -> Self {
+        Self {
+            center_x: 0.0,
+            center_y: 0.0,
+            radius: 1.0,
+            bpm: 60.0,
+            color_cycle: 10.0,
+        }
+    }
+}
+
 #[animation_utils::plugin]
 pub struct CircleBoom {
     points: Vec<(f64, f64, f64)>,
@@ -37,18 +48,14 @@ impl CircleBoom {
         BrightnessControlled::new(Self {
             points,
             time: 0.0,
-            parameters: Parameters {
-                center_x: 0.0,
-                center_y: 0.0,
-                radius: 1.0,
-                bpm: 60.0,
-                color_cycle: 10.0,
-            },
+            parameters: Default::default(),
         })
     }
 }
 
 impl Animation for CircleBoom {
+    type Parameters = Parameters;
+
     fn update(&mut self, delta: f64) {
         self.time += delta * self.parameters.bpm / 60.0;
     }
@@ -78,19 +85,11 @@ impl Animation for CircleBoom {
         "Circle boom"
     }
 
-    fn parameter_schema(&self) -> ParametersSchema {
-        get_schema::<Parameters>()
+    fn set_parameters(&mut self, parameters: Self::Parameters) {
+        self.parameters = parameters;
     }
 
-    fn set_parameters(
-        &mut self,
-        parameters: serde_json::Value,
-    ) -> Result<(), Box<dyn std::error::Error>> {
-        self.parameters = serde_json::from_value(parameters)?;
-        Ok(())
-    }
-
-    fn get_parameters(&self) -> serde_json::Value {
-        json!(self.parameters)
+    fn get_parameters(&self) -> Self::Parameters {
+        self.parameters.clone()
     }
 }

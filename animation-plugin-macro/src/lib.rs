@@ -66,12 +66,12 @@ pub fn plugin(_attr: TokenStream, item: TokenStream) -> TokenStream {
                         },
                         JsonRpcMethod::SetParameters { params } => {
                             if let Some(mut animation) = animation.as_mut() {
-                                animation.set_parameters(params)?;
+                                animation.set_parameters(serde_json::from_value(params)?);
                             }
                         },
                         JsonRpcMethod::GetParameters => {
                             if let Some(animation) = animation.as_ref() {
-                                respond(message.id, animation.get_parameters());
+                                respond(message.id, serde_json::json!(animation.get_parameters()));
                             }
                         },
                         JsonRpcMethod::GetFps => {
@@ -160,7 +160,7 @@ pub fn derive_parameter_schema(input: TokenStream) -> TokenStream {
                 let ty = field.ty;
                 quote! {
                     animation_api::parameter_schema::ParameterValue::Enum {
-                        values: animation_api::parameter_schema::get_enum_options::<#ty>(),
+                        values: <#ty as animation_api::parameter_schema::GetEnumOptions>::enum_options(),
                     }
                 }
             } else {

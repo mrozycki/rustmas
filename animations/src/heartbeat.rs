@@ -1,12 +1,11 @@
-use animation_api::parameter_schema::{get_schema, ParametersSchema};
 use animation_api::Animation;
 use animation_utils::decorators::BrightnessControlled;
 use animation_utils::ParameterSchema;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 
-#[derive(Serialize, Deserialize, ParameterSchema)]
-struct Parameters {
+#[derive(Clone, Default, Serialize, Deserialize, ParameterSchema)]
+pub struct Parameters {
     #[schema_field(name = "Center X", number(min = "-1.0", max = 1.0, step = 0.1))]
     center_x: f64,
 
@@ -47,6 +46,8 @@ impl HeartBoom {
 }
 
 impl Animation for HeartBoom {
+    type Parameters = Parameters;
+
     fn update(&mut self, delta: f64) {
         self.time += delta * self.parameters.bpm / 60.0;
     }
@@ -79,19 +80,11 @@ impl Animation for HeartBoom {
         "Heartbeat"
     }
 
-    fn parameter_schema(&self) -> ParametersSchema {
-        get_schema::<Parameters>()
+    fn set_parameters(&mut self, parameters: Self::Parameters) {
+        self.parameters = parameters;
     }
 
-    fn set_parameters(
-        &mut self,
-        parameters: serde_json::Value,
-    ) -> Result<(), Box<dyn std::error::Error>> {
-        self.parameters = serde_json::from_value(parameters)?;
-        Ok(())
-    }
-
-    fn get_parameters(&self) -> serde_json::Value {
-        json!(self.parameters)
+    fn get_parameters(&self) -> Self::Parameters {
+        self.parameters.clone()
     }
 }

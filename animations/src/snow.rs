@@ -1,4 +1,3 @@
-use animation_api::parameter_schema::{get_schema, ParametersSchema};
 use animation_api::Animation;
 use animation_utils::decorators::{BrightnessControlled, SpeedControlled};
 use animation_utils::ParameterSchema;
@@ -7,8 +6,8 @@ use nalgebra::Vector3;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 
-#[derive(Serialize, Deserialize, ParameterSchema)]
-struct Parameters {
+#[derive(Clone, Default, Serialize, Deserialize, ParameterSchema)]
+pub struct Parameters {
     #[schema_field(name = "Count", number(min = 50.0, max = 150.0, step = 10.0))]
     count: f64,
 
@@ -58,6 +57,8 @@ impl Snow {
 }
 
 impl Animation for Snow {
+    type Parameters = Parameters;
+
     fn update(&mut self, delta: f64) {
         for center in self.centers.iter_mut() {
             center.y -= delta;
@@ -89,23 +90,15 @@ impl Animation for Snow {
         "Snow"
     }
 
-    fn parameter_schema(&self) -> ParametersSchema {
-        get_schema::<Parameters>()
-    }
-
-    fn set_parameters(
-        &mut self,
-        parameters: serde_json::Value,
-    ) -> Result<(), Box<dyn std::error::Error>> {
-        self.parameters = serde_json::from_value(parameters)?;
+    fn set_parameters(&mut self, parameters: Self::Parameters) {
+        self.parameters = parameters;
         self.centers
             .resize_with(self.parameters.count as usize, || {
                 random_new_center(self.parameters.size)
             });
-        Ok(())
     }
 
-    fn get_parameters(&self) -> serde_json::Value {
-        json!(self.parameters)
+    fn get_parameters(&self) -> Self::Parameters {
+        self.parameters.clone()
     }
 }

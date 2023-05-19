@@ -1,9 +1,6 @@
-use std::error::Error;
+use serde::{de::DeserializeOwned, Deserialize, Serialize};
 
-use serde::{Deserialize, Serialize};
-use serde_json::json;
-
-use crate::parameter_schema::ParametersSchema;
+use crate::parameter_schema::{GetParametersSchema, ParametersSchema};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct AnimationError {
@@ -11,25 +8,32 @@ pub struct AnimationError {
 }
 
 pub trait Animation {
+    type Parameters: GetParametersSchema + DeserializeOwned + Serialize + Default + Clone;
+
     fn animation_name(&self) -> &str;
 
-    fn parameter_schema(&self) -> ParametersSchema {
-        Default::default()
+    fn parameter_schema(&self) -> ParametersSchema
+    where
+        Self::Parameters: GetParametersSchema,
+    {
+        Self::Parameters::schema()
     }
 
-    fn set_parameters(&mut self, _parameters: serde_json::Value) -> Result<(), Box<dyn Error>> {
-        Ok(())
-    }
+    fn set_parameters(&mut self, _parameters: Self::Parameters) {}
 
-    fn get_parameters(&self) -> serde_json::Value {
-        json!({})
+    fn get_parameters(&self) -> Self::Parameters
+    where
+        Self::Parameters: Default,
+    {
+        Self::Parameters::default()
     }
 
     fn get_fps(&self) -> f64 {
         30.0
     }
 
-    fn update(&mut self, delta: f64);
+    fn update(&mut self, _delta: f64) {}
+
     fn render(&self) -> lightfx::Frame;
 }
 
