@@ -1,20 +1,27 @@
-use animation_api::parameter_schema::{EnumOption, Parameter, ParameterValue, ParametersSchema};
+use animation_api::parameter_schema::{get_schema, ParametersSchema};
 use animation_api::Animation;
 use animation_utils::decorators::{BrightnessControlled, SpeedControlled};
+use animation_utils::{EnumSchema, ParameterSchema};
 use itertools::Itertools;
 use nalgebra::Vector3;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, EnumSchema)]
 enum SweepType {
+    #[schema_variant(name = "2D")]
     Sweep2D,
+
+    #[schema_variant(name = "3D")]
     Sweep3D,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, ParameterSchema)]
 struct Parameters {
+    #[schema_field(name = "Tail length", number(min = 0.0, max = 2.0, step = 0.05))]
     tail_length: f64,
+
+    #[schema_field(name = "Sweep type", enum_options)]
     sweep_type: SweepType,
 }
 
@@ -105,39 +112,7 @@ impl Animation for RandomSweep {
     }
 
     fn parameter_schema(&self) -> ParametersSchema {
-        ParametersSchema {
-            parameters: vec![
-                Parameter {
-                    id: "tail_length".to_owned(),
-                    name: "Tail length".to_owned(),
-                    description: Some("Length of the sweep tail".to_owned()),
-                    value: ParameterValue::Number {
-                        min: 0.0,
-                        max: 2.0,
-                        step: 0.05,
-                    },
-                },
-                Parameter {
-                    id: "sweep_type".to_owned(),
-                    name: "Sweep type".to_owned(),
-                    description: None,
-                    value: ParameterValue::Enum {
-                        values: vec![
-                            EnumOption {
-                                name: "2D".to_owned(),
-                                description: None,
-                                value: "Sweep2D".to_owned(),
-                            },
-                            EnumOption {
-                                name: "3D".to_owned(),
-                                description: None,
-                                value: "Sweep3D".to_owned(),
-                            },
-                        ],
-                    },
-                },
-            ],
-        }
+        get_schema::<Parameters>()
     }
 
     fn set_parameters(

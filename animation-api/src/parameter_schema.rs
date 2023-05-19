@@ -30,3 +30,19 @@ pub struct Parameter {
 pub struct ParametersSchema {
     pub parameters: Vec<Parameter>,
 }
+
+pub trait GetParametersSchema {
+    fn schema() -> ParametersSchema;
+}
+
+pub fn get_schema<T: GetParametersSchema>() -> ParametersSchema {
+    T::schema()
+}
+
+pub trait GetEnumOptions {
+    fn enum_options() -> Vec<EnumOption>;
+}
+
+pub fn get_enum_options<T: GetEnumOptions>() -> Vec<EnumOption> {
+    T::enum_options()
+}

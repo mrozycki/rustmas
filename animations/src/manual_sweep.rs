@@ -1,29 +1,57 @@
-use animation_api::parameter_schema::{EnumOption, Parameter, ParameterValue, ParametersSchema};
+use animation_api::parameter_schema::{get_schema, ParametersSchema};
 use animation_api::Animation;
 use animation_utils::decorators::BrightnessControlled;
+use animation_utils::{EnumSchema, ParameterSchema};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, EnumSchema)]
 enum Axis {
+    #[schema_variant(name = "X: Left-Right")]
     X,
+
+    #[schema_variant(name = "Y: Bottom-Top")]
     Y,
+
+    #[schema_variant(name = "Z: Front-Back")]
     Z,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, EnumSchema)]
 enum Alignment {
+    #[schema_variant(name = "Before")]
     Before,
+
+    #[schema_variant(name = "Center")]
     Center,
+
+    #[schema_variant(name = "After")]
     After,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, ParameterSchema)]
 struct Parameters {
+    #[schema_field(name = "Axis", enum_options)]
     axis: Axis,
+
+    #[schema_field(name = "Band alignment", enum_options)]
     band_alignment: Alignment,
+
+    #[schema_field(
+        name = "Band size",
+        description = "Thickness of the sweep band",
+        number(min = 0.0, max = 2.0, step = 0.01)
+    )]
     band_size: f64,
+
+    #[schema_field(
+        name = "Band position",
+        description = "Position of the start (left, bottom, front) of the band",
+        number(min = "-1.0", max = 1.0, step = 0.01)
+    )]
     band_position: f64,
+
+    #[schema_field(name = "Color", color)]
     color: lightfx::Color,
 }
 
@@ -92,86 +120,7 @@ impl Animation for ManualSweep {
     }
 
     fn parameter_schema(&self) -> ParametersSchema {
-        ParametersSchema {
-            parameters: vec![
-                Parameter {
-                    id: "axis".to_owned(),
-                    name: "Direction".to_owned(),
-                    description: Some("Direction of the sweep".to_owned()),
-                    value: ParameterValue::Enum {
-                        values: vec![
-                            EnumOption {
-                                name: "X: Left-Right".to_owned(),
-                                description: None,
-                                value: "X".to_owned(),
-                            },
-                            EnumOption {
-                                name: "Y: Bottom-Top".to_owned(),
-                                description: None,
-                                value: "Y".to_owned(),
-                            },
-                            EnumOption {
-                                name: "Z: Front-Back".to_owned(),
-                                description: None,
-                                value: "Z".to_owned(),
-                            },
-                        ],
-                    },
-                },
-                Parameter {
-                    id: "band_position".to_owned(),
-                    name: "Band position".to_owned(),
-                    description: Some(
-                        "Position of the start (left, bottom, front) of the band".to_owned(),
-                    ),
-                    value: ParameterValue::Number {
-                        min: -1.0,
-                        max: 1.0,
-                        step: 0.01,
-                    },
-                },
-                Parameter {
-                    id: "band_size".to_owned(),
-                    name: "Band size".to_owned(),
-                    description: Some("Thickness of the sweep band".to_owned()),
-                    value: ParameterValue::Number {
-                        min: 0.0,
-                        max: 2.0,
-                        step: 0.01,
-                    },
-                },
-                Parameter {
-                    id: "band_alignment".to_owned(),
-                    name: "Band alignment".to_owned(),
-                    description: None,
-                    value: ParameterValue::Enum {
-                        values: vec![
-                            EnumOption {
-                                name: "Before".into(),
-                                description: None,
-                                value: "Before".into(),
-                            },
-                            EnumOption {
-                                name: "Center".into(),
-                                description: None,
-                                value: "Center".into(),
-                            },
-                            EnumOption {
-                                name: "After".into(),
-                                description: None,
-                                value: "After".into(),
-                            },
-                        ],
-                    },
-                },
-                Parameter {
-                    id: "color".to_owned(),
-                    name: "Color".to_owned(),
-                    description: Some("Color of the sweep band".to_owned()),
-                    value: ParameterValue::Color,
-                },
-            ],
-        }
+        get_schema::<Parameters>()
     }
 
     fn set_parameters(

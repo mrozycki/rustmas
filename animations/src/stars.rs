@@ -1,18 +1,24 @@
 use std::f64::consts::PI;
 
-use animation_api::parameter_schema::{Parameter, ParameterValue, ParametersSchema};
+use animation_api::parameter_schema::{get_schema, ParametersSchema};
 use animation_api::Animation;
 use animation_utils::decorators::{BrightnessControlled, SpeedControlled};
+use animation_utils::ParameterSchema;
 use lightfx::Color;
 use nalgebra::Vector3;
 use rand::Rng;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, ParameterSchema)]
 struct Parameters {
+    #[schema_field(name = "Count", number(min = 50.0, max = 150.0, step = 10.0))]
     count: f64,
+
+    #[schema_field(name = "Size", number(min = 0.1, max = 0.5, step = 0.01))]
     size: f64,
+
+    #[schema_field(name = "Color", color)]
     color: lightfx::Color,
 }
 
@@ -89,36 +95,7 @@ impl Animation for Stars {
     }
 
     fn parameter_schema(&self) -> ParametersSchema {
-        ParametersSchema {
-            parameters: vec![
-                Parameter {
-                    id: "count".to_owned(),
-                    name: "Count".to_owned(),
-                    description: None,
-                    value: ParameterValue::Number {
-                        min: 10.0,
-                        max: 120.0,
-                        step: 10.0,
-                    },
-                },
-                Parameter {
-                    id: "size".to_owned(),
-                    name: "Size".to_owned(),
-                    description: None,
-                    value: ParameterValue::Number {
-                        min: 0.1,
-                        max: 0.5,
-                        step: 0.01,
-                    },
-                },
-                Parameter {
-                    id: "color".to_owned(),
-                    name: "Color".to_owned(),
-                    description: None,
-                    value: ParameterValue::Color,
-                },
-            ],
-        }
+        get_schema::<Parameters>()
     }
 
     fn set_parameters(

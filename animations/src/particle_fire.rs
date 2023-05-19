@@ -1,10 +1,13 @@
 use std::error::Error;
 
 use animation_api::{
-    parameter_schema::{Parameter, ParameterValue, ParametersSchema},
+    parameter_schema::{get_schema, ParametersSchema},
     Animation,
 };
-use animation_utils::decorators::{BrightnessControlled, SpeedControlled};
+use animation_utils::{
+    decorators::{BrightnessControlled, SpeedControlled},
+    ParameterSchema,
+};
 use lightfx::{Color, ColorWithAlpha, Gradient};
 use rand::{thread_rng, Rng};
 use serde::{Deserialize, Serialize};
@@ -84,13 +87,24 @@ impl Particle {
     }
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, ParameterSchema)]
 struct Parameters {
+    #[schema_field(name = "Particle count", number(min = 100.0, max = 500.0, step = 20.0))]
     particle_count: usize,
+
+    #[schema_field(name = "Decay rate", number(min = 0.0, max = 1.0, step = 0.01))]
     decay_rate: f64,
+
+    #[schema_field(name = "Decay rate spread", number(min = 0.0, max = 0.2, step = 0.01))]
     decay_rate_spread: f64,
+
+    #[schema_field(name = "Bottom line", number(min = "-1.0", max = 1.0, step = 0.01))]
     bottom_line: f64,
+
+    #[schema_field(name = "Particle range", number(min = 0.0, max = 1.0, step = 0.01))]
     particle_range: f64,
+
+    #[schema_field(name = "Wind", number(min = "-0.1", max = 0.1, step = 0.001))]
     wind: f64,
 }
 
@@ -177,70 +191,7 @@ impl Animation for DoomFireAnimation {
     }
 
     fn parameter_schema(&self) -> ParametersSchema {
-        ParametersSchema {
-            parameters: vec![
-                Parameter {
-                    id: "particle_count".to_owned(),
-                    name: "Particle count".to_owned(),
-                    description: None,
-                    value: ParameterValue::Number {
-                        min: 100.0,
-                        max: 500.0,
-                        step: 20.0,
-                    },
-                },
-                Parameter {
-                    id: "decay_rate".to_owned(),
-                    name: "Decay rate".to_owned(),
-                    description: None,
-                    value: ParameterValue::Number {
-                        min: 0.0,
-                        max: 1.0,
-                        step: 0.01,
-                    },
-                },
-                Parameter {
-                    id: "decay_rate_spread".to_owned(),
-                    name: "Decay rate spread".to_owned(),
-                    description: None,
-                    value: ParameterValue::Number {
-                        min: 0.0,
-                        max: 0.2,
-                        step: 0.01,
-                    },
-                },
-                Parameter {
-                    id: "bottom_line".to_owned(),
-                    name: "Bottom line".to_owned(),
-                    description: None,
-                    value: ParameterValue::Number {
-                        min: -1.0,
-                        max: 0.0,
-                        step: 0.05,
-                    },
-                },
-                Parameter {
-                    id: "particle_range".to_owned(),
-                    name: "Particle range".to_owned(),
-                    description: None,
-                    value: ParameterValue::Number {
-                        min: 0.0,
-                        max: 1.0,
-                        step: 0.01,
-                    },
-                },
-                Parameter {
-                    id: "wind".to_owned(),
-                    name: "Wind".to_owned(),
-                    description: None,
-                    value: ParameterValue::Number {
-                        min: -0.1,
-                        max: 0.1,
-                        step: 0.001,
-                    },
-                },
-            ],
-        }
+        get_schema::<Parameters>()
     }
 
     fn get_parameters(&self) -> serde_json::Value {

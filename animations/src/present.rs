@@ -1,15 +1,31 @@
-use animation_api::parameter_schema::{Parameter, ParameterValue, ParametersSchema};
+use animation_api::parameter_schema::{get_schema, ParametersSchema};
 use animation_api::Animation;
 use animation_utils::decorators::{BrightnessControlled, SpeedControlled};
+use animation_utils::ParameterSchema;
 use nalgebra::{Rotation3, Vector3};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, ParameterSchema)]
 struct Parameters {
+    #[schema_field(name = "Wrap color", color)]
     color_wrap: lightfx::Color,
+
+    #[schema_field(name = "Ribbon color", color)]
     color_ribbon: lightfx::Color,
+
+    #[schema_field(
+        name = "Ribbon height",
+        description = "Position of the horizontal ribbon",
+        number(min = "-1.0", max = 1.0, step = 0.05)
+    )]
     height: f64,
+
+    #[schema_field(
+        name = "Ribbon thickness",
+        description = "Thickness of the ribbon",
+        number(min = 0.0, max = 2.0, step = 0.05)
+    )]
     width: f64,
 }
 
@@ -71,42 +87,7 @@ impl Animation for Present {
     }
 
     fn parameter_schema(&self) -> ParametersSchema {
-        ParametersSchema {
-            parameters: vec![
-                Parameter {
-                    id: "color_wrap".to_owned(),
-                    name: "Wrap color".to_owned(),
-                    description: None,
-                    value: ParameterValue::Color,
-                },
-                Parameter {
-                    id: "color_ribbon".to_owned(),
-                    name: "Ribbon color".to_owned(),
-                    description: None,
-                    value: ParameterValue::Color,
-                },
-                Parameter {
-                    id: "height".to_owned(),
-                    name: "Height".to_owned(),
-                    description: Some("Position of the horizontal ribbon".to_owned()),
-                    value: ParameterValue::Number {
-                        min: -1.0,
-                        max: 1.0,
-                        step: 0.05,
-                    },
-                },
-                Parameter {
-                    id: "width".to_owned(),
-                    name: "Ribbon width".to_owned(),
-                    description: Some("Width of the ribbon".to_owned()),
-                    value: ParameterValue::Number {
-                        min: 0.0,
-                        max: 1.0,
-                        step: 0.02,
-                    },
-                },
-            ],
-        }
+        get_schema::<Parameters>()
     }
 
     fn set_parameters(

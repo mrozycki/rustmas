@@ -1,23 +1,44 @@
 use animation_api::parameter_schema::{EnumOption, Parameter, ParameterValue, ParametersSchema};
 use animation_api::Animation;
 use animation_utils::decorators::{BrightnessControlled, SpeedControlled};
+use animation_utils::{EnumSchema, ParameterSchema};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, EnumSchema)]
 enum Direction {
+    #[schema_variant(name = "Bottom to top")]
     BottomToTop,
+
+    #[schema_variant(name = "Top to bottom")]
     TopToBottom,
+
+    #[schema_variant(name = "Back to front")]
     BackToFront,
+
+    #[schema_variant(name = "Front to back")]
     FrontToBack,
+
+    #[schema_variant(name = "Left to right")]
     LeftToRight,
+
+    #[schema_variant(name = "Right to left")]
     RightToLeft,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, ParameterSchema)]
 struct Parameters {
+    #[schema_field(name = "Direction", enum_options)]
     direction: Direction,
+
+    #[schema_field(
+        name = "Band size",
+        description = "Thickness of the sweep band",
+        number(min = 0.0, max = 2.0, step = 0.05)
+    )]
     band_size: f64,
+
+    #[schema_field(name = "Band color", description = "Color of the sweep band", color)]
     color: lightfx::Color,
 }
 
