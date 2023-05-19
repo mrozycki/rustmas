@@ -6,7 +6,7 @@ use animation_utils::ParameterSchema;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 
-#[derive(Clone, Default, Serialize, Deserialize, ParameterSchema)]
+#[derive(Clone, Serialize, Deserialize, ParameterSchema)]
 pub struct Parameters {
     #[schema_field(name = "First color", color)]
     color_a: lightfx::Color,
@@ -16,6 +16,16 @@ pub struct Parameters {
 
     #[schema_field(name = "Twistiness", number(min = "-5.0", max = 5.0, step = 0.02))]
     twistiness: f64,
+}
+
+impl Default for Parameters {
+    fn default() -> Self {
+        Self {
+            color_a: lightfx::Color::rgb(255, 0, 0),
+            color_b: lightfx::Color::rgb(255, 255, 255),
+            twistiness: 1.0,
+        }
+    }
 }
 
 #[animation_utils::plugin]
@@ -30,11 +40,7 @@ impl BarberPole {
         SpeedControlled::new(BrightnessControlled::new(Self {
             points_polar: points.into_iter().map(animation_utils::to_polar).collect(),
             time: 0.0,
-            parameters: Parameters {
-                color_a: lightfx::Color::rgb(255, 0, 0),
-                color_b: lightfx::Color::rgb(255, 255, 255),
-                twistiness: 1.0,
-            },
+            parameters: Default::default(),
         }))
     }
 }

@@ -4,10 +4,16 @@ use animation_utils::ParameterSchema;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 
-#[derive(Clone, Default, Serialize, Deserialize, ParameterSchema)]
+#[derive(Clone, Serialize, Deserialize, ParameterSchema)]
 pub struct Parameters {
     #[schema_field(name = "Density", number(min = 1.0, max = 5.0, step = 1.0))]
     density: f64,
+}
+
+impl Default for Parameters {
+    fn default() -> Self {
+        Self { density: 1.0 }
+    }
 }
 
 #[animation_utils::plugin]
@@ -26,7 +32,7 @@ impl RainbowCylinder {
                 .map(|(_, a, _)| a)
                 .collect(),
             time: 0.0,
-            parameters: Parameters { density: 1.0 },
+            parameters: Default::default(),
         }))
     }
 }

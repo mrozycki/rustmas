@@ -9,7 +9,7 @@ use rand::Rng;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 
-#[derive(Clone, Default, Serialize, Deserialize, ParameterSchema)]
+#[derive(Clone, Serialize, Deserialize, ParameterSchema)]
 pub struct Parameters {
     #[schema_field(name = "Count", number(min = 50.0, max = 150.0, step = 10.0))]
     count: f64,
@@ -19,6 +19,16 @@ pub struct Parameters {
 
     #[schema_field(name = "Color", color)]
     color: lightfx::Color,
+}
+
+impl Default for Parameters {
+    fn default() -> Self {
+        Self {
+            count: 20.0,
+            size: 0.2,
+            color: Color::white(),
+        }
+    }
 }
 
 struct Star {
@@ -52,11 +62,7 @@ impl Stars {
                 .map(|(x, y, z)| Vector3::new(x, y, z))
                 .collect(),
             stars: vec![],
-            parameters: Parameters {
-                count: 20.0,
-                size: 0.2,
-                color: Color::white(),
-            },
+            parameters: Default::default(),
         };
         result.stars.resize_with(20, random_star);
         SpeedControlled::new(BrightnessControlled::new(result))

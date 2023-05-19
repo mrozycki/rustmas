@@ -19,7 +19,7 @@ pub enum Axis {
     Z,
 }
 
-#[derive(Clone, Default, Serialize, Deserialize, ParameterSchema)]
+#[derive(Clone, Serialize, Deserialize, ParameterSchema)]
 pub struct Parameters {
     #[schema_field(name = "First color", color)]
     color_a: lightfx::Color,
@@ -29,6 +29,16 @@ pub struct Parameters {
 
     #[schema_field(name = "Axis", enum_options)]
     axis: Axis,
+}
+
+impl Default for Parameters {
+    fn default() -> Self {
+        Self {
+            color_a: lightfx::Color::rgb(255, 0, 0),
+            color_b: lightfx::Color::rgb(0, 255, 0),
+            axis: Default::default(),
+        }
+    }
 }
 
 #[animation_utils::plugin]

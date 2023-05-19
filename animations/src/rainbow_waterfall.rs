@@ -4,10 +4,16 @@ use animation_utils::ParameterSchema;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 
-#[derive(Clone, Default, Serialize, Deserialize, ParameterSchema)]
+#[derive(Clone, Serialize, Deserialize, ParameterSchema)]
 pub struct Parameters {
     #[schema_field(name = "Density", number(min = 0.5, max = 5.0, step = 0.05))]
     density: f64,
+}
+
+impl Default for Parameters {
+    fn default() -> Self {
+        Self { density: 1.0 }
+    }
 }
 
 #[animation_utils::plugin]
@@ -20,7 +26,7 @@ pub struct RainbowWaterfall {
 impl RainbowWaterfall {
     pub fn create(points: Vec<(f64, f64, f64)>) -> impl Animation {
         SpeedControlled::new(BrightnessControlled::new(Self {
-            parameters: Parameters { density: 1.0 },
+            parameters: Default::default(),
             time: 0.0,
             points_height: points
                 .into_iter()

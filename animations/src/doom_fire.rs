@@ -94,13 +94,22 @@ impl DoomFire {
     }
 }
 
-#[derive(Clone, Default, Serialize, Deserialize, ParameterSchema)]
+#[derive(Clone, Serialize, Deserialize, ParameterSchema)]
 pub struct Parameters {
     #[schema_field(name = "Upward spread", number(min = 0.0, max = 1.0, step = 0.05))]
     upward_spread: f64,
 
     #[schema_field(name = "Side spread", number(min = "-5.0", max = 5.0, step = 1.0))]
     side_spread: i32,
+}
+
+impl Default for Parameters {
+    fn default() -> Self {
+        Parameters {
+            upward_spread: 0.33,
+            side_spread: 3,
+        }
+    }
 }
 
 #[animation_utils::plugin]
@@ -115,10 +124,7 @@ impl DoomFireAnimation {
     pub fn create(points: Vec<(f64, f64, f64)>) -> impl Animation {
         SpeedControlled::new(BrightnessControlled::new(Self {
             points,
-            parameters: Parameters {
-                upward_spread: 0.33,
-                side_spread: 3,
-            },
+            parameters: Default::default(),
             time: 0.0,
             fire: DoomFire::new(200, 200),
         }))

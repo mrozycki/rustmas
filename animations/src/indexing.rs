@@ -42,7 +42,7 @@ impl Indexing {
     pub fn create(points: Vec<(f64, f64, f64)>) -> impl Animation {
         BrightnessControlled::new(Self {
             points_count: points.len(),
-            parameters: Parameters { bit: 0 },
+            parameters: Default::default(),
         })
     }
 }

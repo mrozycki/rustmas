@@ -5,7 +5,7 @@ use nalgebra::{Rotation3, Vector3};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 
-#[derive(Clone, Default, Serialize, Deserialize, ParameterSchema)]
+#[derive(Clone, Serialize, Deserialize, ParameterSchema)]
 pub struct Parameters {
     #[schema_field(name = "Wrap color", color)]
     color_wrap: lightfx::Color,
@@ -28,6 +28,17 @@ pub struct Parameters {
     width: f64,
 }
 
+impl Default for Parameters {
+    fn default() -> Self {
+        Self {
+            color_wrap: lightfx::Color::rgb(255, 255, 255),
+            color_ribbon: lightfx::Color::rgb(255, 0, 0),
+            height: 0.0,
+            width: 0.1,
+        }
+    }
+}
+
 #[animation_utils::plugin]
 pub struct Present {
     points: Vec<Vector3<f64>>,
@@ -43,12 +54,7 @@ impl Present {
                 .map(|(x, y, z)| Vector3::new(x, y, z))
                 .collect(),
             time: 0.0,
-            parameters: Parameters {
-                color_wrap: lightfx::Color::rgb(255, 255, 255),
-                color_ribbon: lightfx::Color::rgb(255, 0, 0),
-                height: 0.0,
-                width: 0.1,
-            },
+            parameters: Default::default(),
         }))
     }
 }

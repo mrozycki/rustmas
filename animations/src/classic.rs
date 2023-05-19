@@ -21,7 +21,7 @@ enum Mode {
     Static,
 }
 
-#[derive(Clone, Default, Serialize, Deserialize, ParameterSchema)]
+#[derive(Clone, Serialize, Deserialize, ParameterSchema)]
 pub struct Parameters {
     #[schema_field(name = "Color A (Red)", color)]
     color_red: Color,
@@ -39,6 +39,18 @@ pub struct Parameters {
     mode: Mode,
 }
 
+impl Default for Parameters {
+    fn default() -> Self {
+        Self {
+            color_red: lightfx::Color::rgb(255, 0, 0),
+            color_green: lightfx::Color::rgb(0, 255, 0),
+            color_yellow: lightfx::Color::rgb(255, 160, 0),
+            color_blue: lightfx::Color::rgb(0, 0, 255),
+            mode: Default::default(),
+        }
+    }
+}
+
 #[animation_utils::plugin]
 pub struct Classic {
     points_count: usize,
@@ -51,13 +63,7 @@ impl Classic {
         SpeedControlled::new(BrightnessControlled::new(Self {
             points_count: points.len(),
             time: 0.0,
-            parameters: Parameters {
-                color_red: lightfx::Color::rgb(255, 0, 0),
-                color_green: lightfx::Color::rgb(0, 255, 0),
-                color_yellow: lightfx::Color::rgb(255, 160, 0),
-                color_blue: lightfx::Color::rgb(0, 0, 255),
-                mode: Mode::Static,
-            },
+            parameters: Default::default(),
         }))
     }
 }

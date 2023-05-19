@@ -30,7 +30,7 @@ pub enum Alignment {
     After,
 }
 
-#[derive(Clone, Default, Serialize, Deserialize, ParameterSchema)]
+#[derive(Clone, Serialize, Deserialize, ParameterSchema)]
 pub struct Parameters {
     #[schema_field(name = "Axis", enum_options)]
     axis: Axis,
@@ -56,6 +56,18 @@ pub struct Parameters {
     color: lightfx::Color,
 }
 
+impl Default for Parameters {
+    fn default() -> Self {
+        Self {
+            axis: Default::default(),
+            band_alignment: Default::default(),
+            band_size: 0.1,
+            band_position: 0.0,
+            color: lightfx::Color::white(),
+        }
+    }
+}
+
 #[animation_utils::plugin]
 pub struct ManualSweep {
     points: Vec<(f64, f64, f64)>,
@@ -66,13 +78,7 @@ impl ManualSweep {
     pub fn create(points: Vec<(f64, f64, f64)>) -> impl Animation {
         BrightnessControlled::new(Self {
             points,
-            parameters: Parameters {
-                axis: Axis::Y,
-                band_alignment: Alignment::Center,
-                band_size: 0.1,
-                band_position: 0.0,
-                color: lightfx::Color::white(),
-            },
+            parameters: Default::default(),
         })
     }
 }
