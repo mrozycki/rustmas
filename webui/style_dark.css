@@ -1,0 +1,278 @@
+/**
+ * Color palette:
+ * Primary: #195710
+ * Background: #869684
+ * Lighter background: #d9ddd9
+ * Black: #031600
+ * Secondary light: #45763D
+ * Secondary dark: #073300
+ */
+
+* {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    box-sizing: border-box;
+}
+
+body {
+    display: flex;
+    flex-direction: column;
+    font-size: 16px;
+    font-family: sans-serif;
+    background-color: black;
+    min-height: 100vh;
+    color: #ccc;
+}
+
+header {
+    width: 100%;
+    background-color: black;
+    color: #ccc;
+    padding: 1rem;
+}
+
+header h1 {
+    font-size: 1rem;
+    font-weight: 400;
+}
+
+.content {
+    display: flex;
+    flex-grow: 1;
+    background-color: black;
+}
+
+nav {
+    width: 20vw;
+    min-width: 240px;
+    background-color: black;
+    position: relative;
+}
+
+nav::after {
+    position: absolute;
+    right: 0;
+    top: 0;
+    content: "";
+    height: calc(100% - 2rem);
+    width: 1px;
+
+    border-right: 1px solid #333;
+}
+
+nav ul {
+    list-style-type: none;
+}
+
+nav a {
+    display: inline-block;
+    padding: 1rem;
+    width: 100%;
+    height: 100%;
+    cursor: pointer;
+    color: #888;
+}
+
+nav a:hover {
+    display: inline-block;
+    width: 100%;
+    height: 100%;
+    color: #ccc;
+    border-right: 2px solid #ccc;
+}
+
+.parameter-control-list {
+    width: 50vw;
+    padding: 0 3rem;
+    margin-bottom: 2rem;
+}
+
+.parameter-control-list p {
+    font-size: 1rem;
+    line-height: 2rem;
+    color: #888;
+}
+
+.parameter-control-list h2 {
+    margin-top: 1.5rem;
+    font-size: 1.75rem;
+    line-height: 2.5rem;
+    font-weight: 400;
+}
+
+.parameter-control h3 {
+    font-size: 1rem;
+    line-height: 2rem;
+    font-weight: 400;
+}
+
+.parameter-control.buttons {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-end;
+    gap: 1rem;
+    padding-top: 2rem;
+}
+
+.parameter-control-list input[type="submit"],
+.parameter-control-list input[type="button"] {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    border-radius: 0;
+    width: 25%;
+    padding: 1rem;
+    color: #ccc;
+    font-size: 1rem;
+    cursor: pointer;
+}
+
+.parameter-control-list input[type="submit"] {
+    background-color: #020;
+}
+
+.parameter-control-list input[type="button"] {
+    background-color: #111;
+    color: #ccc;
+}
+
+.parameter-control-list input[type="submit"]:hover {
+    background-color: #030;
+}
+
+.parameter-control-list input[type="button"]:hover {
+    background-color: #222;
+}
+
+.parameter-control {
+    max-width: 800px;
+    padding: 1rem 0 0;
+}
+
+.parameter-control:first-child,
+.parameter-control:last-child {
+    border: none;
+}
+
+.color-control {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+}
+
+.parameter-control input[type="color"] {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    width: 25%;
+    height: 1.5rem;
+    margin: 0.25rem 0;
+    border-radius: 0;
+    cursor: pointer;
+}
+
+.parameter-control input[type="color"]::-moz-color-swatch {
+    border: none;
+}
+
+.parameter-control input[type="color"]::-webkit-color-swatch-wrapper {
+    padding: 0;
+}
+
+.parameter-control input[type="color"]::-webkit-color-swatch {
+    border: none;
+}
+
+.parameter-control select {
+    width: 100%;
+    height: 2rem;
+    margin-top: 0.5rem;
+    padding-left: 0.5rem;
+    border: 1px solid #888;
+    border-radius: 0;
+    background-color: black;
+    color: #ccc;
+    font-size: 1rem;
+}
+
+.slider-control {
+    display: flex;
+    align-items: stretch;
+    height: 2rem;
+}
+
+.parameter-control input[type="range"] {
+    flex-grow: 1;
+}
+
+input[type=range] {
+    -webkit-appearance: none;
+    appearance: none;
+    margin: 18px 0;
+    width: 100%;
+}
+
+input[type=range]::-webkit-slider-runnable-track {
+    height: 4px;
+    background: #888;
+}
+
+input[type=range]::-webkit-slider-thumb {
+    height: 16px;
+    margin-top: -6px;
+}
+
+input[type=range]::-moz-range-track {
+    height: 4px;
+    background: #888;
+}
+
+input[type=range]::-ms-track {
+    background: transparent;
+    border-color: transparent;
+    border-width: 16px 0;
+    color: transparent;
+}
+
+input[type=range]::-ms-fill-lower {
+    height: 4px;
+    background: #888;
+}
+
+input[type=range]::-ms-fill-upper {
+    height: 4px;
+    background: #888;
+}
+
+.parameter-control input.value-display {
+    width: 50px;
+    color: #ccc;
+    opacity: 1;
+    padding-left: 0.5rem;
+    background: none;
+    line-height: 2rem;
+    text-align: right;
+    font-size: 1rem;
+}
+
+@media screen and (max-width: 560px) {
+    .content {
+        flex-direction: column;
+    }
+
+    nav,
+    .parameter-control-list {
+        width: 100vw;
+    }
+
+    nav {
+        border-right: none;
+        border-bottom: 1px solid #888;
+        padding-bottom: 1rem;
+    }
+
+    .parameter-control-list {
+        padding: 0 1.5rem;
+    }
+}
