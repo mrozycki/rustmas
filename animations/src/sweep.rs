@@ -1,13 +1,13 @@
-use animation_api::parameter_schema::{EnumOption, Parameter, ParameterValue, ParametersSchema};
 use animation_api::Animation;
 use animation_utils::decorators::{BrightnessControlled, SpeedControlled};
 use animation_utils::{EnumSchema, ParameterSchema};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 
-#[derive(Serialize, Deserialize, EnumSchema)]
+#[derive(Clone, Default, Serialize, Deserialize, EnumSchema)]
 enum Direction {
     #[schema_variant(name = "Bottom to top")]
+    #[default]
     BottomToTop,
 
     #[schema_variant(name = "Top to bottom")]
@@ -26,8 +26,8 @@ enum Direction {
     RightToLeft,
 }
 
-#[derive(Serialize, Deserialize, ParameterSchema)]
-struct Parameters {
+#[derive(Clone, Default, Serialize, Deserialize, ParameterSchema)]
+pub struct Parameters {
     #[schema_field(name = "Direction", enum_options)]
     direction: Direction,
 
@@ -64,6 +64,8 @@ impl Sweep {
 }
 
 impl Animation for Sweep {
+    type Parameters = Parameters;
+
     fn update(&mut self, delta: f64) {
         self.time += delta;
     }
@@ -95,77 +97,11 @@ impl Animation for Sweep {
         "Sweep"
     }
 
-    fn parameter_schema(&self) -> ParametersSchema {
-        ParametersSchema {
-            parameters: vec![
-                Parameter {
-                    id: "direction".to_owned(),
-                    name: "Direction".to_owned(),
-                    description: Some("Direction of the sweep".to_owned()),
-                    value: ParameterValue::Enum {
-                        values: vec![
-                            EnumOption {
-                                name: "Bottom to top".to_owned(),
-                                description: None,
-                                value: "BottomToTop".to_owned(),
-                            },
-                            EnumOption {
-                                name: "Top to bottom".to_owned(),
-                                description: None,
-                                value: "TopToBottom".to_owned(),
-                            },
-                            EnumOption {
-                                name: "Back to front".to_owned(),
-                                description: None,
-                                value: "BackToFront".to_owned(),
-                            },
-                            EnumOption {
-                                name: "Front to back".to_owned(),
-                                description: None,
-                                value: "FrontToBack".to_owned(),
-                            },
-                            EnumOption {
-                                name: "Left to right".to_owned(),
-                                description: None,
-                                value: "LeftToRight".to_owned(),
-                            },
-                            EnumOption {
-                                name: "Right to left".to_owned(),
-                                description: None,
-                                value: "RightToLeft".to_owned(),
-                            },
-                        ],
-                    },
-                },
-                Parameter {
-                    id: "band_size".to_owned(),
-                    name: "Band size".to_owned(),
-                    description: Some("Thickness of the sweep band".to_owned()),
-                    value: ParameterValue::Number {
-                        min: 0.0,
-                        max: 2.0,
-                        step: 0.05,
-                    },
-                },
-                Parameter {
-                    id: "color".to_owned(),
-                    name: "Color".to_owned(),
-                    description: Some("Color of the sweep band".to_owned()),
-                    value: ParameterValue::Color,
-                },
-            ],
-        }
+    fn set_parameters(&mut self, parameters: Self::Parameters) {
+        self.parameters = parameters;
     }
 
-    fn set_parameters(
-        &mut self,
-        parameters: serde_json::Value,
-    ) -> Result<(), Box<dyn std::error::Error>> {
-        self.parameters = serde_json::from_value(parameters)?;
-        Ok(())
-    }
-
-    fn get_parameters(&self) -> serde_json::Value {
-        json!(self.parameters)
+    fn get_parameters(&self) -> Self::Parameters {
+        self.parameters.clone()
     }
 }

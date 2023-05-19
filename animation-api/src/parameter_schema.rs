@@ -35,14 +35,14 @@ pub trait GetParametersSchema {
     fn schema() -> ParametersSchema;
 }
 
-pub fn get_schema<T: GetParametersSchema>() -> ParametersSchema {
-    T::schema()
+impl GetParametersSchema for () {
+    fn schema() -> ParametersSchema {
+        ParametersSchema {
+            parameters: Vec::new(),
+        }
+    }
 }
 
 pub trait GetEnumOptions {
     fn enum_options() -> Vec<EnumOption>;
-}
-
-pub fn get_enum_options<T: GetEnumOptions>() -> Vec<EnumOption> {
-    T::enum_options()
 }

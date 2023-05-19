@@ -1,4 +1,3 @@
-use animation_api::parameter_schema::{get_schema, ParametersSchema};
 use animation_api::Animation;
 use animation_utils::decorators::{BrightnessControlled, SpeedControlled};
 use animation_utils::{EnumSchema, ParameterSchema};
@@ -7,17 +6,18 @@ use nalgebra::Vector3;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 
-#[derive(Serialize, Deserialize, EnumSchema)]
-enum SweepType {
+#[derive(Clone, Default, Serialize, Deserialize, EnumSchema)]
+pub enum SweepType {
     #[schema_variant(name = "2D")]
     Sweep2D,
 
     #[schema_variant(name = "3D")]
+    #[default]
     Sweep3D,
 }
 
-#[derive(Serialize, Deserialize, ParameterSchema)]
-struct Parameters {
+#[derive(Clone, Default, Serialize, Deserialize, ParameterSchema)]
+pub struct Parameters {
     #[schema_field(name = "Tail length", number(min = 0.0, max = 2.0, step = 0.05))]
     tail_length: f64,
 
@@ -64,6 +64,8 @@ impl RandomSweep {
 }
 
 impl Animation for RandomSweep {
+    type Parameters = Parameters;
+
     fn update(&mut self, delta: f64) {
         if self.current_height > self.max_height + self.parameters.tail_length {
             let rotation = match self.parameters.sweep_type {
@@ -111,19 +113,11 @@ impl Animation for RandomSweep {
         "Random Sweep"
     }
 
-    fn parameter_schema(&self) -> ParametersSchema {
-        get_schema::<Parameters>()
+    fn set_parameters(&mut self, parameters: Self::Parameters) {
+        self.parameters = parameters;
     }
 
-    fn set_parameters(
-        &mut self,
-        parameters: serde_json::Value,
-    ) -> Result<(), Box<dyn std::error::Error>> {
-        self.parameters = serde_json::from_value(parameters)?;
-        Ok(())
-    }
-
-    fn get_parameters(&self) -> serde_json::Value {
-        json!(self.parameters)
+    fn get_parameters(&self) -> Self::Parameters {
+        self.parameters.clone()
     }
 }

@@ -1,9 +1,4 @@
-use std::error::Error;
-
-use animation_api::{
-    parameter_schema::{get_schema, ParametersSchema},
-    Animation,
-};
+use animation_api::Animation;
 use animation_utils::{
     decorators::{BrightnessControlled, SpeedControlled},
     ParameterSchema,
@@ -99,8 +94,8 @@ impl DoomFire {
     }
 }
 
-#[derive(Serialize, Deserialize, ParameterSchema)]
-struct Parameters {
+#[derive(Clone, Default, Serialize, Deserialize, ParameterSchema)]
+pub struct Parameters {
     #[schema_field(name = "Upward spread", number(min = 0.0, max = 1.0, step = 0.05))]
     upward_spread: f64,
 
@@ -131,6 +126,8 @@ impl DoomFireAnimation {
 }
 
 impl Animation for DoomFireAnimation {
+    type Parameters = Parameters;
+
     fn update(&mut self, delta: f64) {
         let mut delta = delta * 30.0;
         while (self.time + delta).floor() > self.time.floor() {
@@ -156,16 +153,11 @@ impl Animation for DoomFireAnimation {
         30.0
     }
 
-    fn parameter_schema(&self) -> ParametersSchema {
-        get_schema::<Parameters>()
+    fn get_parameters(&self) -> Self::Parameters {
+        self.parameters.clone()
     }
 
-    fn get_parameters(&self) -> serde_json::Value {
-        json!(self.parameters)
-    }
-
-    fn set_parameters(&mut self, parameters: serde_json::Value) -> Result<(), Box<dyn Error>> {
-        self.parameters = serde_json::from_value(parameters)?;
-        Ok(())
+    fn set_parameters(&mut self, parameters: Self::Parameters) {
+        self.parameters = parameters;
     }
 }

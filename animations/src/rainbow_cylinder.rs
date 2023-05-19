@@ -1,12 +1,11 @@
-use animation_api::parameter_schema::{get_schema, ParametersSchema};
 use animation_api::Animation;
 use animation_utils::decorators::{BrightnessControlled, SpeedControlled};
 use animation_utils::ParameterSchema;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 
-#[derive(Serialize, Deserialize, ParameterSchema)]
-struct Parameters {
+#[derive(Clone, Default, Serialize, Deserialize, ParameterSchema)]
+pub struct Parameters {
     #[schema_field(name = "Density", number(min = 1.0, max = 5.0, step = 1.0))]
     density: f64,
 }
@@ -33,6 +32,8 @@ impl RainbowCylinder {
 }
 
 impl Animation for RainbowCylinder {
+    type Parameters = Parameters;
+
     fn update(&mut self, delta: f64) {
         self.time += delta;
     }
@@ -54,19 +55,11 @@ impl Animation for RainbowCylinder {
         "Rainbow Cylinder"
     }
 
-    fn parameter_schema(&self) -> ParametersSchema {
-        get_schema::<Parameters>()
+    fn get_parameters(&self) -> Self::Parameters {
+        self.parameters.clone()
     }
 
-    fn get_parameters(&self) -> serde_json::Value {
-        json!(self.parameters)
-    }
-
-    fn set_parameters(
-        &mut self,
-        parameters: serde_json::Value,
-    ) -> Result<(), Box<dyn std::error::Error>> {
-        self.parameters = serde_json::from_value(parameters)?;
-        Ok(())
+    fn set_parameters(&mut self, parameters: Self::Parameters) {
+        self.parameters = parameters;
     }
 }

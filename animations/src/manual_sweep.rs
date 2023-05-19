@@ -1,13 +1,13 @@
-use animation_api::parameter_schema::{get_schema, ParametersSchema};
 use animation_api::Animation;
 use animation_utils::decorators::BrightnessControlled;
 use animation_utils::{EnumSchema, ParameterSchema};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 
-#[derive(Serialize, Deserialize, EnumSchema)]
-enum Axis {
+#[derive(Clone, Default, Serialize, Deserialize, EnumSchema)]
+pub enum Axis {
     #[schema_variant(name = "X: Left-Right")]
+    #[default]
     X,
 
     #[schema_variant(name = "Y: Bottom-Top")]
@@ -17,20 +17,21 @@ enum Axis {
     Z,
 }
 
-#[derive(Serialize, Deserialize, EnumSchema)]
-enum Alignment {
+#[derive(Clone, Default, Serialize, Deserialize, EnumSchema)]
+pub enum Alignment {
     #[schema_variant(name = "Before")]
     Before,
 
     #[schema_variant(name = "Center")]
+    #[default]
     Center,
 
     #[schema_variant(name = "After")]
     After,
 }
 
-#[derive(Serialize, Deserialize, ParameterSchema)]
-struct Parameters {
+#[derive(Clone, Default, Serialize, Deserialize, ParameterSchema)]
+pub struct Parameters {
     #[schema_field(name = "Axis", enum_options)]
     axis: Axis,
 
@@ -77,7 +78,7 @@ impl ManualSweep {
 }
 
 impl Animation for ManualSweep {
-    fn update(&mut self, _delta: f64) {}
+    type Parameters = Parameters;
 
     fn render(&self) -> lightfx::Frame {
         self.points
@@ -119,19 +120,11 @@ impl Animation for ManualSweep {
         0.0
     }
 
-    fn parameter_schema(&self) -> ParametersSchema {
-        get_schema::<Parameters>()
+    fn set_parameters(&mut self, parameters: Self::Parameters) {
+        self.parameters = parameters;
     }
 
-    fn set_parameters(
-        &mut self,
-        parameters: serde_json::Value,
-    ) -> Result<(), Box<dyn std::error::Error>> {
-        self.parameters = serde_json::from_value(parameters)?;
-        Ok(())
-    }
-
-    fn get_parameters(&self) -> serde_json::Value {
-        json!(self.parameters)
+    fn get_parameters(&self) -> Self::Parameters {
+        self.parameters.clone()
     }
 }

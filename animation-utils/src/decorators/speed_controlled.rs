@@ -1,18 +1,43 @@
-use animation_api::parameter_schema::{Parameter, ParameterValue, ParametersSchema};
+use animation_api::parameter_schema::{
+    GetParametersSchema, Parameter, ParameterValue, ParametersSchema,
+};
 use animation_api::Animation;
+use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
-use serde_json::json;
 
-#[derive(Serialize, Deserialize)]
-struct Parameters {
+#[derive(Clone, Default, Serialize, Deserialize)]
+pub struct Parameters<P: GetParametersSchema> {
     speed_factor: f64,
-}
-pub struct SpeedControlled<T: Animation> {
-    animation: T,
-    parameters: Parameters,
+
+    #[serde(flatten)]
+    inner: P,
 }
 
-impl<T: Animation> Animation for SpeedControlled<T> {
+impl<P: GetParametersSchema> GetParametersSchema for Parameters<P> {
+    fn schema() -> ParametersSchema {
+        let mut parameters = vec![Parameter {
+            id: "speed_factor".to_owned(),
+            name: "Speed Factor".to_owned(),
+            description: None,
+            value: ParameterValue::Speed,
+        }];
+        parameters.extend(P::schema().parameters);
+        ParametersSchema { parameters }
+    }
+}
+
+pub struct SpeedControlled<P: GetParametersSchema, A: Animation<Parameters = P>> {
+    animation: A,
+    parameters: Parameters<P>,
+}
+
+impl<A, P> Animation for SpeedControlled<P, A>
+where
+    A: Animation<Parameters = P>,
+    P: GetParametersSchema + Default + Clone + Serialize + DeserializeOwned,
+{
+    type Parameters = Parameters<P>;
+
     fn update(&mut self, delta: f64) {
         self.animation.update(delta * self.parameters.speed_factor);
     }
@@ -26,41 +51,20 @@ impl<T: Animation> Animation for SpeedControlled<T> {
     }
 
     fn parameter_schema(&self) -> ParametersSchema {
-        let mut parameters = vec![Parameter {
-            id: "speed_factor".to_owned(),
-            name: "Speed Factor".to_owned(),
-            description: None,
-            value: ParameterValue::Speed,
-        }];
-        parameters.extend(self.animation.parameter_schema().parameters);
-        ParametersSchema { parameters }
+        Self::Parameters::schema()
     }
 
-    fn set_parameters(
-        &mut self,
-        parameters: serde_json::Value,
-    ) -> Result<(), Box<dyn std::error::Error>> {
-        self.parameters = serde_json::from_value(parameters.clone())?;
-        self.animation.set_parameters(parameters)?;
-
-        Ok(())
+    fn set_parameters(&mut self, parameters: Self::Parameters) {
+        self.animation.set_parameters(parameters.inner.clone());
+        self.parameters = parameters;
     }
 
-    fn get_parameters(&self) -> serde_json::Value {
-        let mut parameters = self
-            .animation
-            .get_parameters()
-            .as_object_mut()
-            .unwrap()
-            .to_owned();
-        parameters.extend(
-            json!(self.parameters)
-                .as_object_mut()
-                .cloned()
-                .unwrap()
-                .into_iter(),
-        );
-        json!(parameters)
+    fn get_parameters(&self) -> Self::Parameters {
+        let inner = self.animation.get_parameters();
+        Self::Parameters {
+            inner,
+            ..self.parameters
+        }
     }
 
     fn get_fps(&self) -> f64 {
@@ -68,11 +72,14 @@ impl<T: Animation> Animation for SpeedControlled<T> {
     }
 }
 
-impl<T: Animation> SpeedControlled<T> {
-    pub fn new(animation: T) -> Self {
+impl<P: GetParametersSchema + Default, A: Animation<Parameters = P>> SpeedControlled<P, A> {
+    pub fn new(animation: A) -> Self {
         Self {
             animation,
-            parameters: Parameters { speed_factor: 1.0 },
+            parameters: Parameters {
+                speed_factor: 1.0,
+                inner: Default::default(),
+            },
         }
     }
 }

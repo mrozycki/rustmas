@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Copy, Deserialize, Serialize)]
+#[derive(Clone, Copy, Default, Deserialize, Serialize)]
 #[cfg_attr(test, derive(PartialEq, Debug))]
 pub struct Color {
     pub r: u8,

@@ -22,6 +22,8 @@ impl DetectionStatus {
 }
 
 impl Animation for DetectionStatus {
+    type Parameters = ();
+
     fn update(&mut self, _delta: f64) {}
 
     fn render(&self) -> lightfx::Frame {

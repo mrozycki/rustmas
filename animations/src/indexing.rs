@@ -1,12 +1,35 @@
-use animation_api::parameter_schema::{EnumOption, Parameter, ParameterValue, ParametersSchema};
+use animation_api::parameter_schema::{
+    EnumOption, GetParametersSchema, Parameter, ParameterValue, ParametersSchema,
+};
 use animation_api::Animation;
 use animation_utils::decorators::BrightnessControlled;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 
-#[derive(Deserialize, Serialize)]
-struct Parameters {
+#[derive(Clone, Default, Deserialize, Serialize)]
+pub struct Parameters {
     bit: usize,
+}
+
+impl GetParametersSchema for Parameters {
+    fn schema() -> ParametersSchema {
+        ParametersSchema {
+            parameters: vec![Parameter {
+                id: "bit".to_owned(),
+                name: "Bit".to_owned(),
+                description: None,
+                value: ParameterValue::Enum {
+                    values: (0..10)
+                        .map(|i| EnumOption {
+                            name: format!("{}s", 1 << i),
+                            description: None,
+                            value: i.to_string(),
+                        })
+                        .collect(),
+                },
+            }],
+        }
+    }
 }
 
 #[animation_utils::plugin]
@@ -25,6 +48,8 @@ impl Indexing {
 }
 
 impl Animation for Indexing {
+    type Parameters = Parameters;
+
     fn update(&mut self, _delta: f64) {}
 
     fn render(&self) -> lightfx::Frame {
@@ -44,39 +69,11 @@ impl Animation for Indexing {
         0.0
     }
 
-    fn parameter_schema(&self) -> ParametersSchema {
-        ParametersSchema {
-            parameters: vec![Parameter {
-                id: "bit".to_owned(),
-                name: "Bit".to_owned(),
-                description: None,
-                value: ParameterValue::Enum {
-                    values: (0..10)
-                        .map(|i| EnumOption {
-                            name: format!("{}s", 1 << i),
-                            description: None,
-                            value: i.to_string(),
-                        })
-                        .collect(),
-                },
-            }],
-        }
+    fn set_parameters(&mut self, parameters: Self::Parameters) {
+        self.parameters = parameters;
     }
 
-    fn set_parameters(
-        &mut self,
-        parameters: serde_json::Value,
-    ) -> Result<(), Box<dyn std::error::Error>> {
-        self.parameters.bit = parameters
-            .as_object()
-            .and_then(|obj| obj.get("bit"))
-            .and_then(|value| value.as_str())
-            .and_then(|s| s.parse::<usize>().ok())
-            .ok_or("Incorrect parameters")?;
-        Ok(())
-    }
-
-    fn get_parameters(&self) -> serde_json::Value {
-        json!(self.parameters)
+    fn get_parameters(&self) -> Self::Parameters {
+        self.parameters.clone()
     }
 }
