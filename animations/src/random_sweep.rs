@@ -16,13 +16,22 @@ pub enum SweepType {
     Sweep3D,
 }
 
-#[derive(Clone, Default, Serialize, Deserialize, ParameterSchema)]
+#[derive(Clone, Serialize, Deserialize, ParameterSchema)]
 pub struct Parameters {
     #[schema_field(name = "Tail length", number(min = 0.0, max = 2.0, step = 0.05))]
     tail_length: f64,
 
     #[schema_field(name = "Sweep type", enum_options)]
     sweep_type: SweepType,
+}
+
+impl Default for Parameters {
+    fn default() -> Self {
+        Self {
+            tail_length: 0.5,
+            sweep_type: Default::default(),
+        }
+    }
 }
 
 #[animation_utils::plugin]
@@ -55,10 +64,7 @@ impl RandomSweep {
             color: lightfx::Color::black(),
             current_height: 0.0,
             max_height: 0.0,
-            parameters: Parameters {
-                tail_length: 0.5,
-                sweep_type: SweepType::Sweep3D,
-            },
+            parameters: Default::default(),
         }))
     }
 }

@@ -6,7 +6,7 @@ use nalgebra::Vector3;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 
-#[derive(Clone, Default, Serialize, Deserialize, ParameterSchema)]
+#[derive(Clone, Serialize, Deserialize, ParameterSchema)]
 pub struct Parameters {
     #[schema_field(name = "Count", number(min = 50.0, max = 150.0, step = 10.0))]
     count: f64,
@@ -16,6 +16,16 @@ pub struct Parameters {
 
     #[schema_field(name = "Color", color)]
     color: lightfx::Color,
+}
+
+impl Default for Parameters {
+    fn default() -> Self {
+        Self {
+            count: 20.0,
+            size: 0.2,
+            color: Color::white(),
+        }
+    }
 }
 
 #[animation_utils::plugin]
@@ -35,22 +45,17 @@ fn random_new_center(size: f64) -> Vector3<f64> {
 
 impl Snow {
     pub fn create(points: Vec<(f64, f64, f64)>) -> impl Animation {
-        let starting_size = 0.2;
         let mut result = Self {
             points: points
                 .into_iter()
                 .map(|(x, y, z)| Vector3::new(x, y, z))
                 .collect(),
             centers: vec![],
-            parameters: Parameters {
-                count: 20.0,
-                size: starting_size,
-                color: Color::white(),
-            },
+            parameters: Default::default(),
         };
         result
             .centers
-            .resize_with(20, || random_new_center(starting_size));
+            .resize_with(20, || random_new_center(result.parameters.size));
 
         SpeedControlled::new(BrightnessControlled::new(result))
     }

@@ -26,7 +26,7 @@ enum Direction {
     RightToLeft,
 }
 
-#[derive(Clone, Default, Serialize, Deserialize, ParameterSchema)]
+#[derive(Clone, Serialize, Deserialize, ParameterSchema)]
 pub struct Parameters {
     #[schema_field(name = "Direction", enum_options)]
     direction: Direction,
@@ -42,6 +42,16 @@ pub struct Parameters {
     color: lightfx::Color,
 }
 
+impl Default for Parameters {
+    fn default() -> Self {
+        Self {
+            direction: Direction::BottomToTop,
+            band_size: 0.2,
+            color: lightfx::Color::white(),
+        }
+    }
+}
+
 #[animation_utils::plugin]
 pub struct Sweep {
     points: Vec<(f64, f64, f64)>,
@@ -54,11 +64,7 @@ impl Sweep {
         SpeedControlled::new(BrightnessControlled::new(Self {
             points,
             time: 0.0,
-            parameters: Parameters {
-                direction: Direction::BottomToTop,
-                band_size: 0.2,
-                color: lightfx::Color::white(),
-            },
+            parameters: Default::default(),
         }))
     }
 }

@@ -4,7 +4,7 @@ use animation_utils::ParameterSchema;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 
-#[derive(Clone, Default, Serialize, Deserialize, ParameterSchema)]
+#[derive(Clone, Serialize, Deserialize, ParameterSchema)]
 pub struct Parameters {
     #[schema_field(name = "Center X", number(min = "-1.0", max = 1.0, step = 0.1))]
     center_x: f64,
@@ -22,6 +22,18 @@ pub struct Parameters {
     color_cycle: f64,
 }
 
+impl Default for Parameters {
+    fn default() -> Self {
+        Self {
+            center_x: 0.0,
+            center_y: 0.0,
+            radius: 1.0,
+            bpm: 60.0,
+            color_cycle: 10.0,
+        }
+    }
+}
+
 #[animation_utils::plugin]
 pub struct HeartBoom {
     points: Vec<(f64, f64, f64)>,
@@ -34,13 +46,7 @@ impl HeartBoom {
         BrightnessControlled::new(Self {
             points,
             time: 0.0,
-            parameters: Parameters {
-                center_x: 0.0,
-                center_y: 0.0,
-                radius: 1.0,
-                bpm: 60.0,
-                color_cycle: 10.0,
-            },
+            parameters: Default::default(),
         })
     }
 }

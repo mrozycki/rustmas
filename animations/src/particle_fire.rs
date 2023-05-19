@@ -82,7 +82,7 @@ impl Particle {
     }
 }
 
-#[derive(Clone, Default, Serialize, Deserialize, ParameterSchema)]
+#[derive(Clone, Serialize, Deserialize, ParameterSchema)]
 pub struct Parameters {
     #[schema_field(name = "Particle count", number(min = 100.0, max = 500.0, step = 20.0))]
     particle_count: usize,
@@ -103,6 +103,19 @@ pub struct Parameters {
     wind: f64,
 }
 
+impl Default for Parameters {
+    fn default() -> Self {
+        Self {
+            particle_count: 200,
+            decay_rate: 0.5,
+            decay_rate_spread: 0.1,
+            bottom_line: -1.0,
+            particle_range: 0.2,
+            wind: 0.0,
+        }
+    }
+}
+
 #[animation_utils::plugin]
 pub struct DoomFireAnimation {
     points: Vec<(f64, f64, f64)>,
@@ -116,14 +129,7 @@ impl DoomFireAnimation {
         let particles = Vec::new();
         SpeedControlled::new(BrightnessControlled::new(Self {
             points,
-            parameters: Parameters {
-                particle_count: 200,
-                decay_rate: 0.5,
-                decay_rate_spread: 0.1,
-                bottom_line: -1.0,
-                particle_range: 0.2,
-                wind: 0.0,
-            },
+            parameters: Default::default(),
             particles,
             gradient: Gradient::new(vec![
                 Color::rgb_unit(0.0, 0.0, 0.0), // black
