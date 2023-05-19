@@ -51,6 +51,12 @@ async fn switch(form: web::Json<SwitchForm>, app_state: web::Data<AppState>) -> 
     switch_inner(&form.animation, app_state).await
 }
 
+#[post("/turn_off")]
+async fn turn_off(app_state: web::Data<AppState>) -> HttpResponse {
+    app_state.animation_controller.lock().await.turn_off().await;
+    HttpResponse::Ok().json(())
+}
+
 #[get("/params")]
 async fn get_params(app_state: web::Data<AppState>) -> HttpResponse {
     HttpResponse::Ok().json(
@@ -115,35 +121,31 @@ async fn post_params(
     }
 }
 
+#[post("/discover")]
+async fn discover(app_state: web::Data<AppState>) -> HttpResponse {
+    let mut controller = app_state.animation_controller.lock().await;
+    match controller.discover_animations() {
+        Ok(_) => HttpResponse::Ok().json(json!({
+            "animations": controller
+                .list_animations()
+                .iter()
+                .map(|(id, plugin)| json!({"id": id, "name": plugin.manifest.display_name}))
+                .collect::<Vec<_>>()})),
+        Err(e) => HttpResponse::InternalServerError().json(json!({"error": e.to_string()})),
+    }
+}
+
 #[get("/list")]
-async fn list() -> HttpResponse {
+async fn list(app_state: web::Data<AppState>) -> HttpResponse {
     HttpResponse::Ok().json(json!({
-        "animations": [
-            { "id": "blank", "name": "Off" },
-            { "id": "doom_fire", "name": "Doom Fire" },
-            { "id": "particle_fire", "name": "Particle Fire" },
-            { "id": "circle_boom", "name": "Circle boom" },
-            { "id": "heartbeat", "name": "Heartbeat" },
-            { "id": "classic", "name": "Classic" },
-            { "id": "rainbow_waterfall", "name": "Rainbow Waterfall" },
-            { "id": "rainbow_cylinder", "name": "Rainbow Cylinder" },
-            { "id": "rainbow_halves", "name": "Rainbow Halves" },
-            { "id": "rainbow_sphere", "name": "Rainbow Sphere" },
-            { "id": "rainbow_spiral", "name": "Rainbow Spiral" },
-            { "id": "rainbow_cable", "name": "Rainbow Cable" },
-            { "id": "barber_pole", "name": "Barber Pole" },
-            { "id": "random_sweep", "name": "Random Sweep" },
-            { "id": "spinning_halves", "name": "Spinning Halves" },
-            { "id": "present", "name": "Present" },
-            { "id": "snow", "name": "Snow" },
-            { "id": "stars", "name": "Stars" },
-            { "id": "test_check", "name": "Testing: Check lights" },
-            { "id": "test_sweep", "name": "Testing: Sweep" },
-            { "id": "test_manual_sweep", "name": "Testing: Manual Sweep" },
-            { "id": "test_indexing", "name": "Testing: Indexing" },
-            { "id": "test_detection_status", "name": "Testing: Detection status" },
-        ]
-    }))
+        "animations": app_state
+            .animation_controller
+            .lock()
+            .await
+            .list_animations()
+            .iter()
+            .map(|(id, plugin)| json!({"id": id, "name": plugin.manifest.display_name}))
+            .collect::<Vec<_>>()}))
 }
 
 #[get("/frames")]
@@ -191,7 +193,10 @@ async fn main() -> Result<(), Box<dyn Error>> {
             builder = builder.visualiser_lights()?;
         }
 
-        builder.build()
+        let mut controller = builder.build();
+        controller.discover_animations()?;
+        info!("Discovered {} plugins", controller.list_animations().len());
+        controller
     };
 
     info!("Establishing database connection");
@@ -212,7 +217,9 @@ async fn main() -> Result<(), Box<dyn Error>> {
             .wrap(cors)
             .service(reload)
             .service(switch)
+            .service(turn_off)
             .service(list)
+            .service(discover)
             .service(get_params)
             .service(post_params)
             .service(save_params)

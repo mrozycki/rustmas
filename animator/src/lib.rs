@@ -1,13 +1,14 @@
 mod factory;
 mod jsonrpc_animation;
 
+use std::collections::HashMap;
 use std::error::Error;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
 use chrono::{DateTime, Duration, Utc};
 use client::combined::{CombinedLightClient, CombinedLightClientBuilder};
-use factory::AnimationFactory;
+use factory::{AnimationFactory, Plugin};
 use jsonrpc_animation::AnimationPlugin;
 use log::{info, warn};
 use rustmas_light_client as client;
@@ -24,7 +25,7 @@ enum ConnectionStatus {
 }
 
 pub struct ControllerState {
-    animation: AnimationPlugin,
+    animation: Option<AnimationPlugin>,
     last_frame: DateTime<Utc>,
     next_frame: DateTime<Utc>,
     fps: f64,
@@ -42,16 +43,15 @@ impl Controller {
         plugin_dir: P,
         client: Box<dyn rustmas_light_client::LightClient + Sync + Send>,
     ) -> Self {
-        let animation_factory = AnimationFactory::new(plugin_dir, points);
-        let animation = animation_factory.make("blank");
         let now = Utc::now();
         let state = Arc::new(Mutex::new(ControllerState {
             last_frame: now,
             next_frame: now,
-            fps: animation.get_fps(),
-            animation,
+            fps: 0.0,
+            animation: None,
         }));
-        let join_handle = tokio::spawn(Self::run(state.clone(), client));
+        let join_handle = tokio::spawn(Self::run(state.clone(), client, points.len()));
+        let animation_factory = AnimationFactory::new(plugin_dir, points);
 
         Self {
             state,
@@ -63,6 +63,7 @@ impl Controller {
     async fn run(
         state: Arc<Mutex<ControllerState>>,
         client: Box<dyn rustmas_light_client::LightClient + Sync + Send>,
+        point_count: usize,
     ) {
         let start_backoff_delay: Duration = Duration::seconds(1);
         let max_backoff_delay: Duration = Duration::seconds(8);
@@ -95,11 +96,13 @@ impl Controller {
                 };
 
                 let delta = now - state.last_frame;
-                state
-                    .animation
-                    .update(delta.num_milliseconds() as f64 / 1000.0);
                 state.last_frame = now;
-                state.animation.render()
+                if let Some(ref mut animation) = state.animation {
+                    animation.update(delta.num_milliseconds() as f64 / 1000.0);
+                    animation.render()
+                } else {
+                    lightfx::Frame::new_black(point_count)
+                }
             };
 
             match client.display_frame(&frame).await {
@@ -147,42 +150,60 @@ impl Controller {
     pub async fn switch_animation(&self, name: &str) -> Result<(), Box<dyn Error>> {
         info!("Trying to switch animation to \"{}\"", name);
         let mut state = self.state.lock().await;
-        state.animation = self.animation_factory.make(name);
+        let new_animation = self.animation_factory.make(name)?;
 
         let now = Utc::now();
-        let new_fps = state.animation.get_fps();
-        state.fps = new_fps;
+        state.fps = new_animation.get_fps();
         state.last_frame = now;
         state.next_frame = now;
+        state.animation = Some(new_animation);
         Ok(())
     }
 
     pub async fn reload_animation(&self) -> Result<(), Box<dyn Error>> {
         let mut state = self.state.lock().await;
-        let name = state.animation.animation_name();
+        let Some(name) = state.animation.as_ref().map(AnimationPlugin::animation_name) else { return Ok(()) };
 
         info!("Reloading animation \"{}\"", name);
-        state.animation = self.animation_factory.make(&name);
+        let new_animation = self.animation_factory.make(&name)?;
 
         let now = Utc::now();
-        let new_fps = state.animation.get_fps();
-        state.fps = new_fps;
+        state.fps = new_animation.get_fps();
         state.last_frame = now;
         state.next_frame = now;
+        state.animation = Some(new_animation);
         Ok(())
     }
 
+    pub async fn turn_off(&self) {
+        info!("Turning off the animation");
+        let mut state = self.state.lock().await;
+
+        let now = Utc::now();
+        state.fps = 0.0;
+        state.last_frame = now;
+        state.next_frame = now;
+        state.animation = None;
+    }
+
     pub async fn parameters(&self) -> serde_json::Value {
-        let animation = &self.state.lock().await.animation;
-        json!({
-            "name": animation.animation_name(),
-            "schema": animation.parameter_schema(),
-            "values": animation.get_parameters(),
-        })
+        if let Some(animation) = &self.state.lock().await.animation {
+            json!({
+                "name": animation.animation_name(),
+                "schema": animation.parameter_schema(),
+                "values": animation.get_parameters(),
+            })
+        } else {
+            json!({})
+        }
     }
 
     pub async fn parameter_values(&self) -> serde_json::Value {
-        self.state.lock().await.animation.get_parameters()
+        if let Some(animation) = &self.state.lock().await.animation {
+            animation.get_parameters()
+        } else {
+            json!({})
+        }
     }
 
     pub async fn set_parameters(
@@ -190,8 +211,10 @@ impl Controller {
         parameters: serde_json::Value,
     ) -> Result<(), Box<dyn Error>> {
         let mut state = self.state.lock().await;
-        state.animation.set_parameters(parameters)?;
-        state.next_frame = Utc::now();
+        if let Some(ref mut animation) = state.animation {
+            animation.set_parameters(parameters)?;
+            state.next_frame = Utc::now();
+        }
         Ok(())
     }
 
@@ -199,6 +222,14 @@ impl Controller {
         self.join_handle.await?;
 
         Ok(())
+    }
+
+    pub fn discover_animations(&mut self) -> Result<(), Box<dyn Error>> {
+        self.animation_factory.discover()
+    }
+
+    pub fn list_animations(&self) -> &HashMap<String, Plugin> {
+        self.animation_factory.list()
     }
 }
 

@@ -2633,6 +2633,7 @@ dependencies = [
  "clap",
  "csv",
  "env_logger",
+ "glob",
  "lightfx 0.1.0",
  "log",
  "rustmas-light-client",
