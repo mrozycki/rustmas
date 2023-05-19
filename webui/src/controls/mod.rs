@@ -163,7 +163,10 @@ impl Component for ParameterControlList {
                                     let value = ctx.props().values.get(&schema.id).cloned();
                                     let dummy_update = self.dummy_update;
                                     html! {
-                                    <div class="parameter-control">
+                                    <div class={match schema.value {
+                                        ParameterValue::Color => "parameter-control color-control",
+                                        _ => "parameter-control",
+                                    }}>
                                         <h3>{ &schema.name }</h3>
                                         {
                                             if let Some(description) = &schema.description {

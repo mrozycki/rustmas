@@ -86,7 +86,7 @@ impl Component for SpeedParameterControl {
                         ref={self.slider_ref.clone()}
                         oninput={link.callback(|_| Msg::InputChange)}
                         value={raw.to_string()} />
-                    <input type="text" ref={self.value_display_ref.clone()} value={format!("{:.2}x", speed)} class="value-display" />
+                    <input type="text" ref={self.value_display_ref.clone()} value={format!("{:.2}x", speed)} disabled=true class="value-display" />
                     <input name={id} type="hidden" ref={self.hidden_ref.clone()} value={speed.to_string()} />
                 </div>
             }
