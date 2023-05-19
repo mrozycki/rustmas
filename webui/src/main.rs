@@ -13,6 +13,8 @@ enum Msg {
     SwitchAnimation(String),
     LoadedParameters(Option<GetParamsResponse>),
     ParametersDirty(bool),
+    TurnOff,
+    Discover,
 }
 
 #[derive(Default)]
@@ -72,7 +74,8 @@ impl Component for AnimationSelector {
                 });
                 false
             }
-            Msg::LoadedAnimations(animations) => {
+            Msg::LoadedAnimations(mut animations) => {
+                animations.sort_by(|a, b| a.name.cmp(&b.name));
                 self.animations = animations;
                 true
             }
@@ -84,6 +87,26 @@ impl Component for AnimationSelector {
             Msg::ParametersDirty(dirty) => {
                 self.dirty = dirty;
                 false
+            }
+            Msg::TurnOff => {
+                let api = self.api.clone();
+                let link = ctx.link().clone();
+                wasm_bindgen_futures::spawn_local(async move {
+                    if api.turn_off().await.is_ok() {
+                        link.send_message(Msg::LoadedParameters(None));
+                    }
+                });
+                true
+            }
+            Msg::Discover => {
+                let api = self.api.clone();
+                let link = ctx.link().clone();
+                wasm_bindgen_futures::spawn_local(async move {
+                    link.send_message(Msg::LoadedAnimations(
+                        api.discover_animations().await.unwrap_or_default(),
+                    ));
+                });
+                true
             }
         }
     }
@@ -97,11 +120,16 @@ impl Component for AnimationSelector {
                 <header><h1>{"Rustmas Lights"}</h1></header>
                 <div class="content">
                     <nav>
-                        <ul> {
-                            animations.into_iter().map(|animation| html! {
-                                <li><a onclick={link.callback(move |_| Msg::SwitchAnimation(animation.id.clone()))}>{ animation.name }</a></li>
-                            }).collect::<Html>()
-                        } </ul>
+                        <ul>
+                            <li><a onclick={link.callback(move |_| Msg::TurnOff)}>{ "⏻ Off" }</a></li>
+                            <li><a onclick={link.callback(move |_| Msg::Discover)}>{ "⟳ Refresh list" }</a></li>
+                            <hr />
+                            {
+                                animations.into_iter().map(|animation| html! {
+                                    <li><a onclick={link.callback(move |_| Msg::SwitchAnimation(animation.id.clone()))}>{ animation.name }</a></li>
+                                }).collect::<Html>()
+                            }
+                        </ul>
                     </nav>
                     {if let Some(parameters) = &self.parameters {
                         html! {
@@ -112,7 +140,14 @@ impl Component for AnimationSelector {
                                 update_values={link.callback(Msg::LoadedParameters)}
                                 parameters_dirty={link.callback(Msg::ParametersDirty)} />
                         }
-                    } else { html!{} }}
+                    } else {
+                        html!{
+                            <div class="parameter-control-list">
+                                <h2>{ "Off" }</h2>
+                                <p>{ "Select an animation from the list" }</p>
+                            </div>
+                        }
+                    }}
                 </div>
             </>
             </ContextProvider<Gateway>>

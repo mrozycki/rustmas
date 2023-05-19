@@ -59,6 +59,19 @@ impl Gateway {
             .animations)
     }
 
+    pub async fn discover_animations(&self) -> Result<Vec<Animation>> {
+        Ok(Request::post(&self.url("discover"))
+            .send()
+            .await
+            .map_err(|e| GatewayError::RequestError {
+                reason: e.to_string(),
+            })?
+            .json::<ListAnimationsResponse>()
+            .await
+            .map_err(|_| GatewayError::InvalidResponse)?
+            .animations)
+    }
+
     pub async fn switch_animation(&self, animation_id: String) -> Result<GetParamsResponse> {
         Request::post(&self.url("switch"))
             .json(&json!({ "animation": animation_id }))
@@ -71,6 +84,16 @@ impl Gateway {
             .json::<GetParamsResponse>()
             .await
             .map_err(|_| GatewayError::InvalidResponse)
+    }
+
+    pub async fn turn_off(&self) -> Result<()> {
+        Request::post(&self.url("turn_off"))
+            .send()
+            .await
+            .map_err(|e| GatewayError::RequestError {
+                reason: e.to_string(),
+            })?;
+        Ok(())
     }
 
     pub async fn get_params(&self) -> Result<GetParamsResponse> {
