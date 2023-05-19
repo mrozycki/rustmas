@@ -123,6 +123,7 @@ async fn list() -> HttpResponse {
             { "id": "doom_fire", "name": "Doom Fire" },
             { "id": "particle_fire", "name": "Particle Fire" },
             { "id": "circle_boom", "name": "Circle boom" },
+            { "id": "heartbeat", "name": "Heartbeat" },
             { "id": "classic", "name": "Classic" },
             { "id": "rainbow_waterfall", "name": "Rainbow Waterfall" },
             { "id": "rainbow_cylinder", "name": "Rainbow Cylinder" },
