@@ -80,8 +80,13 @@ fn capturer_from_options(
     };
 
     let light_client: Box<dyn light_client::LightClient> = if let Some(endpoint) = lights_endpoint {
-        info!("Using remote light client at endpoint: {}", endpoint);
-        Box::new(light_client::RemoteLightClient::new(&endpoint))
+        if endpoint.starts_with("http://") {
+            info!("Using remote HTTP light client at endpoint: {}", endpoint);
+            Box::new(light_client::RemoteLightClient::new(&endpoint))
+        } else {
+            info!("Using local TTY light client at endpoint: {}", endpoint);
+            Box::new(light_client::tty::TtyLightClient::new(&endpoint)?)
+        }
     } else {
         info!("Using mock light client");
         Box::new(light_client::MockLightClient::new())
