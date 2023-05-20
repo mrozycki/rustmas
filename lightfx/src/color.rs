@@ -1,7 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Copy, Default, Deserialize, Serialize)]
-#[cfg_attr(test, derive(PartialEq, Debug))]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Deserialize, Serialize)]
 pub struct Color {
     pub r: u8,
     pub g: u8,
@@ -139,6 +138,12 @@ impl Color {
         format!("#{:02x}{:02x}{:02x}", self.r, self.g, self.b)
     }
 
+    /// Adds an alpha channel to the color. Alpha value provided is expected
+    /// to be between 0.0 and 1.0.
+    pub fn with_alpha(self, alpha: f64) -> ColorWithAlpha {
+        ColorWithAlpha::new(self, alpha)
+    }
+
     /// Produces a dimmer version of the color. The dimming factor is expected
     /// to be in the range [0.0, 1.0]. Values outside of this range will be
     /// truncated.
@@ -187,6 +192,7 @@ impl Color {
     }
 }
 
+#[derive(Clone, Debug, PartialEq)]
 pub struct ColorWithAlpha {
     color: Color,
     alpha: f64,
