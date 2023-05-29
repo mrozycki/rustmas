@@ -1,6 +1,7 @@
 use animation_api::Animation;
 use animation_utils::decorators::BrightnessControlled;
 use animation_utils::ParameterSchema;
+use lightfx::Color;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 
@@ -18,8 +19,8 @@ pub struct Parameters {
     #[schema_field(name = "BPM", number(min = 40.0, max = 240.0, step = 1.0))]
     bpm: f64,
 
-    #[schema_field(name = "Color cycle", number(min = 5.0, max = 60.0, step = 5.0))]
-    color_cycle: f64,
+    #[schema_field(name = "Color", color)]
+    color: Color,
 }
 
 impl Default for Parameters {
@@ -29,7 +30,7 @@ impl Default for Parameters {
             center_y: 0.0,
             radius: 1.0,
             bpm: 60.0,
-            color_cycle: 10.0,
+            color: Color::rgb(255, 0, 255),
         }
     }
 }
@@ -70,13 +71,9 @@ impl Animation for HeartBoom {
             .map(|(x, y)| x.powi(2) + (1.25 * y - x.abs().sqrt() + 0.35).powi(2))
             .map(|r| {
                 if r <= 1.0 {
-                    lightfx::Color::hsv(
-                        (self.time / self.parameters.color_cycle).rem_euclid(1.0),
-                        1.0,
-                        1.0,
-                    )
+                    self.parameters.color
                 } else {
-                    lightfx::Color::black()
+                    Color::black()
                 }
             })
             .into()

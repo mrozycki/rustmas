@@ -12,8 +12,16 @@ name = "check"
 path = "src/check.rs"
 
 [[bin]]
+name = "color_picker"
+path = "src/color_picker.rs"
+
+[[bin]]
 name = "circle_boom"
 path = "src/circle_boom.rs"
+
+[[bin]]
+name = "circle_wave"
+path = "src/circle_wave.rs"
 
 [[bin]]
 name = "heartbeat"
