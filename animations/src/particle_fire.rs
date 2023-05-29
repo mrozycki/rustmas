@@ -84,7 +84,7 @@ impl Particle {
 
 #[derive(Clone, Serialize, Deserialize, ParameterSchema)]
 pub struct Parameters {
-    #[schema_field(name = "Particle count", number(min = 100.0, max = 500.0, step = 20.0))]
+    #[schema_field(name = "Particle count", number(min = 0.0, max = 500.0, step = 20.0))]
     particle_count: usize,
 
     #[schema_field(name = "Decay rate", number(min = 0.0, max = 1.0, step = 0.01))]
@@ -134,9 +134,8 @@ impl DoomFireAnimation {
             gradient: Gradient::new(vec![
                 Color::rgb_unit(0.0, 0.0, 0.0), // black
                 Color::rgb_unit(1.0, 0.0, 0.0), // red
-                Color::rgb_unit(1.0, 0.5, 0.0), // orange
-                Color::rgb_unit(1.0, 1.0, 0.0), // yellow
-                Color::rgb_unit(1.0, 1.0, 1.0), // white
+                Color::rgb_unit(1.0, 0.3, 0.0), // orange
+                Color::rgb_unit(1.0, 0.6, 0.0), // yellow
             ]),
         }))
     }
