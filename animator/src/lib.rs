@@ -299,11 +299,11 @@ impl ControllerBuilder {
         Ok(self)
     }
 
-    pub fn local_lights(mut self, path: &str) -> Result<Self, Box<dyn Error>> {
-        info!("Using tty lights client with endpoint {}", path);
+    pub fn local_lights(mut self) -> Result<Self, Box<dyn Error>> {
+        info!("Using tty lights client");
         self.client_builder = self
             .client_builder
-            .with(Box::new(client::tty::TtyLightClient::new(path)?));
+            .with(Box::new(client::tty::TtyLightClient::new()?));
         Ok(self)
     }
 
