@@ -2,7 +2,8 @@ use std::{error::Error, io::Write, time::Duration};
 
 use async_trait::async_trait;
 use lightfx::Frame;
-use serialport::SerialPort;
+use log::info;
+use serialport::{SerialPort, SerialPortType};
 use tokio::sync::Mutex;
 
 use crate::{LightClient, LightClientError};
@@ -12,15 +13,30 @@ pub struct TtyLightClient {
 }
 
 impl TtyLightClient {
-    pub fn new(path: &str) -> Result<Self, Box<dyn Error>> {
+    pub fn new() -> Result<Self, Box<dyn Error>> {
+        let port_name = get_port()?;
         Ok(Self {
             tty: Mutex::new(
-                serialport::new(path, 921_600)
+                serialport::new(port_name, 921_600)
                     .timeout(Duration::from_millis(100))
                     .open()?,
             ),
         })
     }
+}
+
+fn get_port() -> Result<String, Box<dyn Error>> {
+    for port in serialport::available_ports()? {
+        if let SerialPortType::UsbPort(port_info) = port.port_type {
+            if let Some(manufacturer) = port_info.manufacturer {
+                if manufacturer == "krzmaz" {
+                    info!("Found endpoint: {}", port.port_name);
+                    return Ok(port.port_name);
+                }
+            }
+        }
+    }
+    Err(Box::new(LightClientError::ConnectionLost))
 }
 
 fn component_gamma_correction(component: u8) -> u8 {
@@ -38,9 +54,18 @@ impl LightClient for TtyLightClient {
             .collect();
 
         let mut tty = self.tty.lock().await;
-        tty.write_all(&(pixels.len() as u16).to_le_bytes())
-            .map_err(|_| LightClientError::ProcessExited)?;
-        tty.write_all(&pixels)
-            .map_err(|_| LightClientError::ProcessExited)
+        let bytes_written = tty.write_all(&(pixels.len() as u16).to_le_bytes());
+        if bytes_written.is_ok() {
+            tty.write_all(&pixels)
+                .map_err(|_| LightClientError::ProcessExited)
+        } else {
+            let port_name = get_port().map_err(|_| LightClientError::ProcessExited)?;
+
+            *tty = serialport::new(port_name, 921_600)
+                .timeout(Duration::from_millis(100))
+                .open()
+                .map_err(|_| LightClientError::ProcessExited)?;
+            Ok(())
+        }
     }
 }

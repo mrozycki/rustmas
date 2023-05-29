@@ -199,8 +199,11 @@ async fn main() -> Result<(), Box<dyn Error>> {
         if let Ok(url) = env::var("RUSTMAS_LIGHTS_URL") {
             builder = builder.remote_lights(&url)?;
         }
-        if let Ok(path) = env::var("RUSTMAS_TTY_PATH") {
-            builder = builder.local_lights(&path)?;
+        if env::var("RUSTMAS_USE_TTY")
+            .map(|v| v == "true" || v == "1")
+            .unwrap_or(false)
+        {
+            builder = builder.local_lights()?;
         }
 
         #[cfg(feature = "visualiser")]

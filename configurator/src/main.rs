@@ -84,8 +84,8 @@ fn capturer_from_options(
             info!("Using remote HTTP light client at endpoint: {}", endpoint);
             Box::new(light_client::RemoteLightClient::new(&endpoint))
         } else {
-            info!("Using local TTY light client at endpoint: {}", endpoint);
-            Box::new(light_client::tty::TtyLightClient::new(&endpoint)?)
+            info!("Using local TTY light client");
+            Box::new(light_client::tty::TtyLightClient::new()?)
         }
     } else {
         info!("Using mock light client");
