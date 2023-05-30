@@ -3,15 +3,16 @@ mod controls;
 
 use std::error::Error;
 
-use api::{Gateway, GetParamsResponse};
+use api::Gateway;
+use log::error;
 use yew::prelude::*;
 
 use crate::controls::ParameterControlList;
 
 enum Msg {
-    LoadedAnimations(Vec<api::Animation>),
+    LoadedAnimations(Vec<api::AnimationEntry>),
     SwitchAnimation(String),
-    LoadedParameters(Option<GetParamsResponse>),
+    LoadedParameters(Option<api::Animation>),
     ParametersDirty(bool),
     TurnOff,
     Discover,
@@ -20,8 +21,8 @@ enum Msg {
 #[derive(Default)]
 struct AnimationSelector {
     api: api::Gateway,
-    animations: Vec<api::Animation>,
-    parameters: Option<GetParamsResponse>,
+    animations: Vec<api::AnimationEntry>,
+    parameters: Option<api::Animation>,
     dirty: bool,
 }
 
@@ -36,10 +37,21 @@ impl Component for AnimationSelector {
             let api = api.clone();
             let link = ctx.link().clone();
             wasm_bindgen_futures::spawn_local(async move {
-                link.send_message(Msg::LoadedAnimations(
-                    api.list_animations().await.unwrap_or_default(),
-                ));
-                link.send_message(Msg::LoadedParameters(api.get_params().await.ok()));
+                match api.list_animations().await {
+                    Ok(animations) => link.send_message(Msg::LoadedAnimations(animations)),
+                    Err(e) => error!("Failed to load animations, reason: {}", e),
+                }
+            });
+        }
+
+        {
+            let api = api.clone();
+            let link = ctx.link().clone();
+            wasm_bindgen_futures::spawn_local(async move {
+                match api.get_params().await {
+                    Ok(params) => link.send_message(Msg::LoadedParameters(params)),
+                    Err(e) => error!("Failed to load parameters, reason: {}", e),
+                }
             });
         }
 
@@ -68,9 +80,10 @@ impl Component for AnimationSelector {
                 let link = ctx.link().clone();
                 let api = self.api.clone();
                 wasm_bindgen_futures::spawn_local(async move {
-                    link.send_message(Msg::LoadedParameters(
-                        api.switch_animation(animation_id).await.ok(),
-                    ));
+                    match api.switch_animation(animation_id).await {
+                        Ok(resp) => link.send_message(Msg::LoadedParameters(resp)),
+                        Err(e) => error!("Failed to switch animations, reason: {}", e),
+                    }
                 });
                 false
             }
@@ -92,8 +105,9 @@ impl Component for AnimationSelector {
                 let api = self.api.clone();
                 let link = ctx.link().clone();
                 wasm_bindgen_futures::spawn_local(async move {
-                    if api.turn_off().await.is_ok() {
-                        link.send_message(Msg::LoadedParameters(None));
+                    match api.turn_off().await {
+                        Ok(_) => link.send_message(Msg::LoadedParameters(None)),
+                        Err(e) => error!("Failed to turn off animation, reason: {}", e),
                     }
                 });
                 true
@@ -102,9 +116,10 @@ impl Component for AnimationSelector {
                 let api = self.api.clone();
                 let link = ctx.link().clone();
                 wasm_bindgen_futures::spawn_local(async move {
-                    link.send_message(Msg::LoadedAnimations(
-                        api.discover_animations().await.unwrap_or_default(),
-                    ));
+                    match api.discover_animations().await {
+                        Ok(animations) => link.send_message(Msg::LoadedAnimations(animations)),
+                        Err(e) => error!("Failed to discover animations, reason: {}", e),
+                    }
                 });
                 true
             }
@@ -156,6 +171,7 @@ impl Component for AnimationSelector {
 }
 
 fn main() -> Result<(), Box<dyn Error>> {
+    wasm_logger::init(wasm_logger::Config::default());
     yew::start_app::<AnimationSelector>();
 
     Ok(())

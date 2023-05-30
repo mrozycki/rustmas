@@ -1,13 +1,31 @@
 use std::{
     collections::HashMap,
-    error::Error,
     path::{Path, PathBuf},
 };
 
 use log::info;
 use serde::Deserialize;
+use thiserror::Error;
 
-use crate::jsonrpc_animation::{AnimationPlugin, JsonRpcEndpoint, JsonRpcEndpointError};
+use crate::jsonrpc_animation::{AnimationPlugin, AnimationPluginError, JsonRpcEndpoint};
+
+#[derive(Debug, Error)]
+pub enum AnimationFactoryError {
+    #[error("internal error: {reason}")]
+    InternalError { reason: String },
+
+    #[error("animation not found")]
+    AnimationNotFound,
+
+    #[error("malformed animation manifest: {reason}")]
+    InvalidManifest { reason: String },
+
+    #[error("animation failed to start: {0}")]
+    AnimationFailedToStart(#[from] std::io::Error),
+
+    #[error(transparent)]
+    AnimationError(#[from] AnimationPluginError),
+}
 
 #[derive(Deserialize)]
 pub struct PluginManifest {
@@ -20,7 +38,7 @@ pub struct Plugin {
 }
 
 impl Plugin {
-    fn start(&self) -> Result<JsonRpcEndpoint, JsonRpcEndpointError> {
+    fn start(&self) -> std::io::Result<JsonRpcEndpoint> {
         #[cfg(windows)]
         let executable_name = "plugin.exe";
 
@@ -46,26 +64,45 @@ impl AnimationFactory {
         }
     }
 
-    pub fn discover(&mut self) -> Result<(), Box<dyn Error>> {
+    pub fn discover(&mut self) -> Result<(), AnimationFactoryError> {
         self.plugins = glob::glob(&format!(
             "{}/*/manifest.json",
             self.plugin_dir
                 .to_str()
-                .ok_or("Plugins directory path is not valid UTF-8")?
-        ))?
+                .ok_or(AnimationFactoryError::InternalError {
+                    reason: "Plugins directory path is not valid UTF-8".into()
+                })?
+        ))
+        .map_err(|e| AnimationFactoryError::InternalError {
+            reason: format!("Pattern error: {}", e),
+        })?
         .map(|path| {
-            path.map_err(|e| -> Box<dyn Error> { Box::new(e) })
-                .and_then(|path| -> Result<_, Box<dyn Error>> {
-                    let manifest: PluginManifest = serde_json::from_slice(&std::fs::read(&path)?)?;
-                    let path = path.parent().unwrap().to_owned();
-                    let id = path
-                        .file_name()
-                        .unwrap()
-                        .to_str()
-                        .ok_or("Plugin name not valid UTF-8")?
-                        .to_owned();
-                    Ok((id, Plugin { path, manifest }))
-                })
+            path.map_err(|e| AnimationFactoryError::InternalError {
+                reason: format!("Glob error: {}", e),
+            })
+            .and_then(|path| -> Result<_, AnimationFactoryError> {
+                let manifest: PluginManifest =
+                    serde_json::from_slice(&std::fs::read(&path).map_err(|e| {
+                        AnimationFactoryError::InvalidManifest {
+                            reason: format!("IO error: {}", e),
+                        }
+                    })?)
+                    .map_err(|e| {
+                        AnimationFactoryError::InvalidManifest {
+                            reason: e.to_string(),
+                        }
+                    })?;
+                let path = path.parent().unwrap().to_owned();
+                let id = path
+                    .file_name()
+                    .unwrap()
+                    .to_str()
+                    .ok_or(AnimationFactoryError::InternalError {
+                        reason: "Plugins directory path is not valid UTF-8".into(),
+                    })?
+                    .to_owned();
+                Ok((id, Plugin { path, manifest }))
+            })
         })
         .collect::<Result<_, _>>()?;
 
@@ -76,9 +113,9 @@ impl AnimationFactory {
         &self.plugins
     }
 
-    pub fn make(&self, name: &str) -> Result<AnimationPlugin, Box<dyn Error>> {
+    pub fn make(&self, name: &str) -> Result<AnimationPlugin, AnimationFactoryError> {
         let Some(plugin) = self.plugins.get(name) else {
-            return Err(format!("No plugin with name '{}'", name).into());
+            return Err(AnimationFactoryError::AnimationNotFound);
         };
 
         info!(
@@ -86,6 +123,6 @@ impl AnimationFactory {
             name, plugin.path
         );
 
-        Ok(AnimationPlugin::new(plugin.start()?, self.points.clone()))
+        Ok(AnimationPlugin::new(plugin.start()?, self.points.clone())?)
     }
 }

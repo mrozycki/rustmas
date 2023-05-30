@@ -15,7 +15,7 @@ pub fn plugin(_attr: TokenStream, item: TokenStream) -> TokenStream {
                 io::{BufRead, BufReader},
             };
 
-            use animation_api::{JsonRpcMessage, JsonRpcMethod};
+            use animation_api::{JsonRpcMessage, JsonRpcMethod, JsonRpcError, ErrorType, AnimationError};
             use serde::Serialize;
             use serde_json::json;
 
@@ -44,6 +44,26 @@ pub fn plugin(_attr: TokenStream, item: TokenStream) -> TokenStream {
                     })
                 );
             }
+
+            fn error(id: Option<usize>, message: String)
+            {
+                let Some(id) = id else { return; };
+
+                println!(
+                    "{}",
+                    json!({
+                        "id": id,
+                        "error": JsonRpcError {
+                            code: ErrorType::AnimationError,
+                            message: "Animation Error".into(),
+                            data: AnimationError {
+                                message
+                            }
+                        },
+                    })
+                );
+            }
+
             let mut animation = None;
             let mut stdin = BufReader::new(std::io::stdin());
 
@@ -53,6 +73,7 @@ pub fn plugin(_attr: TokenStream, item: TokenStream) -> TokenStream {
                         JsonRpcMethod::Initialize { points } => {
                             animation = None;
                             animation = Some(<#name>::create(points));
+                            respond(message.id, ());
                         }
                         JsonRpcMethod::AnimationName => {
                             if let Some(animation) = animation.as_ref() {
@@ -66,7 +87,13 @@ pub fn plugin(_attr: TokenStream, item: TokenStream) -> TokenStream {
                         },
                         JsonRpcMethod::SetParameters { params } => {
                             if let Some(mut animation) = animation.as_mut() {
-                                animation.set_parameters(serde_json::from_value(params)?);
+                                match serde_json::from_value(params) {
+                                    Ok(params) => {
+                                        animation.set_parameters(params);
+                                        respond(message.id, ());
+                                    }
+                                    Err(e) => error(message.id, e.to_string())
+                                }
                             }
                         },
                         JsonRpcMethod::GetParameters => {
