@@ -24,20 +24,20 @@ struct SwitchForm {
 async fn switch_inner(animation_name: &str, app_state: web::Data<AppState>) -> HttpResponse {
     let mut controller = app_state.animation_controller.lock().await;
     if let Err(e) = controller.switch_animation(animation_name).await {
-        return HttpResponse::InternalServerError().json(json!({"error": e.to_string()}));
+        return HttpResponse::InternalServerError().json(json!({ "error": format!("{:#}", e) }));
     }
 
     if let Ok(Some(params)) = app_state.db.get_parameters(animation_name).await {
         let _ = controller.set_parameters(params).await;
-    } else {
-        let _ = app_state
-            .db
-            .set_parameters(animation_name, &controller.parameter_values().await)
-            .await;
+    } else if let Ok(params) = controller.parameter_values().await {
+        let _ = app_state.db.set_parameters(animation_name, &params).await;
     }
 
     *app_state.animation_name.lock().await = animation_name.to_owned();
-    HttpResponse::Ok().json(controller.parameters().await)
+    match controller.parameters().await {
+        Ok(animation) => HttpResponse::Ok().json(json!({ "animation": animation })),
+        Err(e) => HttpResponse::InternalServerError().json(json!({"error": e.to_string() })),
+    }
 }
 
 #[post("/reload")]
@@ -59,48 +59,63 @@ async fn turn_off(app_state: web::Data<AppState>) -> HttpResponse {
 
 #[get("/params")]
 async fn get_params(app_state: web::Data<AppState>) -> HttpResponse {
-    HttpResponse::Ok().json(
-        app_state
-            .animation_controller
-            .lock()
-            .await
-            .parameters()
-            .await,
-    )
+    match app_state
+        .animation_controller
+        .lock()
+        .await
+        .parameters()
+        .await
+    {
+        Ok(animation) => HttpResponse::Ok().json(json!({ "animation": animation })),
+        Err(e) => HttpResponse::InternalServerError().json(json!({ "error": e.to_string() })),
+    }
 }
 
 #[post("/params/save")]
 async fn save_params(app_state: web::Data<AppState>) -> HttpResponse {
-    match app_state
-        .db
-        .set_parameters(
-            &app_state.animation_name.lock().await,
-            &app_state
-                .animation_controller
-                .lock()
-                .await
-                .parameter_values()
-                .await,
-        )
+    let parameter_values = match app_state
+        .animation_controller
+        .lock()
+        .await
+        .parameter_values()
         .await
     {
-        Ok(_) => HttpResponse::Ok().json(json!({"success": true})),
-        Err(_) => HttpResponse::InternalServerError().json(json!({"success": false})),
+        Ok(params) => params,
+        Err(e) => {
+            return HttpResponse::InternalServerError().json(json!({"error": e.to_string() }))
+        }
+    };
+
+    match app_state
+        .db
+        .set_parameters(&app_state.animation_name.lock().await, &parameter_values)
+        .await
+    {
+        Ok(_) => HttpResponse::Ok().json(json!(())),
+        Err(e) => HttpResponse::InternalServerError().json(json!({"error": e.to_string()})),
     }
 }
 
 #[post("/params/reset")]
 async fn reset_params(app_state: web::Data<AppState>) -> HttpResponse {
-    if let Ok(Some(params)) = app_state
+    match app_state
         .db
         .get_parameters(&app_state.animation_name.lock().await)
         .await
     {
-        let mut controller = app_state.animation_controller.lock().await;
-        let _ = controller.set_parameters(params).await;
-        HttpResponse::Ok().json(controller.parameters().await)
-    } else {
-        HttpResponse::InternalServerError().json(json!({"success": false}))
+        Ok(Some(params)) => {
+            let mut controller = app_state.animation_controller.lock().await;
+            let _ = controller.set_parameters(params).await;
+            match controller.parameters().await {
+                Ok(animation) => HttpResponse::Ok().json(json!({ "animation": animation })),
+                Err(e) => {
+                    HttpResponse::InternalServerError().json(json!({"error": e.to_string() }))
+                }
+            }
+        }
+        Ok(None) => HttpResponse::InternalServerError()
+            .json(json!({"error": "No parameters stored for this animation"})),
+        Err(e) => HttpResponse::InternalServerError().json(json!({"error": e.to_string()})),
     }
 }
 
@@ -116,8 +131,8 @@ async fn post_params(
         .set_parameters(params.0)
         .await
     {
-        Ok(_) => HttpResponse::Ok().json(json!({"success": true})),
-        Err(_) => HttpResponse::InternalServerError().json(json!({"success": false})),
+        Ok(_) => HttpResponse::Ok().json(json!({})),
+        Err(e) => HttpResponse::InternalServerError().json(json!({"error": e.to_string()})),
     }
 }
 

@@ -7,6 +7,7 @@ mod speed_control;
 use std::{collections::HashMap, time::Duration};
 
 use animation_api::parameter_schema::{Parameter, ParameterValue, ParametersSchema};
+use log::error;
 use wasm_bindgen::JsCast;
 use web_sys::{
     Event, EventTarget, FocusEvent, FormData, HtmlFormElement, HtmlInputElement, HtmlSelectElement,
@@ -49,7 +50,7 @@ pub struct ParameterControlListProps {
     pub name: String,
     pub schema: ParametersSchema,
     pub values: HashMap<String, serde_json::Value>,
-    pub update_values: Callback<Option<api::GetParamsResponse>>,
+    pub update_values: Callback<Option<api::Animation>>,
     pub parameters_dirty: Callback<bool>,
 }
 
@@ -86,8 +87,10 @@ impl Component for ParameterControlList {
 
                 let parameters_dirty = ctx.props().parameters_dirty.clone();
                 wasm_bindgen_futures::spawn_local(async move {
-                    let _ = api.save_params().await;
-                    parameters_dirty.emit(false);
+                    match api.save_params().await {
+                        Ok(_) => parameters_dirty.emit(false),
+                        Err(e) => error!("Failed to save parameters, reason: {}", e),
+                    }
                 });
                 false
             }
@@ -116,14 +119,19 @@ impl Component for ParameterControlList {
 
                 ctx.props().parameters_dirty.emit(true);
                 wasm_bindgen_futures::spawn_local(async move {
-                    let _ = api.set_params(&params).await;
+                    if let Err(e) = api.set_params(&params).await {
+                        error!("Failed to update parameters, reason: {}", e);
+                    }
                 });
                 false
             }
             ParameterControlListMsg::RestoreParams => {
                 let update_values = ctx.props().update_values.clone();
                 wasm_bindgen_futures::spawn_local(async move {
-                    update_values.emit(api.reset_params().await.ok());
+                    match api.reset_params().await {
+                        Ok(params) => update_values.emit(params),
+                        Err(e) => error!("Failed to reset parameters, reason: {}", e),
+                    }
                 });
 
                 self.dummy_update += 1;
@@ -133,7 +141,10 @@ impl Component for ParameterControlList {
             ParameterControlListMsg::ReloadAnimation => {
                 let update_values = ctx.props().update_values.clone();
                 wasm_bindgen_futures::spawn_local(async move {
-                    update_values.emit(api.reload_animation().await.ok());
+                    match api.reload_animation().await {
+                        Ok(params) => update_values.emit(params),
+                        Err(e) => error!("Failed to reload animation, reason: {}", e),
+                    }
                 });
 
                 self.dummy_update += 1;

@@ -1,11 +1,21 @@
+use std::fmt;
+
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 
 use crate::parameter_schema::{GetParametersSchema, ParametersSchema};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct AnimationError {
-    message: String,
+    pub message: String,
 }
+
+impl fmt::Display for AnimationError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "AnimationError: {}", self.message)
+    }
+}
+
+impl std::error::Error for AnimationError {}
 
 pub trait Animation {
     type Parameters: GetParametersSchema + DeserializeOwned + Serialize + Default + Clone;

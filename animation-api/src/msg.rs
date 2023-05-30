@@ -31,11 +31,12 @@ pub enum ErrorType {
     MethodNotFound = -32601,
     InvalidParams = -32602,
     InternalError = -32603,
+    AnimationError = -32000,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct JsonRpcError<T> {
     pub code: ErrorType,
     pub message: String,
-    pub data: Option<T>,
+    pub data: T,
 }
