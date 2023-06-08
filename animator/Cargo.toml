@@ -27,3 +27,4 @@ thiserror = "1.0.40"
 [features]
 default = ["visualiser"]
 visualiser = ["rustmas-light-client/visualiser"]
+websocket = ["rustmas-light-client/websocket"]

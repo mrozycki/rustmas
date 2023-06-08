@@ -1,9 +1,10 @@
 mod pan_orbit_camera;
+mod websocket;
 
-use bevy::diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin};
 use bevy::prelude::*;
 use bevy::window::PresentMode;
 
+use bevy_websocket_adapter::bevy::{WebSocketServer, WsMessageInserter};
 use csv::ReaderBuilder;
 use pan_orbit_camera::{pan_orbit_camera, spawn_camera};
 
@@ -73,30 +74,6 @@ fn add_lights(
     commands.spawn_batch(leds);
 }
 
-fn animate(
-    time: Res<Time>,
-    query: Query<(&Handle<StandardMaterial>, &Led)>,
-    mut materials: ResMut<Assets<StandardMaterial>>,
-) {
-    for (material, led) in query.iter() {
-        let color = materials.get(material).unwrap().base_color;
-
-        materials.get_mut(material).unwrap().base_color = match color {
-            Color::Hsla {
-                hue,
-                saturation,
-                lightness,
-                ..
-            } => Color::hsl(
-                (hue + time.delta_seconds() * 180.0) % 360.0,
-                saturation,
-                lightness,
-            ),
-            _ => Color::hsl(led.0 as f32 % 360.0, 1.0, 0.5),
-        };
-    }
-}
-
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins.set(WindowPlugin {
@@ -106,13 +83,14 @@ fn main() {
             }),
             ..default()
         }))
-        .add_plugin(LogDiagnosticsPlugin::default()) // TODO: remove this after the project is stabilized
-        .add_plugin(FrameTimeDiagnosticsPlugin::default())
+        .add_plugin(WebSocketServer::default())
         .insert_resource(Msaa::Off)
         .add_startup_system(create_plane_and_light)
         .add_startup_system(spawn_camera)
         .add_startup_system(add_lights)
+        .add_startup_system(websocket::start_listen)
+        .add_message_type::<websocket::FrameEvent>()
         .add_system(pan_orbit_camera)
-        .add_system(animate)
+        .add_system(websocket::listen_for_frame)
         .run();
 }

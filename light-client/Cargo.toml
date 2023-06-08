@@ -17,6 +17,14 @@ serde_json = "1.0"
 tokio = { version = "1", features = ["full"] }
 serialport = { git = "https://github.com/mrozycki/serialport-rs", rev = "86cbf11" }
 
+[dependencies.bevy_websocket_adapter] 
+git = "https://github.com/mrozycki/bevy-websocket-adapter"
+branch = "bump-bevy-0.10"
+optional = true
+default_features = false
+features = ["client"]
+
 [features]
-default = ["visualiser"]
+default = ["visualiser", "websocket"]
 visualiser = ["dep:rustmas-visualiser"]
+websocket = ["bevy_websocket_adapter"]

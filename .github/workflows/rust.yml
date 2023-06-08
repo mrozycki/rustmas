@@ -27,7 +27,7 @@ jobs:
         command: fmt
         args: --check
     - name: Install dependencies
-      run: sudo apt update && sudo apt install libopencv-dev libxinerama-dev libxcursor-dev xorg-dev libgl1 libgl1-mesa-dev libudev-dev
+      run: sudo apt update && sudo apt install libopencv-dev libxinerama-dev libxcursor-dev xorg-dev libgl1 libgl1-mesa-dev libudev-dev 
     - name: Cache cargo dependencies
       uses: actions/cache@v3
       with:
@@ -51,3 +51,4 @@ jobs:
       uses: actions-rs/cargo@v1
       with:
         command: test
+        args: -p lightfx
