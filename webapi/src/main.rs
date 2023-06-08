@@ -6,7 +6,7 @@ use actix_cors::Cors;
 use actix_web_actors::ws;
 use db::Db;
 use dotenvy::dotenv;
-use log::info;
+use log::{error, info};
 use serde::Deserialize;
 use serde_json::json;
 use std::{env, error::Error};
@@ -197,7 +197,19 @@ async fn main() -> Result<(), Box<dyn Error>> {
             .plugin_dir(env::var("RUSTMAS_PLUGIN_DIR").unwrap_or(".".to_owned()));
 
         if let Ok(url) = env::var("RUSTMAS_LIGHTS_URL") {
-            builder = builder.remote_lights(&url)?;
+            if url.starts_with("http://") {
+                builder = builder.remote_lights(&url)?;
+            } else if url.starts_with("ws://") {
+                #[cfg(feature = "websocket")]
+                {
+                    builder = builder.websocket_lights(url);
+                }
+
+                #[cfg(not(feature = "websocket"))]
+                error!("Web API built without websocket support, ignoring");
+            } else {
+                error!("Unknown remote client protocol, ignoring");
+            }
         }
         if env::var("RUSTMAS_USE_TTY")
             .map(|v| v == "true" || v == "1")

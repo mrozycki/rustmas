@@ -1,0 +1,21 @@
+[package]
+name = "rustmas-bevy-visualizer"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+bevy_websocket_adapter = { git = "https://github.com/mrozycki/bevy-websocket-adapter", branch = "bump-bevy-0.10" }
+csv = "1.2.1"
+serde = { version = "1.0.164", features = ["derive"] }
+
+[dependencies.bevy]
+version = "0.10.0"
+default-features = false
+features = [
+    "bevy_asset",
+    "bevy_winit",
+    "bevy_core_pipeline",
+    "bevy_pbr",
+    "bevy_render",
+    "x11",
+]

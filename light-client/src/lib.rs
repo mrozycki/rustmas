@@ -1,6 +1,8 @@
 pub mod combined;
 pub mod feedback;
 pub mod tty;
+#[cfg(feature = "websocket")]
+pub mod websocket;
 
 #[cfg(feature = "visualiser")]
 use std::{error::Error, sync::mpsc};
