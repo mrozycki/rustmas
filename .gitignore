@@ -4,6 +4,7 @@
 
 *.csv
 !/bevy-visualizer/assets/lights.csv
+!/bevy-visualizer/assets/ovs.csv
 *.log
 
 .env

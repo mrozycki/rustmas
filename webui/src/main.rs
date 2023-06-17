@@ -31,7 +31,7 @@ impl Component for AnimationSelector {
     type Properties = ();
 
     fn create(ctx: &Context<Self>) -> Self {
-        let api = api::Gateway::new("/api");
+        let api = api::Gateway::new("http://localhost:8081");
 
         {
             let api = api.clone();

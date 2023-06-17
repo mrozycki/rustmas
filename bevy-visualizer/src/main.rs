@@ -13,7 +13,7 @@ use pan_orbit_camera::{pan_orbit_camera, spawn_camera};
 #[uuid = "1F6B746C-C703-47AC-A70D-F531096220E8"]
 struct Led(usize);
 
-static LIGHTS_CSV: &[u8] = include_bytes!("../assets/lights.csv");
+static LIGHTS_CSV: &[u8] = include_bytes!("../assets/ovs.csv");
 
 /// set up a simple 3D scene
 pub fn create_plane_and_light(
