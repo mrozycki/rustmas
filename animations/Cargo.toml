@@ -8,6 +8,10 @@ name = "barber_pole"
 path = "src/barber_pole.rs"
 
 [[bin]]
+name = "beats"
+path = "src/beats.rs"
+
+[[bin]]
 name = "check"
 path = "src/check.rs"
 
@@ -18,6 +22,10 @@ path = "src/color_picker.rs"
 [[bin]]
 name = "circle_boom"
 path = "src/circle_boom.rs"
+
+[[bin]]
+name = "circle_grid"
+path = "src/circle_grid.rs"
 
 [[bin]]
 name = "circle_wave"
@@ -48,8 +56,20 @@ name = "indexing"
 path = "src/indexing.rs"
 
 [[bin]]
+name = "lightspeed"
+path = "src/lightspeed.rs"
+
+[[bin]]
 name = "manual_sweep"
 path = "src/manual_sweep.rs"
+
+[[bin]]
+name = "moon"
+path = "src/moon.rs"
+
+[[bin]]
+name = "pillars"
+path = "src/pillars.rs"
 
 [[bin]]
 name = "present"
@@ -114,3 +134,4 @@ serde_json = "1.0.93"
 itertools = "0.10.5"
 nalgebra = "0.31"
 rand = "0.8.5"
+bracket-noise = "0.8"
