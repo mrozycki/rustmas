@@ -25,6 +25,6 @@ env_logger = "0.10.0"
 thiserror = "1.0.40"
 
 [features]
-default = ["visualiser"]
+default = []
 visualiser = ["rustmas-light-client/visualiser"]
 websocket = ["rustmas-light-client/websocket"]

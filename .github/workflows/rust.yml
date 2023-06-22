@@ -42,11 +42,11 @@ jobs:
       uses: actions-rs/cargo@v1
       with:
         command: clippy
-    - name: Clippy without default features
+    - name: Clippy webapi with websocket and visualiser
       uses: actions-rs/cargo@v1
       with:
         command: clippy
-        args: --no-default-features
+        args: -p rustmas-webapi --features websocket,visualiser
     - name: Test
       uses: actions-rs/cargo@v1
       with:
