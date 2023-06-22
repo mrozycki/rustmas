@@ -84,6 +84,10 @@ name = "random_sweep"
 path = "src/random_sweep.rs"
 
 [[bin]]
+name = "single_color"
+path = "src/single_color.rs"
+
+[[bin]]
 name = "snow"
 path = "src/snow.rs"
 
