@@ -21,7 +21,7 @@ pub struct Parameters {
     #[schema_field(name = "Color", color)]
     color: Color,
 
-    #[schema_field(name = "Switch delay", number(min = 0.0, max = 1.0, step = 0.05))]
+    #[schema_field(name = "Switch delay", number(min = 0.0, max = 5.0, step = 0.05))]
     switch_delay: f64,
 
     #[schema_field(name = "Status", enum_options)]
@@ -49,7 +49,7 @@ impl SingleColor {
     pub fn create(points: Vec<(f64, f64, f64)>) -> impl Animation {
         SpeedControlled::new(BrightnessControlled::new(Self {
             points_count: points.len(),
-            energy: 1.0,
+            energy: 0.0,
             parameters: Default::default(),
         }))
     }
