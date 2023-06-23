@@ -89,6 +89,9 @@ pub struct Parameters {
     #[schema_field(name = "Dim distance", number(min = 0.1, max = 1.0, step = 0.1))]
     dim_distance: f64,
 
+    #[schema_field(name = "Ramp up time", number(min = 0.0, max = 10.0, step = 0.5))]
+    ramp_up: f64,
+
     #[schema_field(name = "Color", color)]
     color: Color,
 }
@@ -103,6 +106,7 @@ impl Default for Parameters {
             max_speed: 1.0,
             gen_rate: 50,
             dim_distance: 0.5,
+            ramp_up: 1.0,
             color: Color::white(),
         }
     }
@@ -111,8 +115,9 @@ impl Default for Parameters {
 #[animation_utils::plugin]
 pub struct Lightspeed {
     points: Vec<(f64, f64, f64)>,
+    time: f64,
     particles: Vec<Particle>,
-    fractional_generation: f64,
+    to_generate: f64,
     parameters: Parameters,
 }
 
@@ -121,8 +126,9 @@ impl Lightspeed {
         let particles = Vec::new();
         SpeedControlled::new(BrightnessControlled::new(Self {
             points,
+            time: 0.0,
             particles,
-            fractional_generation: 0.0,
+            to_generate: 0.0,
             parameters: Default::default(),
         }))
     }
@@ -132,12 +138,21 @@ impl Animation for Lightspeed {
     type Parameters = Parameters;
 
     fn update(&mut self, delta: f64) {
+        self.time += delta;
         self.particles.retain_mut(|p| p.update(delta));
-        let n = self.parameters.gen_rate as f64 * delta + self.fractional_generation;
+
+        self.to_generate += self.parameters.gen_rate as f64
+            * delta
+            * (self.time / self.parameters.ramp_up).clamp(0.0, 1.0);
+        if self.to_generate <= 0.0 {
+            return;
+        }
+
+        let n = thread_rng().gen_range(0.0..2.0 * self.to_generate).floor();
         for _ in 0..n as usize {
             self.particles.push(Particle::new_random(&self.parameters));
         }
-        self.fractional_generation = n.fract();
+        self.to_generate -= n;
     }
 
     fn render(&self) -> lightfx::Frame {

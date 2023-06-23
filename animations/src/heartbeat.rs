@@ -1,9 +1,19 @@
 use animation_api::Animation;
-use animation_utils::decorators::BrightnessControlled;
 use animation_utils::ParameterSchema;
+use animation_utils::{decorators::BrightnessControlled, EnumSchema};
 use lightfx::Color;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
+
+#[derive(Clone, Default, Serialize, Deserialize, EnumSchema, PartialEq)]
+pub enum Switch {
+    #[schema_variant(name = "On")]
+    #[default]
+    On,
+
+    #[schema_variant(name = "Off")]
+    Off,
+}
 
 #[derive(Clone, Serialize, Deserialize, ParameterSchema)]
 pub struct Parameters {
@@ -13,14 +23,17 @@ pub struct Parameters {
     #[schema_field(name = "Center Y", number(min = "-1.0", max = 1.0, step = 0.1))]
     center_y: f64,
 
-    #[schema_field(name = "Radius", number(min = "-1.0", max = 1.0, step = 0.1))]
+    #[schema_field(name = "Radius", number(min = 0.0, max = 1.0, step = 0.05))]
     radius: f64,
 
-    #[schema_field(name = "BPM", number(min = 40.0, max = 240.0, step = 1.0))]
+    #[schema_field(name = "BPM", number(min = 20.0, max = 240.0, step = 0.1))]
     bpm: f64,
 
     #[schema_field(name = "Color", color)]
     color: Color,
+
+    #[schema_field(name = "State", enum_options)]
+    state: Switch,
 }
 
 impl Default for Parameters {
@@ -31,6 +44,7 @@ impl Default for Parameters {
             radius: 1.0,
             bpm: 60.0,
             color: Color::rgb(255, 0, 255),
+            state: Switch::On,
         }
     }
 }
@@ -39,6 +53,7 @@ impl Default for Parameters {
 pub struct HeartBoom {
     points: Vec<(f64, f64, f64)>,
     time: f64,
+    off_after: Option<f64>,
     parameters: Parameters,
 }
 
@@ -47,6 +62,7 @@ impl HeartBoom {
         BrightnessControlled::new(Self {
             points,
             time: 0.0,
+            off_after: None,
             parameters: Default::default(),
         })
     }
@@ -61,8 +77,11 @@ impl Animation for HeartBoom {
 
     fn render(&self) -> lightfx::Frame {
         let r = self.parameters.radius
-            * (((self.time * std::f64::consts::PI).cos() + 0.5).abs() + 0.5)
-            / 2.0;
+            * if let Some(off_after) = self.off_after.filter(|t| self.time > *t) {
+                1.0 - (self.time - off_after).clamp(0.0, 1.0)
+            } else {
+                (((self.time * std::f64::consts::TAU).cos() + 0.5).abs() + 0.5) / 2.0
+            };
 
         self.points
             .iter()
@@ -84,6 +103,9 @@ impl Animation for HeartBoom {
     }
 
     fn set_parameters(&mut self, parameters: Self::Parameters) {
+        if parameters.state == Switch::Off {
+            self.off_after = Some(self.time.ceil());
+        }
         self.parameters = parameters;
     }
 

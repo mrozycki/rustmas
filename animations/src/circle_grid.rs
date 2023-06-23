@@ -1,7 +1,10 @@
 use std::f64::consts::TAU;
 
 use animation_api::Animation;
-use animation_utils::{decorators::BrightnessControlled, ParameterSchema};
+use animation_utils::{
+    decorators::{BrightnessControlled, OffSwitch},
+    ParameterSchema,
+};
 use lightfx::Color;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
@@ -70,11 +73,11 @@ pub struct CircleGrid {
 
 impl CircleGrid {
     pub fn create(points: Vec<(f64, f64, f64)>) -> impl Animation {
-        BrightnessControlled::new(Self {
+        OffSwitch::new(BrightnessControlled::new(Self {
             points,
             time: 0.0,
             parameters: Default::default(),
-        })
+        }))
     }
 }
 

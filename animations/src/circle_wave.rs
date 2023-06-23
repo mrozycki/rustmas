@@ -1,11 +1,21 @@
 use std::f64::consts::TAU;
 
 use animation_api::Animation;
-use animation_utils::decorators::BrightnessControlled;
 use animation_utils::ParameterSchema;
+use animation_utils::{decorators::BrightnessControlled, EnumSchema};
 use lightfx::Color;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
+
+#[derive(Clone, Default, Serialize, Deserialize, EnumSchema, PartialEq)]
+pub enum Switch {
+    #[schema_variant(name = "On")]
+    #[default]
+    On,
+
+    #[schema_variant(name = "Off")]
+    Off,
+}
 
 #[derive(Clone, Serialize, Deserialize, ParameterSchema)]
 pub struct Parameters {
@@ -23,6 +33,9 @@ pub struct Parameters {
 
     #[schema_field(name = "Color", color)]
     color: Color,
+
+    #[schema_field(name = "State", enum_options)]
+    state: Switch,
 }
 
 impl Default for Parameters {
@@ -33,6 +46,7 @@ impl Default for Parameters {
             radius: 1.0,
             bpm: 60.0,
             color: Color::rgb(0, 138, 106),
+            state: Switch::On,
         }
     }
 }
@@ -41,6 +55,7 @@ impl Default for Parameters {
 pub struct CircleWave {
     points: Vec<(f64, f64, f64)>,
     time: f64,
+    off_after: Option<f64>,
     parameters: Parameters,
 }
 
@@ -48,7 +63,8 @@ impl CircleWave {
     pub fn create(points: Vec<(f64, f64, f64)>) -> impl Animation {
         BrightnessControlled::new(Self {
             points,
-            time: 0.0,
+            time: -0.25,
+            off_after: None,
             parameters: Default::default(),
         })
     }
@@ -68,7 +84,11 @@ impl Animation for CircleWave {
                 let d = ((x - self.parameters.center_x).powi(2)
                     + (y - self.parameters.center_y).powi(2))
                 .sqrt();
-                if d > self.time {
+                if d > self.time
+                    || self
+                        .off_after
+                        .is_some_and(|off_after| self.time - d >= off_after)
+                {
                     Color::black()
                 } else {
                     self.parameters
@@ -84,6 +104,9 @@ impl Animation for CircleWave {
     }
 
     fn set_parameters(&mut self, parameters: Self::Parameters) {
+        if parameters.state == Switch::Off {
+            self.off_after = Some(self.time.ceil() - 0.25);
+        }
         self.parameters = parameters;
     }
 
