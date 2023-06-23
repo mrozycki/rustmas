@@ -1,7 +1,7 @@
 use std::f64::consts::TAU;
 
 use animation_api::Animation;
-use animation_utils::decorators::BrightnessControlled;
+use animation_utils::decorators::{BrightnessControlled, OffSwitch};
 use animation_utils::ParameterSchema;
 use bracket_noise::prelude::FastNoise;
 use lightfx::Color;
@@ -41,7 +41,7 @@ impl Default for Parameters {
             cycle_length: 10.0,
             halo_brightness: 0.7,
             noise_frequency: 3.0,
-            noise_amplitude: 0.5,
+            noise_amplitude: 1.0,
             color: Color::white(),
         }
     }
@@ -59,12 +59,12 @@ impl Moon {
     pub fn create(points: Vec<(f64, f64, f64)>) -> impl Animation {
         let mut noise = FastNoise::new();
         noise.set_frequency(2.0);
-        BrightnessControlled::new(Self {
+        OffSwitch::new(BrightnessControlled::new(Self {
             points,
-            time: 0.0,
+            time: 0.25,
             noise,
             parameters: Default::default(),
-        })
+        }))
     }
 }
 
@@ -72,11 +72,12 @@ impl Animation for Moon {
     type Parameters = Parameters;
 
     fn update(&mut self, delta: f64) {
-        self.time += delta * TAU / self.parameters.cycle_length;
+        self.time += delta / self.parameters.cycle_length;
     }
 
     fn render(&self) -> lightfx::Frame {
-        let to_sun = Vector3::new(self.time.sin(), 0.0, self.time.cos());
+        let t = self.time * TAU;
+        let to_sun = Vector3::new(t.sin(), 0.0, t.cos());
 
         self.points
             .iter()
@@ -94,7 +95,7 @@ impl Animation for Moon {
                         + (1.0 - self.parameters.noise_amplitude / 2.0);
                     self.parameters.color.dim(n.dot(&to_sun) * noise)
                 } else {
-                    let sun_strength = (-self.time.cos() + 1.5) / 2.5;
+                    let sun_strength = (-t.cos() + 1.5) / 2.5;
                     let halo_strength = self.parameters.halo_brightness
                         * (((self.parameters.radius - d) * 4.0).exp() * 0.8
                             + (self.parameters.radius - d).exp() * 0.2);

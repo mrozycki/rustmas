@@ -1,7 +1,7 @@
 use std::f64::consts::PI;
 
 use animation_api::Animation;
-use animation_utils::decorators::BrightnessControlled;
+use animation_utils::decorators::{BrightnessControlled, OffSwitch};
 use animation_utils::ParameterSchema;
 use lightfx::Color;
 use serde::{Deserialize, Serialize};
@@ -62,11 +62,11 @@ pub struct CircleBoom {
 
 impl CircleBoom {
     pub fn create(points: Vec<(f64, f64, f64)>) -> impl Animation {
-        BrightnessControlled::new(Self {
+        OffSwitch::new(BrightnessControlled::new(Self {
             points,
             beat: 0.0,
             parameters: Default::default(),
-        })
+        }))
     }
 }
 
