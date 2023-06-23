@@ -208,7 +208,8 @@ impl ColorWithAlpha {
         let blend_component = |a, b| {
             let a = (a as f64) / 255.0;
             let b = (b as f64) / 255.0;
-            ((a.powf(gamma) * self.alpha + b.powf(gamma) * other.alpha * (1.0 - self.alpha))
+            (((a.powf(gamma) * self.alpha + b.powf(gamma) * other.alpha * (1.0 - self.alpha))
+                / alpha_0)
                 .powf(1.0 / gamma)
                 * 255.0) as u8
         };

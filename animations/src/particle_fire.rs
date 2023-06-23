@@ -3,7 +3,7 @@ use animation_utils::{
     decorators::{BrightnessControlled, SpeedControlled},
     ParameterSchema,
 };
-use lightfx::{Color, ColorWithAlpha, Gradient};
+use lightfx::{Color, Gradient};
 use rand::{thread_rng, Rng};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
@@ -66,15 +66,9 @@ impl Particle {
             thread_rng().gen_range(wind / 1.1..wind * 1.1)
         };
         self.speed = (vx + wind, vy);
+        self.power = (self.power - self.decay_rate * delta).clamp(0.0, 1.0);
 
-        self.power -= self.decay_rate * delta;
-
-        if self.power > 0.0 {
-            true
-        } else {
-            self.power = 0.0;
-            false
-        }
+        self.power > 0.0
     }
 
     fn distance_to(&self, x: f64, y: f64) -> f64 {
@@ -84,8 +78,8 @@ impl Particle {
 
 #[derive(Clone, Serialize, Deserialize, ParameterSchema)]
 pub struct Parameters {
-    #[schema_field(name = "Particle count", number(min = 0.0, max = 500.0, step = 20.0))]
-    particle_count: usize,
+    #[schema_field(name = "Generation rate", number(min = 0.0, max = 500.0, step = 10.0))]
+    gen_rate: usize,
 
     #[schema_field(name = "Decay rate", number(min = 0.0, max = 1.0, step = 0.01))]
     decay_rate: f64,
@@ -106,7 +100,7 @@ pub struct Parameters {
 impl Default for Parameters {
     fn default() -> Self {
         Self {
-            particle_count: 200,
+            gen_rate: 200,
             decay_rate: 0.5,
             decay_rate_spread: 0.1,
             bottom_line: -1.0,
@@ -120,7 +114,8 @@ impl Default for Parameters {
 pub struct DoomFireAnimation {
     points: Vec<(f64, f64, f64)>,
     parameters: Parameters,
-    particles: Vec<Option<Particle>>,
+    particles: Vec<Particle>,
+    to_generate: f64,
     gradient: Gradient,
 }
 
@@ -131,10 +126,12 @@ impl DoomFireAnimation {
             points,
             parameters: Default::default(),
             particles,
+            to_generate: 0.0,
             gradient: Gradient::new(vec![
                 Color::rgb_unit(0.0, 0.0, 0.0), // black
                 Color::rgb_unit(1.0, 0.0, 0.0), // red
                 Color::rgb_unit(1.0, 0.3, 0.0), // orange
+                Color::rgb_unit(1.0, 0.6, 0.0), // yellow
                 Color::rgb_unit(1.0, 0.6, 0.0), // yellow
             ]),
         }))
@@ -145,14 +142,22 @@ impl Animation for DoomFireAnimation {
     type Parameters = Parameters;
 
     fn update(&mut self, delta: f64) {
-        for particle in &mut self.particles {
-            if let Some(p) = particle {
-                if !p.update(delta, self.parameters.wind) {
-                    *p = Particle::new_random(&self.parameters);
-                }
-            } else if thread_rng().gen_bool((self.parameters.decay_rate * delta).clamp(0.0, 1.0)) {
-                *particle = Some(Particle::new_random(&self.parameters));
-            }
+        self.particles
+            .retain_mut(|p| p.update(delta, self.parameters.wind));
+
+        self.to_generate += self.parameters.gen_rate as f64 * delta;
+        if self.to_generate <= 0.0 {
+            return;
+        }
+
+        let n = thread_rng().gen_range(0.0..2.0 * self.to_generate).floor();
+        if n == 0.0 {
+            return;
+        }
+
+        self.to_generate -= n;
+        for _ in 0..n as usize {
+            self.particles.push(Particle::new_random(&self.parameters))
         }
     }
 
@@ -165,17 +170,19 @@ impl Animation for DoomFireAnimation {
                 } else {
                     self.particles
                         .iter()
-                        .flatten()
                         .map(|p| (p.power, p.distance_to(*x, *y)))
                         .fold(
-                            ColorWithAlpha::new(Color::black(), 0.0),
+                            Color::black().with_alpha(0.0),
                             |color, (power, distance)| {
-                                ColorWithAlpha::new(
-                                    self.gradient.at(power),
-                                    (1.0 - (distance / self.parameters.particle_range).powi(2))
+                                self.gradient
+                                    .at(power)
+                                    .with_alpha(
+                                        (1.0 - (distance
+                                            / (self.parameters.particle_range * power))
+                                            .powi(2))
                                         .clamp(0.0, 1.0),
-                                )
-                                .blend(&color)
+                                    )
+                                    .blend(&color)
                             },
                         )
                         .apply_alpha()
@@ -198,7 +205,5 @@ impl Animation for DoomFireAnimation {
 
     fn set_parameters(&mut self, parameters: Self::Parameters) {
         self.parameters = parameters;
-        self.particles
-            .resize_with(self.parameters.particle_count, || None);
     }
 }
