@@ -2,53 +2,53 @@ name: Rust
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
   pull_request:
-    branches: [ "main" ]
+    branches: ["main"]
 
 env:
   RUSTFLAGS: "-Dwarnings"
-    
+
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
-    - name: Install Rust toolchain
-      id: toolchain
-      uses: actions-rs/toolchain@v1
-      with:
-        toolchain: stable
-        profile: minimal
-        components: rustfmt
-    - name: Check formatting
-      uses: actions-rs/cargo@v1
-      with:
-        command: fmt
-        args: --check
-    - name: Install dependencies
-      run: sudo apt update && sudo apt install libopencv-dev libxinerama-dev libxcursor-dev xorg-dev libgl1 libgl1-mesa-dev libudev-dev 
-    - name: Cache cargo dependencies
-      uses: actions/cache@v3
-      with:
-        path: |
-          ~/.cargo/bin/
-          ~/.cargo/registry/index/
-          ~/.cargo/registry/cache/
-          ~/.cargo/git/db/
-          target/
-        key: ${{ runner.os }}-${{ hashFiles('**/Cargo.lock') }}-rust-${{ steps.toolchain.outputs.rustc_hash }}
-    - name: Clippy
-      uses: actions-rs/cargo@v1
-      with:
-        command: clippy
-    - name: Clippy webapi with websocket and visualiser
-      uses: actions-rs/cargo@v1
-      with:
-        command: clippy
-        args: -p rustmas-webapi --features websocket,visualiser
-    - name: Test
-      uses: actions-rs/cargo@v1
-      with:
-        command: test
-        args: -p lightfx
+      - uses: actions/checkout@v3
+      - name: Install Rust toolchain
+        id: toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          profile: minimal
+          components: rustfmt
+      - name: Check formatting
+        uses: actions-rs/cargo@v1
+        with:
+          command: fmt
+          args: --check
+      - name: Install dependencies
+        run: sudo apt update && sudo apt install libopencv-dev libxinerama-dev libxcursor-dev xorg-dev libgl1 libgl1-mesa-dev libudev-dev clang libclang-dev
+      - name: Cache cargo dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: ${{ runner.os }}-${{ hashFiles('**/Cargo.lock') }}-rust-${{ steps.toolchain.outputs.rustc_hash }}
+      - name: Clippy
+        uses: actions-rs/cargo@v1
+        with:
+          command: clippy
+      - name: Clippy webapi with websocket and visualiser
+        uses: actions-rs/cargo@v1
+        with:
+          command: clippy
+          args: -p rustmas-webapi --features websocket,visualiser
+      - name: Test
+        uses: actions-rs/cargo@v1
+        with:
+          command: test
+          args: -p lightfx

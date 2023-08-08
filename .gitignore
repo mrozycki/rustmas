@@ -11,3 +11,5 @@
 webui/dist
 
 *.sqlite
+
+.DS_Store
