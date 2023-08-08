@@ -5,7 +5,7 @@ use std::{error::Error, time::Duration};
 use log::debug;
 use opencv::{
     core, highgui, imgproc,
-    prelude::{Mat, MatTraitConstManual},
+    prelude::{Mat, MatTraitConst},
     videoio::{self, VideoCapture, VideoCaptureTrait, VideoCaptureTraitConst},
 };
 use tokio::task::JoinHandle;
