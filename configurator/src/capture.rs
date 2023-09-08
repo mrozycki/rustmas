@@ -242,8 +242,8 @@ impl Capturer {
 
         [WithConfidence::default()]
             .into_iter()
-            .chain(raw_points.into_iter())
-            .chain([WithConfidence::default()].into_iter())
+            .chain(raw_points)
+            .chain([WithConfidence::default()])
             .tuple_windows()
             .map(|(before, current, after)| {
                 if before.confident()
@@ -360,8 +360,8 @@ impl Capturer {
     ) -> Vec<WithConfidence<Vector3<f64>>> {
         front
             .into_iter()
-            .zip(back.into_iter())
-            .zip(left.into_iter().zip(right.into_iter()))
+            .zip(back)
+            .zip(left.into_iter().zip(right))
             .map(|((front, back), (left, right))| Self::merge_point(front, right, back, left))
             .collect()
     }
