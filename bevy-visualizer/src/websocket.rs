@@ -34,7 +34,9 @@ pub(crate) fn listen_for_frame(
             ev.pixels.len()
         );
         for (material, led) in query.iter() {
-            let Some(color) = ev.pixels.get(led.0) else { continue; };
+            let Some(color) = ev.pixels.get(led.0) else {
+                continue;
+            };
             materials.get_mut(material).unwrap().base_color =
                 bevy::prelude::Color::rgb_u8(color.r, color.g, color.b);
         }

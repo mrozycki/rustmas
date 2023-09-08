@@ -111,7 +111,8 @@ impl Controller {
                 let delta = now - state.last_frame;
                 state.last_frame = now;
                 if let Some(ref mut animation) = state.animation {
-                    animation.update(delta.num_milliseconds() as f64 / 1000.0)
+                    animation
+                        .update(delta.num_milliseconds() as f64 / 1000.0)
                         .and_then(|_| animation.render())
                 } else {
                     Ok(lightfx::Frame::new_black(point_count))
@@ -181,8 +182,8 @@ impl Controller {
             .animation
             .as_ref()
             .map(AnimationPlugin::animation_name)
-            .transpose()? else
-        {
+            .transpose()?
+        else {
             return Ok(());
         };
 
