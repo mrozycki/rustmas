@@ -13,7 +13,7 @@ lightfx = { path = "../lightfx" }
 animation-api = { path = "../animation-api" }
 
 csv = "1.1.6"
-chrono = "0.4.23"
+chrono = "0.4.30"
 clap = { version = "4.0.18", features = ["derive"] }
 glob = "0.3.1"
 serde = { version = "1.0", features = ["derive"] }
