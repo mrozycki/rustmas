@@ -6,8 +6,10 @@ use std::error::Error;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
+use animation_api::event::Event;
 use chrono::{DateTime, Duration, Utc};
 use client::combined::{CombinedLightClient, CombinedLightClientBuilder};
+use events::beat_generator::BeatEventGenerator;
 use factory::{AnimationFactory, AnimationFactoryError, Plugin};
 use jsonrpc_animation::{AnimationPlugin, AnimationPluginError};
 use log::{info, warn};
@@ -45,9 +47,11 @@ pub struct ControllerState {
 }
 
 pub struct Controller {
-    join_handle: JoinHandle<()>,
+    animation_join_handle: JoinHandle<()>,
+    event_generator_join_handle: JoinHandle<()>,
     state: Arc<Mutex<ControllerState>>,
     animation_factory: AnimationFactory,
+    _event_generators: Vec<Box<dyn Send + Sync>>,
 }
 
 impl Controller {
@@ -63,13 +67,20 @@ impl Controller {
             fps: 0.0,
             animation: None,
         }));
-        let join_handle = tokio::spawn(Self::run(state.clone(), client, points.len()));
+        let animation_join_handle = tokio::spawn(Self::run(state.clone(), client, points.len()));
         let animation_factory = AnimationFactory::new(plugin_dir, points);
+
+        let (sender, receiver) = mpsc::channel(16);
+        let event_generator_join_handle = tokio::spawn(Self::event_loop(state.clone(), receiver));
 
         Self {
             state,
-            join_handle,
+            animation_join_handle,
+            event_generator_join_handle,
             animation_factory,
+            _event_generators: vec![
+                Box::new(BeatEventGenerator::new(60.0, sender)) as Box<dyn Send + Sync>
+            ],
         }
     }
 
@@ -152,6 +163,15 @@ impl Controller {
                 }
                 _ => (),
             };
+        }
+    }
+
+    async fn event_loop(state: Arc<Mutex<ControllerState>>, mut receiver: mpsc::Receiver<Event>) {
+        while let Some(event) = receiver.recv().await {
+            let state = state.lock().await;
+            if let Some(animation) = &state.animation {
+                let _ = animation.send_event(event);
+            }
         }
     }
 
@@ -242,7 +262,13 @@ impl Controller {
     }
 
     pub async fn join(self) -> Result<(), ControllerError> {
-        self.join_handle
+        self.animation_join_handle
+            .await
+            .map_err(|e| ControllerError::InternalError {
+                reason: e.to_string(),
+            })?;
+
+        self.event_generator_join_handle
             .await
             .map_err(|e| ControllerError::InternalError {
                 reason: e.to_string(),

@@ -44,6 +44,8 @@ pub trait Animation {
 
     fn update(&mut self, _delta: f64) {}
 
+    fn on_event(&mut self, _event: crate::event::Event) {}
+
     fn render(&self) -> lightfx::Frame;
 }
 
@@ -57,5 +59,6 @@ pub enum JsonRpcMethod {
     GetParameters,
     GetFps,
     Update { time_delta: f64 },
+    OnEvent { event: crate::event::Event },
     Render,
 }

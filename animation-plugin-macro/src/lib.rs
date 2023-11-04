@@ -111,6 +111,12 @@ pub fn plugin(_attr: TokenStream, item: TokenStream) -> TokenStream {
                                 animation.update(time_delta);
                             }
                         },
+                        JsonRpcMethod::OnEvent { event } => {
+                            if let Some(mut animation) = animation.as_mut() {
+                                animation.on_event(event);
+                            }
+                            respond(message.id, ());
+                        },
                         JsonRpcMethod::Render => {
                             if let Some(animation) = animation.as_ref() {
                                 respond(message.id, animation.render());

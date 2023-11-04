@@ -42,6 +42,10 @@ where
         self.animation.update(delta * self.parameters.speed_factor);
     }
 
+    fn on_event(&mut self, event: animation_api::event::Event) {
+        self.animation.on_event(event)
+    }
+
     fn render(&self) -> lightfx::Frame {
         self.animation.render()
     }
