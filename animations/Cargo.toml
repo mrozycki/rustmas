@@ -127,6 +127,14 @@ path = "src/sweep.rs"
 name = "event_test"
 path = "src/event_test.rs"
 
+[[bin]]
+name = "audio_visualizer"
+path = "src/audio_visualizer.rs"
+
+[[bin]]
+name = "audio_wave"
+path = "src/audio_wave.rs"
+
 [dependencies]
 animation-utils = { path = "../animation-utils" }
 animation-api = { path = "../animation-api" }
@@ -139,3 +147,6 @@ itertools = "0.10.5"
 nalgebra = "0.31"
 rand = "0.8.5"
 bracket-noise = "0.8"
+cpal = "0.15.2"
+env_logger = "0.10.0"
+rustfft = "6.1.0"

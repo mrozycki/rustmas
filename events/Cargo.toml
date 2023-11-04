@@ -7,5 +7,8 @@ edition = "2021"
 
 [dependencies]
 animation-api = { path = "../animation-api" }
+cpal = "0.15.2"
+itertools = "0.11.0"
+rustfft = "6.1.0"
 
 tokio = { version = "1", features = ["full"] }

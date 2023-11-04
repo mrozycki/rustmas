@@ -10,6 +10,7 @@ use animation_api::event::Event;
 use chrono::{DateTime, Duration, Utc};
 use client::combined::{CombinedLightClient, CombinedLightClientBuilder};
 use events::beat_generator::BeatEventGenerator;
+use events::fft_generator::FftEventGenerator;
 use factory::{AnimationFactory, AnimationFactoryError, Plugin};
 use jsonrpc_animation::{AnimationPlugin, AnimationPluginError};
 use log::{info, warn};
@@ -79,7 +80,8 @@ impl Controller {
             event_generator_join_handle,
             animation_factory,
             _event_generators: vec![
-                Box::new(BeatEventGenerator::new(60.0, sender)) as Box<dyn Send + Sync>
+                Box::new(BeatEventGenerator::new(60.0, sender.clone())) as Box<dyn Send + Sync>,
+                Box::new(FftEventGenerator::new(30.0, sender)) as Box<dyn Send + Sync>,
             ],
         }
     }
