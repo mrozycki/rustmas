@@ -1,4 +1,5 @@
 mod api;
+pub mod event;
 mod msg;
 pub mod parameter_schema;
 

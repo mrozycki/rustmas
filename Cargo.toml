@@ -13,6 +13,7 @@ members = [
     "webapi",
     "webui",
     "bevy-visualizer",
+    "events",
 ]
 
 resolver = "2"

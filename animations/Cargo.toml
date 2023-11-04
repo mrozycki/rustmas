@@ -123,6 +123,10 @@ path = "src/stars.rs"
 name = "sweep"
 path = "src/sweep.rs"
 
+[[bin]]
+name = "event_test"
+path = "src/event_test.rs"
+
 [dependencies]
 animation-utils = { path = "../animation-utils" }
 animation-api = { path = "../animation-api" }

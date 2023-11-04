@@ -198,4 +198,15 @@ impl AnimationPlugin {
             Err(e) => Err(AnimationPluginError::JsonRpcError(e)),
         }
     }
+
+    pub fn send_event(
+        &self,
+        event: animation_api::event::Event,
+    ) -> Result<(), AnimationPluginError> {
+        match self.endpoint.send_message(JsonRpcMethod::OnEvent { event }) {
+            Ok(JsonRpcResult::Result(())) => Ok(()),
+            Ok(JsonRpcResult::Error(e)) => Err(AnimationPluginError::AnimationError(e.data)),
+            Err(e) => Err(AnimationPluginError::JsonRpcError(e)),
+        }
+    }
 }
