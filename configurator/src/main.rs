@@ -101,7 +101,10 @@ async fn capture_or_read_coordinates(
     save_pictures: bool,
     coordinates_path: Option<String>,
 ) -> Result<Vec<WithConfidence<(f64, f64)>>, Box<dyn Error>> {
-    if coordinates_path.is_none() {
+    if let Some(coordinates_path) = coordinates_path {
+        debug!("Reading {} side positions from {}", side, coordinates_path);
+        Capturer::read_coordinates_from_file(&coordinates_path)
+    } else {
         capturer
             .wait_for_perspective(
                 format!("Position camera to capture lights from the {side}").as_str(),
@@ -110,13 +113,6 @@ async fn capture_or_read_coordinates(
         let coords = capturer.capture_perspective(side, save_pictures).await?;
         debug!("Captured positions from the {side}: {:?}", coords);
         Ok(coords)
-    } else {
-        debug!(
-            "Reading {} side positions from {}",
-            side,
-            coordinates_path.as_ref().unwrap()
-        );
-        Capturer::read_coordinates_from_file(&coordinates_path.unwrap())
     }
 }
 
