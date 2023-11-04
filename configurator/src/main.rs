@@ -51,6 +51,8 @@ enum Commands {
         number_of_lights: usize,
         #[arg(short, long, default_value_t = false)]
         save_pictures: bool,
+        #[arg(long = "override")]
+        override_coordinates: Option<String>,
     },
     Center {
         #[arg(short, long, default_value = "lights.csv")]
@@ -174,9 +176,16 @@ async fn main() -> Result<(), Box<dyn Error>> {
             ip_camera,
             number_of_lights,
             save_pictures,
+            override_coordinates,
         } => {
             let mut capturer = capturer_from_options(lights_endpoint, ip_camera, number_of_lights)?;
-            let coords = capturer.capture_perspective("2d", save_pictures).await?;
+            let coords = capture_or_read_coordinates(
+                &mut capturer,
+                "2d",
+                save_pictures,
+                override_coordinates,
+            )
+            .await?;
             let light_positions = coords
                 .iter()
                 .map(|x| WithConfidence::<Vector3<f64>> {

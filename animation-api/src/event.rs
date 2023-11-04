@@ -4,4 +4,5 @@ use serde::{Deserialize, Serialize};
 #[non_exhaustive]
 pub enum Event {
     BeatEvent { bpm: f64 },
+    FftEvent { bands: Vec<f32> },
 }
