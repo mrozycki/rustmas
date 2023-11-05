@@ -8,16 +8,17 @@ pub mod websocket;
 use std::{error::Error, sync::mpsc};
 use std::{
     fmt,
-    sync::{Mutex, MutexGuard},
+    sync::{Arc, Mutex, MutexGuard},
     time::Duration,
 };
 
 use async_trait::async_trait;
 use lightfx::{Color, Frame};
-use log::debug;
+use log::{debug, info};
 #[cfg(feature = "visualiser")]
 use log::{error, info};
 use reqwest::header::CONNECTION;
+use tokio::net::{self, UdpSocket};
 
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub enum LightClientError {
@@ -63,12 +64,12 @@ impl LightClient for MockLightClient {
 }
 
 #[derive(Clone)]
-pub struct RemoteLightClient {
+pub struct HttpLightClient {
     url: String,
     http_client: reqwest::Client,
 }
 
-impl RemoteLightClient {
+impl HttpLightClient {
     pub fn new(url: &str) -> Self {
         Self {
             url: url.to_owned(),
@@ -95,7 +96,7 @@ fn gamma_correction(color: Color) -> Color {
 }
 
 #[async_trait]
-impl LightClient for RemoteLightClient {
+impl LightClient for HttpLightClient {
     async fn display_frame(&self, frame: &Frame) -> Result<(), LightClientError> {
         let pixels: Vec<_> = frame
             .pixels_iter()
@@ -112,6 +113,47 @@ impl LightClient for RemoteLightClient {
             .send()
             .await
         {
+            Ok(_) => Ok(()),
+            Err(err) => {
+                debug!("Failed to send frame to light client: {}", err);
+                Err(LightClientError::ConnectionLost)
+            }
+        }
+    }
+}
+
+#[derive(Clone)]
+pub struct UdpLightClient {
+    // url: String,
+    socket: Arc<net::UdpSocket>,
+}
+
+impl UdpLightClient {
+    pub async fn new(url: &str) -> Self {
+        let url = url.replace("udp://", "");
+        let socket = Arc::new(UdpSocket::bind("0.0.0.0:0").await.unwrap());
+        info!("Bound socket: {}", socket.local_addr().unwrap());
+        info!("Trying to connect to: {}", url);
+        let _ = socket.connect(url).await;
+        // we don't want old news
+        socket.set_ttl(1).unwrap();
+        // hopefully this gets us some priority
+        socket.set_tos(152).unwrap();
+        Self { socket }
+    }
+}
+
+#[async_trait]
+impl LightClient for UdpLightClient {
+    async fn display_frame(&self, frame: &Frame) -> Result<(), LightClientError> {
+        let pixels: Vec<_> = frame
+            .pixels_iter()
+            .cloned()
+            .map(gamma_correction)
+            .flat_map(|pixel| vec![pixel.g, pixel.r, pixel.b])
+            .collect();
+
+        match self.socket.send(&pixels).await {
             Ok(_) => Ok(()),
             Err(err) => {
                 debug!("Failed to send frame to light client: {}", err);

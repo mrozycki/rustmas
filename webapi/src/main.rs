@@ -205,7 +205,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
         if let Ok(url) = env::var("RUSTMAS_LIGHTS_URL") {
             if url.starts_with("http://") {
-                builder = builder.remote_lights(&url)?;
+                builder = builder.http_lights(&url)?;
             } else if url.starts_with("ws://") {
                 #[cfg(feature = "websocket")]
                 {
@@ -214,6 +214,8 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
                 #[cfg(not(feature = "websocket"))]
                 error!("Web API built without websocket support, ignoring");
+            } else if url.starts_with("udp://") {
+                builder = builder.udp_lights(&url).await?;
             } else {
                 error!("Unknown remote client protocol, ignoring");
             }

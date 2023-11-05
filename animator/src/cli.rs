@@ -23,7 +23,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
         rustmas_animator::Controller::builder().points_from_file(&cli.positions_file)?;
 
     builder = match cli.lights_endpoint {
-        Some(path) => builder.remote_lights(&path)?,
+        Some(path) => builder.http_lights(&path)?,
         None => {
             #[cfg(not(feature = "visualiser"))]
             panic!("Visualiser feature is disabled, please provide a light client endpoint");
