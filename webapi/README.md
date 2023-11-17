@@ -14,9 +14,9 @@ database are provided in the `migrations` directory. You can run them using
 the [migrant CLI](https://crates.io/crates/migrant) from the `webapi` directory:
 
 ```
-$ cargo install migrant --features sqlite
-$ migrant setup
-$ migrant apply
+cargo install migrant --features sqlite
+migrant setup
+migrant apply
 ```
 
 This will produce a `db.sqlite` file with appropriate tables set up.
@@ -26,7 +26,9 @@ This will produce a `db.sqlite` file with appropriate tables set up.
 In order to run WebAPI locally, you need to set up some environment variables:
 * `RUSTMAS_POINTS_PATH` is the path to CSV file with light positions
 * `RUSTMAS_LIGHTS_URL` is the URL of the pico-w-neopixel-server endpoint
+    or `RUSTMAS_USE_TTY=1` to use lights connected via USB
 * `RUSTMAS_DB_PATH` is the path to the SQLite database (for parameter storage)
+* `RUSTMAS_PLUGIN_DIR` is the path to the [animation plugins directory](../plugins/README.md)
 
 You can set these up with a `.env` file. An example `.env` file is provided in [.env.example](../.env.example).
 
@@ -35,19 +37,38 @@ You can set these up with a `.env` file. An example `.env` file is provided in [
 Once everything is set up, you can start the WebAPI by simply running:
 
 ```
-$ cargo run --bin rustmas-webapi
+cargo run --release -p rustmas-webapi
 ```
 
-The WebAPI needs to be restarted every time you modify the code (including animations).
+If you want to use the visualizer, you will need to start it first, and then start the WebAPI
+with the `websocket` feature:
+
+```
+cargo run --release -p rustmas-webapi --features websocket
+```
 
 ### Running WebUI
 
 Once the WebAPI is running, you can start WebUI using [trunk](https://trunkrs.dev/).
-Run the following from the `webui` directory:
+This will require installing trunk first:
 
 ```
-$ trunk serve
+cargo install trunk
 ```
+
+And adding the wasm target:
+
+```
+rustup target add wasm32-unknown-unknown
+```
+
+Then run the following from the `webui` directory:
+
+```
+trunk serve --features local
+```
+
+The `local` feature will connect WebUI to a locally running WebAPI.
 
 Deployment
 ----------
