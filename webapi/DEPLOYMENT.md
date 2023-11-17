@@ -14,19 +14,19 @@ Getting and building the code
 
 * Install cargo through rustup:
   ```
-  $ curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-  $ source "$HOME/.cargo/env"
+  curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+  source "$HOME/.cargo/env"
   ```
 
 * Install tools and dependencies:
   ```
-  $ sudo apt install git libssl-dev
+  sudo apt install git libssl-dev
   ```
 
 * Clone the repository:
   ```
-  $ git clone https://github.com/mrozycki/rustmas
-  $ cd rustmas
+  git clone https://github.com/mrozycki/rustmas
+  cd rustmas
   ```
 
 Database setup
@@ -36,10 +36,17 @@ Similarly to local development setup, you will need to set up the database using
 the [migrant CLI](https://crates.io/crates/migrant). Run the following from the `webapi` directory:
 
 ```
-$ cargo install migrant --features sqlite
-$ migrant setup
-$ migrant apply
+cargo install migrant --features sqlite
+migrant setup
+migrant apply
 ```
+
+Animation plugin setup
+----------------------
+
+Before starting the service you will need to build animations and add your animations
+to the plugins directory. Instructions can be found in the provided example [plugins directory](../plugins/README.md).
+
 
 WebAPI service
 --------------
@@ -53,14 +60,14 @@ and lights URL.
 Before running the service, you will need to build the WebAPI:
 
 ```
-$ cargo build --bin rustmas-webapi --release
+cargo build --bin rustmas-webapi --release
 ```
 
 Enable the service with:
 
 ```
-$ sudo service rustmas start
-$ sudo service rustmas enable
+sudo service rustmas start
+sudo service rustmas enable
 ```
 
 This will start the service automatically every time you start the machine.
@@ -68,7 +75,7 @@ This will start the service automatically every time you start the machine.
 You can verify that the service started successfully with journalctl:
 
 ```
-$ journalctl -f -u rustmas
+journalctl -f -u rustmas
 ```
 
 If there are no errors, and the logs end with a message similar to this:
@@ -89,8 +96,9 @@ it's ran, you might prefer to build the WebUI on a more powerful computer.
 Install trunk and build the WebUI by running the following from the `webui` directory:
 
 ```
-$ cargo install trunk
-$ trunk build --release
+cargo install trunk
+rustup target add wasm32-unknown-unknown
+trunk build --release
 ```
 
 Reverse proxy
@@ -100,7 +108,7 @@ We recommend using nginx to proxy the traffic of both WebAPI and WebUI through a
 You can install it with:
 
 ```
-$ sudo apt install nginx
+sudo apt install nginx
 ```
 
 In order to configure the proxy, copy the [`nginx.example`](deployment/nginx.example) file to
@@ -110,21 +118,21 @@ In order to configure the proxy, copy the [`nginx.example`](deployment/nginx.exa
 After that, you will need to enable the configuration with:
 
 ```
-$ sudo ln -s /etc/nginx/sites-available/rustmaspi.local /etc/nginx/sites-enabled/
+sudo ln -s /etc/nginx/sites-available/rustmaspi.local /etc/nginx/sites-enabled/
 ```
 
 You will also need to copy the compiled WebUI files to `/var/www/rustmas`:
 
 ```
-$ sudo mkdir /var/www/rustmas
-$ sudo chown www-data /var/www/rustmas
-$ sudo cp webui/dist/* /var/www/rustmas
+sudo mkdir /var/www/rustmas
+sudo chown www-data /var/www/rustmas
+sudo cp webui/dist/* /var/www/rustmas
 ```
 
 After that is done, you need to restart nginx:
 
 ```
-$ sudo service nginx restart
+sudo service nginx restart
 ```
 
 All done! You can now navigate to your machine's address (as specified in the nginx configuration)

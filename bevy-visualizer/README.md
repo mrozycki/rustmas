@@ -1,25 +1,17 @@
+# Rustmas Visualizer
+
 ## Running
-native:
+
+You can run the visualizer with:
+
 ```
 cargo run [--release] --bin rustmas-bevy-visualizer
 ```
-or WASM:
-```
-# once:
-cargo install wasm-server-runner
 
-# then:
-cargo run --profile wasm-release --target wasm32-unknown-unknown --bin rustmas-bevy-visualizer
-```
+Visualizer needs to be started before WebAPI.
+
 ## Controls
-- RMB: Orbit camera
-- MMB: Pan camera
-- Scroll: Zoom camera
 
-## Next steps
-
-Investigate if this gives better rendering on WASM:
-https://github.com/mrk-its/bevy_webgl2
-
-Mouse picking of entities (should be useful to set colors via visualizer):
-https://github.com/aevyrie/bevy_mod_picking
+You can control the view of the visualizer with your mouse. Scroll to zoom,
+move your mouse while holding left mouse button to move, move your mouse while
+holding right mouse button to rotate the view.

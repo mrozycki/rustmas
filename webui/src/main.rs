@@ -31,7 +31,11 @@ impl Component for AnimationSelector {
     type Properties = ();
 
     fn create(ctx: &Context<Self>) -> Self {
-        let api = api::Gateway::new("/api");
+        let api = if cfg!(feature = "local") {
+            api::Gateway::new("http://127.0.0.1:8081")
+        } else {
+            api::Gateway::new("/api")
+        };
 
         {
             let api = api.clone();

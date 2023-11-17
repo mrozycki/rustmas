@@ -3,10 +3,6 @@ name = "rustmas-animator"
 version = "0.1.0"
 edition = "2021"
 
-[[bin]]
-name = "animator-cli"
-path = "src/cli.rs"
-
 [dependencies]
 rustmas-light-client = { path = "../light-client", default-features = false }
 lightfx = { path = "../lightfx" }
@@ -27,5 +23,4 @@ thiserror = "1.0.40"
 
 [features]
 default = []
-visualiser = ["rustmas-light-client/visualiser"]
 websocket = ["rustmas-light-client/websocket"]
