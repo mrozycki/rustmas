@@ -4,8 +4,6 @@ pub mod tty;
 #[cfg(feature = "websocket")]
 pub mod websocket;
 
-#[cfg(feature = "visualiser")]
-use std::{error::Error, sync::mpsc};
 use std::{
     fmt,
     sync::{Mutex, MutexGuard},
@@ -15,8 +13,6 @@ use std::{
 use async_trait::async_trait;
 use lightfx::{Color, Frame};
 use log::debug;
-#[cfg(feature = "visualiser")]
-use log::{error, info};
 use reqwest::header::CONNECTION;
 
 #[derive(Debug, Copy, Clone, PartialEq)]
@@ -118,49 +114,5 @@ impl LightClient for RemoteLightClient {
                 Err(LightClientError::ConnectionLost)
             }
         }
-    }
-}
-
-#[cfg(feature = "visualiser")]
-pub struct VisualiserLightClient {
-    _join_handle: std::thread::JoinHandle<()>,
-    light_tx: Mutex<mpsc::Sender<Vec<(f32, f32, f32)>>>,
-}
-
-#[cfg(feature = "visualiser")]
-impl VisualiserLightClient {
-    pub fn new(points: Vec<(f64, f64, f64)>) -> Result<Self, Box<dyn Error>> {
-        let points = points
-            .into_iter()
-            .map(|(x, y, z)| (x as f32, y as f32, z as f32))
-            .collect();
-
-        let (tx, rx) = mpsc::channel();
-        Ok(Self {
-            _join_handle: std::thread::spawn(move || {
-                match rustmas_visualiser::visualise(points, rx) {
-                    Ok(_) => info!("Visualiser completed without errors"),
-                    Err(e) => error!("Visualiser returned an error: {}", e),
-                }
-            }),
-            light_tx: Mutex::new(tx),
-        })
-    }
-}
-
-#[async_trait]
-#[cfg(feature = "visualiser")]
-impl LightClient for VisualiserLightClient {
-    async fn display_frame(&self, frame: &Frame) -> Result<(), LightClientError> {
-        let pixels = frame
-            .pixels_iter()
-            .map(|Color { r, g, b }| (*r as f32 / 255.0, *g as f32 / 255.0, *b as f32 / 255.0))
-            .collect();
-
-        self.light_tx
-            .lock()
-            .map_err(|_| LightClientError::Unlikely)?
-            .send(pixels)
-            .map_err(|_| LightClientError::ProcessExited)
     }
 }
