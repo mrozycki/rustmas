@@ -84,7 +84,7 @@ fn capturer_from_options(
     let light_client: Box<dyn light_client::LightClient> = if let Some(endpoint) = lights_endpoint {
         if endpoint.starts_with("http://") {
             info!("Using remote HTTP light client at endpoint: {}", endpoint);
-            Box::new(light_client::RemoteLightClient::new(&endpoint))
+            Box::new(light_client::http::HttpLightClient::new(&endpoint))
         } else {
             info!("Using local TTY light client");
             Box::new(light_client::tty::TtyLightClient::new()?)
