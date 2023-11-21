@@ -26,5 +26,4 @@ features = ["client"]
 
 [features]
 default = []
-visualiser = ["dep:rustmas-visualiser"]
 websocket = ["bevy_websocket_adapter"]
