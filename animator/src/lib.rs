@@ -319,11 +319,11 @@ impl ControllerBuilder {
         Ok(self)
     }
 
-    pub fn remote_lights(mut self, path: &str) -> Result<Self, Box<dyn Error>> {
-        info!("Using remote light client with endpoint {}", path);
+    pub fn http_lights(mut self, path: &str) -> Result<Self, Box<dyn Error>> {
+        info!("Using http light client with endpoint {}", path);
         self.client_builder = self
             .client_builder
-            .with(Box::new(client::RemoteLightClient::new(path)));
+            .with(Box::new(client::http::HttpLightClient::new(path)));
         Ok(self)
     }
 
