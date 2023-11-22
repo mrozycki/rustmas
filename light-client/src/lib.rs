@@ -1,9 +1,10 @@
 pub mod combined;
 pub mod feedback;
+pub mod http;
+pub mod tcp;
 pub mod tty;
 #[cfg(feature = "websocket")]
 pub mod websocket;
-pub mod http;
 
 use std::{
     fmt,
@@ -55,7 +56,6 @@ impl LightClient for MockLightClient {
         Ok(())
     }
 }
-
 
 fn component_gamma_correction(component: u8) -> u8 {
     (((component as f64) / 255.0).powi(2) * 255.0) as u8
