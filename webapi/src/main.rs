@@ -214,6 +214,8 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
                 #[cfg(not(feature = "websocket"))]
                 error!("Web API built without websocket support, ignoring");
+            } else if url.starts_with("tcp://") {
+                builder = builder.tcp_lights(&url)?;
             } else {
                 error!("Unknown remote client protocol, ignoring");
             }
