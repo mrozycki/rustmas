@@ -1,11 +1,13 @@
 use animation_api::event::Event;
 use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
 use itertools::Itertools;
+use log::error;
 use rustfft::{num_complex::Complex32, FftPlanner};
 use tokio::sync::mpsc;
 
 use std::{
     collections::VecDeque,
+    error::Error,
     sync::{
         atomic::{AtomicBool, Ordering},
         Arc, Mutex,
@@ -24,11 +26,13 @@ pub struct FftEventGenerator {
 }
 
 impl FftEventGenerator {
-    pub fn new(fps: f64, channel: mpsc::Sender<Event>) -> Self {
+    pub fn new(fps: f64, channel: mpsc::Sender<Event>) -> Result<Self, Box<dyn Error>> {
         let keep_running = Arc::new(AtomicBool::new(true));
         let host = cpal::default_host();
-        let device = host.default_input_device().unwrap();
-        let config: cpal::StreamConfig = device.default_input_config().unwrap().into();
+        let device = host
+            .default_input_device()
+            .ok_or_else(|| anyhow::anyhow!("No default input device found"))?;
+        let config: cpal::StreamConfig = device.default_input_config()?.into();
         let buffer: Arc<Mutex<VecDeque<f32>>> = Arc::new(Mutex::new(vec![0.0; FFT_SIZE].into()));
 
         let input_stream_handle = {
@@ -43,8 +47,8 @@ impl FftEventGenerator {
                 }
             };
 
-            let err_fn = move |err| {
-                eprintln!("an error occurred on stream: {}", err);
+            let err_fn = |err| {
+                error!("an error occurred on stream: {}", err);
             };
 
             // Workaround for stream not being Send; we don't need it to be sent
@@ -52,10 +56,19 @@ impl FftEventGenerator {
             // until the generator is dropped.
             let keep_running = keep_running.clone();
             std::thread::spawn(move || {
-                let input_stream = device
+                let _input_stream = match device
                     .build_input_stream(&config, input_data_fn, err_fn, None)
-                    .unwrap();
-                input_stream.play().unwrap();
+                    .map_err(|e| anyhow::anyhow!(e))
+                    .and_then(|stream| -> anyhow::Result<_> {
+                        stream.play()?;
+                        Ok(stream)
+                    }) {
+                    Ok(stream) => stream,
+                    Err(e) => {
+                        error!("Failed to build audio input stream, audio animations will not work: {}", e);
+                        return;
+                    }
+                };
                 while keep_running.load(Ordering::Relaxed) {
                     std::thread::sleep(Duration::from_millis(1000));
                 }
@@ -94,11 +107,11 @@ impl FftEventGenerator {
             }
         });
 
-        Self {
+        Ok(Self {
             keep_running,
             _input_stream_handle: input_stream_handle,
             _fft_loop_handle: event_generator_thread,
-        }
+        })
     }
 }
 
