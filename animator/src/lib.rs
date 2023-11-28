@@ -74,15 +74,25 @@ impl Controller {
         let (sender, receiver) = mpsc::channel(16);
         let event_generator_join_handle = tokio::spawn(Self::event_loop(state.clone(), receiver));
 
+        let event_generators = {
+            let mut generators = vec![
+                Box::new(BeatEventGenerator::new(60.0, sender.clone())) as Box<dyn Send + Sync>
+            ];
+            match FftEventGenerator::new(30.0, sender) {
+                Ok(generator) => generators.push(Box::new(generator)),
+                Err(e) => {
+                    warn!("Failed to initialize FFT generator: {}", e);
+                }
+            };
+            generators
+        };
+
         Self {
             state,
             animation_join_handle,
             event_generator_join_handle,
             animation_factory,
-            _event_generators: vec![
-                Box::new(BeatEventGenerator::new(60.0, sender.clone())) as Box<dyn Send + Sync>,
-                Box::new(FftEventGenerator::new(30.0, sender)) as Box<dyn Send + Sync>,
-            ],
+            _event_generators: event_generators,
         }
     }
 
