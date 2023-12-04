@@ -97,6 +97,13 @@ fn capturer_from_options(
                 );
                 Box::new(light_client::tcp::TcpLightClient::new(&tcp_endpoint))
             }
+            udp_endpoint if endpoint.starts_with("udp://") => {
+                info!(
+                    "Using remote UDP light client at endpoint: {}",
+                    udp_endpoint
+                );
+                Box::new(light_client::udp::UdpLightClient::new(&udp_endpoint))
+            }
             _ => {
                 info!("Using local TTY light client");
                 Box::new(light_client::tty::TtyLightClient::new()?)
