@@ -76,7 +76,7 @@ impl Capturer {
     }
 
     fn single_light_on(&self, index: usize) -> lightfx::Frame {
-        lightfx::Frame::new_black(self.number_of_lights).with_pixel(index, lightfx::Color::white())
+        lightfx::Frame::new_black(index + 1).with_pixel(index, lightfx::Color::white())
     }
 
     pub fn read_coordinates_from_file(
