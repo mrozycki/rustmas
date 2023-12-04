@@ -216,6 +216,8 @@ async fn main() -> Result<(), Box<dyn Error>> {
                 error!("Web API built without websocket support, ignoring");
             } else if url.starts_with("tcp://") {
                 builder = builder.tcp_lights(&url)?;
+            } else if url.starts_with("udp://") {
+                builder = builder.udp_lights(&url)?;
             } else {
                 error!("Unknown remote client protocol, ignoring");
             }

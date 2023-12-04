@@ -335,6 +335,14 @@ impl ControllerBuilder {
         Ok(self)
     }
 
+    pub fn udp_lights(mut self, path: &str) -> Result<Self, Box<dyn Error>> {
+        info!("Using udp light client with endpoint {}", path);
+        self.client_builder = self
+            .client_builder
+            .with(Box::new(client::udp::UdpLightClient::new(path)));
+        Ok(self)
+    }
+
     #[cfg(feature = "visualiser")]
     pub fn visualiser_lights(mut self) -> Result<Self, Box<dyn Error>> {
         info!("Using local visualiser");
