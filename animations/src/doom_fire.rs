@@ -4,6 +4,7 @@ use animation_utils::{
     ParameterSchema,
 };
 use lightfx::{Color, Gradient};
+use nalgebra::{Rotation3, Vector3};
 use rand::Rng;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
@@ -63,20 +64,20 @@ impl DoomFire {
 
     fn tick(&mut self, parameters: &Parameters) {
         let mut rng = rand::thread_rng();
-        for x in 0..self.surface.width {
-            for y in 1..self.surface.height() {
+        for y in 1..self.surface.height() {
+            for x in 0..self.surface.width {
                 let side_spread = if parameters.side_spread == 0 {
                     rng.gen_range(0..parameters.side_spread) * parameters.side_spread.signum()
                 } else {
                     0
                 };
-                let curr = self.surface.get(x, y).cloned().unwrap_or(0.0);
+                let curr = self.surface.get(x, y).copied().unwrap_or(0.0);
                 if let Some(p) = self.surface.get_mut(
                     (x as isize - side_spread as isize + 1).rem_euclid(self.surface.width as isize)
                         as usize,
                     y - 1,
                 ) {
-                    *p = (curr - rng.gen_range(0.0..1.0) * (1.0 - parameters.upward_spread) / 64.0)
+                    *p = (curr - rng.gen_range(0.0..1.0) * (1.0 - parameters.upward_spread) / 36.0)
                         .clamp(0.0, 1.0);
                 }
             }
@@ -101,6 +102,9 @@ pub struct Parameters {
 
     #[schema_field(name = "Side spread", number(min = "-5.0", max = 5.0, step = 1.0))]
     side_spread: i32,
+
+    #[schema_field(name = "Angle", number(min = 0.0, max = 360.0, step = 5.0))]
+    angle: f64,
 }
 
 impl Default for Parameters {
@@ -108,13 +112,14 @@ impl Default for Parameters {
         Parameters {
             upward_spread: 0.33,
             side_spread: 3,
+            angle: 0.0,
         }
     }
 }
 
 #[animation_utils::plugin]
 pub struct DoomFireAnimation {
-    points: Vec<(f64, f64, f64)>,
+    points: Vec<Vector3<f64>>,
     parameters: Parameters,
     time: f64,
     fire: DoomFire,
@@ -123,7 +128,10 @@ pub struct DoomFireAnimation {
 impl DoomFireAnimation {
     pub fn create(points: Vec<(f64, f64, f64)>) -> impl Animation {
         SpeedControlled::new(BrightnessControlled::new(Self {
-            points,
+            points: points
+                .into_iter()
+                .map(|(x, y, z)| Vector3::new(x, y, z))
+                .collect(),
             parameters: Default::default(),
             time: 0.0,
             fire: DoomFire::new(200, 200),
@@ -145,9 +153,12 @@ impl Animation for DoomFireAnimation {
     }
 
     fn render(&self) -> lightfx::Frame {
+        let rotation =
+            Rotation3::from_axis_angle(&Vector3::y_axis(), self.parameters.angle.to_radians());
         self.points
             .iter()
-            .map(|(x, y, _z)| self.fire.sample(*x, *y))
+            .map(|v| rotation * v)
+            .map(|v| self.fire.sample(v.x, v.y))
             .into()
     }
 
