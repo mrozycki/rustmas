@@ -16,6 +16,7 @@ enum Msg {
     ParametersDirty(bool),
     TurnOff,
     Discover,
+    RestartEvents,
 }
 
 #[derive(Default)]
@@ -127,6 +128,15 @@ impl Component for AnimationSelector {
                 });
                 true
             }
+            Msg::RestartEvents => {
+                let api = self.api.clone();
+                wasm_bindgen_futures::spawn_local(async move {
+                    if let Err(e) = api.restart_events().await {
+                        error!("Failed to restart events: {}", e);
+                    }
+                });
+                false
+            }
         }
     }
 
@@ -142,6 +152,7 @@ impl Component for AnimationSelector {
                         <ul>
                             <li><a onclick={link.callback(move |_| Msg::TurnOff)}>{ "⏻ Off" }</a></li>
                             <li><a onclick={link.callback(move |_| Msg::Discover)}>{ "⟳ Refresh list" }</a></li>
+                            <li><a onclick={link.callback(move |_| Msg::RestartEvents)}>{ "⟳ Restart events" }</a></li>
                             <hr />
                             {
                                 animations.into_iter().map(|animation| html! {

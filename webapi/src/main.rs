@@ -16,6 +16,17 @@ use actix_web::{get, post, web, App, HttpRequest, HttpResponse, HttpServer};
 
 use crate::frame_broadcaster::{FrameBroadcaster, FrameBroadcasterSession};
 
+#[post("/restart_events")]
+async fn restart_events(app_state: web::Data<AppState>) -> HttpResponse {
+    app_state
+        .animation_controller
+        .lock()
+        .await
+        .restart_event_generators()
+        .await;
+    HttpResponse::Ok().json(())
+}
+
 #[derive(Deserialize)]
 struct SwitchForm {
     animation: String,
@@ -256,6 +267,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
         let cors = Cors::permissive();
         App::new()
             .wrap(cors)
+            .service(restart_events)
             .service(reload)
             .service(switch)
             .service(turn_off)

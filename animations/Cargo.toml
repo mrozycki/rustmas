@@ -135,6 +135,10 @@ path = "src/audio_visualizer.rs"
 name = "audio_wave"
 path = "src/audio_wave.rs"
 
+[[bin]]
+name = "midi_wave"
+path = "src/midi_wave.rs"
+
 [dependencies]
 animation-utils = { path = "../animation-utils" }
 animation-api = { path = "../animation-api" }
@@ -150,3 +154,4 @@ bracket-noise = "0.8"
 cpal = "0.15.2"
 env_logger = "0.10.0"
 rustfft = "6.1.0"
+midi-msg = "0.4.0"

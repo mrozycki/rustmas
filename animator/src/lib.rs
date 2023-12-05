@@ -11,6 +11,7 @@ use chrono::{DateTime, Duration, Utc};
 use client::combined::{CombinedLightClient, CombinedLightClientBuilder};
 use events::beat_generator::BeatEventGenerator;
 use events::fft_generator::FftEventGenerator;
+use events::midi_generator::MidiEventGenerator;
 use factory::{AnimationFactory, AnimationFactoryError, Plugin};
 use jsonrpc_animation::{AnimationPlugin, AnimationPluginError};
 use log::{info, warn};
@@ -18,6 +19,7 @@ use rustmas_light_client as client;
 use rustmas_light_client::LightClientError;
 use serde_json::json;
 use thiserror::Error;
+use tokio::sync::mpsc::Sender;
 use tokio::sync::{mpsc, Mutex};
 use tokio::task::JoinHandle;
 
@@ -45,6 +47,7 @@ pub struct ControllerState {
     last_frame: DateTime<Utc>,
     next_frame: DateTime<Utc>,
     fps: f64,
+    event_generators: Vec<Box<dyn Send + Sync>>,
 }
 
 pub struct Controller {
@@ -52,7 +55,7 @@ pub struct Controller {
     event_generator_join_handle: JoinHandle<()>,
     state: Arc<Mutex<ControllerState>>,
     animation_factory: AnimationFactory,
-    _event_generators: Vec<Box<dyn Send + Sync>>,
+    event_sender: Sender<Event>,
 }
 
 impl Controller {
@@ -62,38 +65,47 @@ impl Controller {
         client: Box<dyn rustmas_light_client::LightClient + Sync + Send>,
     ) -> Self {
         let now = Utc::now();
+        let (event_sender, event_receiver) = mpsc::channel(16);
+
         let state = Arc::new(Mutex::new(ControllerState {
             last_frame: now,
             next_frame: now,
             fps: 0.0,
             animation: None,
+            event_generators: Self::start_generators(event_sender.clone()),
         }));
+
         let animation_join_handle = tokio::spawn(Self::run(state.clone(), client, points.len()));
+        let event_generator_join_handle =
+            tokio::spawn(Self::event_loop(state.clone(), event_receiver));
         let animation_factory = AnimationFactory::new(plugin_dir, points);
-
-        let (sender, receiver) = mpsc::channel(16);
-        let event_generator_join_handle = tokio::spawn(Self::event_loop(state.clone(), receiver));
-
-        let event_generators = {
-            let mut generators = vec![
-                Box::new(BeatEventGenerator::new(60.0, sender.clone())) as Box<dyn Send + Sync>
-            ];
-            match FftEventGenerator::new(30.0, sender) {
-                Ok(generator) => generators.push(Box::new(generator)),
-                Err(e) => {
-                    warn!("Failed to initialize FFT generator: {}", e);
-                }
-            };
-            generators
-        };
 
         Self {
             state,
             animation_join_handle,
             event_generator_join_handle,
             animation_factory,
-            _event_generators: event_generators,
+            event_sender,
         }
+    }
+
+    fn start_generators(event_sender: Sender<Event>) -> Vec<Box<dyn Send + Sync>> {
+        let mut generators = vec![
+            Box::new(BeatEventGenerator::new(60.0, event_sender.clone())) as Box<dyn Send + Sync>,
+        ];
+        match FftEventGenerator::new(30.0, event_sender.clone()) {
+            Ok(generator) => generators.push(Box::new(generator)),
+            Err(e) => {
+                warn!("Failed to initialize FFT generator: {}", e);
+            }
+        };
+        match MidiEventGenerator::new(event_sender) {
+            Ok(generator) => generators.push(Box::new(generator)),
+            Err(e) => {
+                warn!("Failed to initialize MIDI generator: {}", e);
+            }
+        };
+        generators
     }
 
     async fn run(
@@ -193,6 +205,14 @@ impl Controller {
             plugin_dir_: None,
             client_builder: CombinedLightClient::builder(),
         }
+    }
+
+    pub async fn restart_event_generators(&self) {
+        info!("Restarting event generators");
+        let mut state = self.state.lock().await;
+
+        state.event_generators = Vec::new();
+        state.event_generators = Self::start_generators(self.event_sender.clone());
     }
 
     pub async fn switch_animation(&self, name: &str) -> Result<(), ControllerError> {

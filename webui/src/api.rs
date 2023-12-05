@@ -75,6 +75,16 @@ impl Gateway {
         format!("{}/{}", self.endpoint, path)
     }
 
+    pub async fn restart_events(&self) -> Result<()> {
+        Request::post(&self.url("restart_events"))
+            .send()
+            .await
+            .map_err(|e| GatewayError::RequestError {
+                reason: e.to_string(),
+            })?;
+        Ok(())
+    }
+
     pub async fn list_animations(&self) -> Result<Vec<AnimationEntry>> {
         Ok(Request::get(&self.url("list"))
             .send()
