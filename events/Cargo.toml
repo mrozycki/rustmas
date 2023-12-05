@@ -11,6 +11,8 @@ cpal = "0.15.2"
 itertools = "0.11.0"
 rustfft = "6.1.0"
 log = "0.4.20"
+midi-msg = "0.4.0"
+midir = "0.9.1"
 
 tokio = { version = "1", features = ["full"] }
 anyhow = "1.0.75"
