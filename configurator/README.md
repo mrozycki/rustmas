@@ -12,13 +12,18 @@ Configuration process
 
 Before you start the configuration process, you will need to know the IP address of
 the Raspberry Pi Pico W that is controlling your lights. You will also need a camera connected to
-the computer you're running the configurator from. YOu can either use a webcam connected to
+the computer you're running the configurator from. You can either use a webcam connected to
 the computer (or built in), or an IP Camera application on your phone.
 
 ### Using a built-in/USB webcam
 
 Rustmas Configurator will use the built-in/USB-connected webcam by default, so if this is your
-preferred method, simply skip the `-i` option.
+preferred method, simply skip the `-c` option. If you have multiple cameras, and the one chosen
+by default is not the one you want, you can try using the `-c` option with a different camera
+index, e.g. `-c 1`. The default is 0.
+
+At this point, there is unfortunately no way to list available cameras, as Rustmas uses OpenCV
+for image capture, which does not support listing devices.
 
 ### Using a remote IP camera
 
@@ -46,7 +51,7 @@ the four sides, or you can rotate your tree so that you will be able to capture 
 Once you are ready, run:
 
 ```
-cargo run --bin rustmas-configurator -- capture -n <count> -l <pico_url> -i <camera_url> -s
+cargo run --bin rustmas-configurator -- capture -n <count> -l <pico_url> -c <camera_url> -s
 ```
 
 where `<count>` is the number of lights, `<pico_url>` is the URL of the pico-w-neopixel-webserver
@@ -76,7 +81,7 @@ capturing the sides that have been successful by providing paths to the CSV file
 e.g. to skip front and left:
 
 ```
-cargo run --bin rustmas-configurator -- capture -n <count> -l <pico_url> -i <camera_url> -s \
+cargo run --bin rustmas-configurator -- capture -n <count> -l <pico_url> -c <camera> -s \
     --front captures/2022-12-05T19:23:07/front.csv --left captures/2022-12-05T19:29:12/left.csv
 ```
 

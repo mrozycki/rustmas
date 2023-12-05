@@ -26,7 +26,7 @@ enum Commands {
         #[arg(short, long)]
         lights_endpoint: Option<String>,
         #[arg(short, long)]
-        ip_camera: Option<String>,
+        camera: Option<String>,
         #[arg(short, long, default_value_t = 500)]
         number_of_lights: usize,
         #[arg(short, long, default_value_t = false)]
@@ -46,7 +46,7 @@ enum Commands {
         #[arg(short, long)]
         lights_endpoint: Option<String>,
         #[arg(short, long)]
-        ip_camera: Option<String>,
+        camera: Option<String>,
         #[arg(short, long, default_value_t = 500)]
         number_of_lights: usize,
         #[arg(short, long, default_value_t = false)]
@@ -70,10 +70,12 @@ enum Commands {
 
 fn capturer_from_options(
     lights_endpoint: Option<String>,
-    ip_camera: Option<String>,
+    camera: Option<String>,
     number_of_lights: usize,
 ) -> Result<Capturer, Box<dyn Error>> {
-    let camera = if let Some(path) = ip_camera {
+    let camera = if let Some(Ok(index)) = camera.as_ref().map(|s| s.parse::<i32>()) {
+        Camera::new_local(index)?
+    } else if let Some(path) = camera {
         info!("Using camera from file: {}", path);
         Camera::new_from_file(&path)?
     } else {
@@ -148,7 +150,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
         Commands::Capture {
             output,
             number_of_lights,
-            ip_camera,
+            camera,
             lights_endpoint,
             save_pictures,
             left_coordinates,
@@ -156,7 +158,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
             front_coordinates,
             back_coordinates,
         } => {
-            let mut capturer = capturer_from_options(lights_endpoint, ip_camera, number_of_lights)?;
+            let mut capturer = capturer_from_options(lights_endpoint, camera, number_of_lights)?;
             let front = capture_or_read_coordinates(
                 &mut capturer,
                 "front",
@@ -193,12 +195,12 @@ async fn main() -> Result<(), Box<dyn Error>> {
         Commands::Capture2d {
             output,
             lights_endpoint,
-            ip_camera,
+            camera,
             number_of_lights,
             save_pictures,
             override_coordinates,
         } => {
-            let mut capturer = capturer_from_options(lights_endpoint, ip_camera, number_of_lights)?;
+            let mut capturer = capturer_from_options(lights_endpoint, camera, number_of_lights)?;
             let coords = capture_or_read_coordinates(
                 &mut capturer,
                 "2d",

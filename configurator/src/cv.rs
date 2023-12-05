@@ -83,8 +83,13 @@ impl Camera {
             _grabber_thread_join,
         })
     }
+
     pub fn new_default() -> Result<Self, Box<dyn Error>> {
-        let cam = videoio::VideoCapture::new(0, videoio::CAP_ANY)?; // 0 is the default camera
+        Self::new_local(0)
+    }
+
+    pub fn new_local(index: i32) -> Result<Self, Box<dyn Error>> {
+        let cam = videoio::VideoCapture::new(index, videoio::CAP_ANY)?; // 0 is the default camera
         Self::new_from_video_capture(cam)
     }
 
