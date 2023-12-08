@@ -4,7 +4,6 @@ mod websocket;
 use bevy::prelude::*;
 use bevy::window::PresentMode;
 
-use bevy_websocket_adapter::bevy::{WebSocketServer, WsMessageInserter};
 use csv::ReaderBuilder;
 use pan_orbit_camera::{pan_orbit_camera, spawn_camera};
 
@@ -78,19 +77,19 @@ fn main() {
     App::new()
         .add_plugins(DefaultPlugins.set(WindowPlugin {
             primary_window: Some(Window {
+                title: "Rustmas Visualizer".to_string(),
                 present_mode: PresentMode::AutoNoVsync,
                 ..default()
             }),
             ..default()
         }))
-        .add_plugin(WebSocketServer::default())
+        .add_plugin(websocket::WebsocketPlugin::new(
+            "ws://127.0.0.1:8081/frames",
+        ))
         .insert_resource(Msaa::Off)
         .add_startup_system(create_plane_and_light)
         .add_startup_system(spawn_camera)
         .add_startup_system(add_lights)
-        .add_startup_system(websocket::start_listen)
-        .add_message_type::<websocket::FrameEvent>()
         .add_system(pan_orbit_camera)
-        .add_system(websocket::listen_for_frame)
         .run();
 }

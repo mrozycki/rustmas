@@ -4,8 +4,6 @@ pub mod http;
 pub mod tcp;
 pub mod tty;
 pub mod udp;
-#[cfg(feature = "websocket")]
-pub mod websocket;
 
 use std::{
     fmt,

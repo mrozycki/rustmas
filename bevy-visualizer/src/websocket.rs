@@ -1,8 +1,41 @@
 use bevy::prelude::*;
-use bevy_websocket_adapter::{impl_message_type, server::Server, shared::ConnectionHandle};
+use ewebsock::{WsEvent, WsMessage};
+use itertools::Itertools;
 use serde::{Deserialize, Serialize};
+use std::sync::{mpsc, Mutex};
 
 use crate::Led;
+
+pub(crate) struct WebsocketPlugin {
+    endpoint: String,
+}
+
+impl WebsocketPlugin {
+    pub(crate) fn new(url: &str) -> Self {
+        Self {
+            endpoint: url.to_string(),
+        }
+    }
+}
+
+impl Plugin for WebsocketPlugin {
+    fn build(&self, app: &mut App) {
+        let (sender, receiver) = mpsc::channel();
+        ewebsock::ws_receive(
+            self.endpoint.clone(),
+            Box::new(move |event| {
+                let _ = sender.send(event);
+                std::ops::ControlFlow::Continue(())
+            }),
+        )
+        .unwrap();
+        app.insert_resource(Receiver(Mutex::new(receiver)))
+            .add_system(listen_for_frame);
+    }
+}
+
+struct Receiver(Mutex<mpsc::Receiver<WsEvent>>);
+impl Resource for Receiver {}
 
 #[derive(Serialize, Deserialize, Debug)]
 pub(crate) struct Color {
@@ -15,30 +48,28 @@ pub(crate) struct Color {
 pub(crate) struct FrameEvent {
     pixels: Vec<Color>,
 }
-impl_message_type!(FrameEvent, "frame");
 
-pub(crate) fn start_listen(mut ws: ResMut<Server>) {
-    ws.listen("0.0.0.0:12345")
-        .expect("failed to start websocket server");
-}
-
-pub(crate) fn listen_for_frame(
-    mut evs: EventReader<(ConnectionHandle, FrameEvent)>,
+fn listen_for_frame(
+    recv: Res<Receiver>,
     query: Query<(&Handle<StandardMaterial>, &Led)>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
-    if let Some((handle, ev)) = evs.iter().last() {
-        trace!(
-            "received FrameEvent from {:?}; size = {}",
-            handle,
-            ev.pixels.len()
-        );
+    let mut last_frame = None;
+
+    while let Ok(event) = recv.0.lock().unwrap().try_recv() {
+        if let WsEvent::Message(WsMessage::Binary(bytes)) = event {
+            last_frame = Some(bytes);
+        }
+    }
+
+    if let Some(frame) = last_frame {
+        let colors: Vec<_> = frame.into_iter().tuples::<(u8, u8, u8)>().collect();
         for (material, led) in query.iter() {
-            let Some(color) = ev.pixels.get(led.0) else {
+            let Some((r, g, b)) = colors.get(led.0) else {
                 continue;
             };
             materials.get_mut(material).unwrap().base_color =
-                bevy::prelude::Color::rgb_u8(color.r, color.g, color.b);
+                bevy::prelude::Color::rgb_u8(*r, *g, *b);
         }
     }
 }

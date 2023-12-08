@@ -7,7 +7,6 @@ use tokio::sync::mpsc;
 #[derive(Message)]
 #[rtype(result = "()")]
 struct Frame {
-    #[allow(dead_code)]
     frame: lightfx::Frame,
 }
 
@@ -106,7 +105,12 @@ impl Handler<Frame> for FrameBroadcasterSession {
     type Result = ();
 
     fn handle(&mut self, msg: Frame, ctx: &mut Self::Context) -> Self::Result {
-        ctx.text(serde_json::to_string(&msg.frame).unwrap());
+        let bytes: Vec<_> = msg
+            .frame
+            .pixels_iter()
+            .flat_map(|c| [c.r, c.g, c.b])
+            .collect();
+        ctx.binary(bytes);
     }
 }
 

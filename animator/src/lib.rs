@@ -363,26 +363,6 @@ impl ControllerBuilder {
         Ok(self)
     }
 
-    #[cfg(feature = "visualiser")]
-    pub fn visualiser_lights(mut self) -> Result<Self, Box<dyn Error>> {
-        info!("Using local visualiser");
-        self.client_builder =
-            self.client_builder
-                .with(Box::new(client::VisualiserLightClient::new(
-                    self.points.as_ref().unwrap().clone(),
-                )?));
-        Ok(self)
-    }
-
-    #[cfg(feature = "websocket")]
-    pub fn websocket_lights(mut self, url: String) -> Self {
-        info!("Using websocket visualiser");
-        self.client_builder = self
-            .client_builder
-            .with(Box::new(client::websocket::WebsocketLightClient::new(url)));
-        self
-    }
-
     pub fn local_lights(mut self) -> Result<Self, Box<dyn Error>> {
         info!("Using tty lights client");
         self.client_builder = self

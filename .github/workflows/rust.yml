@@ -42,11 +42,6 @@ jobs:
         uses: actions-rs/cargo@v1
         with:
           command: clippy
-      - name: Clippy webapi with websocket
-        uses: actions-rs/cargo@v1
-        with:
-          command: clippy
-          args: -p rustmas-webapi --features websocket
       - name: Test
         uses: actions-rs/cargo@v1
         with:
