@@ -217,14 +217,6 @@ async fn main() -> Result<(), Box<dyn Error>> {
         if let Ok(url) = env::var("RUSTMAS_LIGHTS_URL") {
             if url.starts_with("http://") {
                 builder = builder.http_lights(&url)?;
-            } else if url.starts_with("ws://") {
-                #[cfg(feature = "websocket")]
-                {
-                    builder = builder.websocket_lights(url);
-                }
-
-                #[cfg(not(feature = "websocket"))]
-                error!("Web API built without websocket support, ignoring");
             } else if url.starts_with("tcp://") {
                 builder = builder.tcp_lights(&url)?;
             } else if url.starts_with("udp://") {
@@ -238,11 +230,6 @@ async fn main() -> Result<(), Box<dyn Error>> {
             .unwrap_or(false)
         {
             builder = builder.local_lights()?;
-        }
-
-        #[cfg(feature = "visualiser")]
-        {
-            builder = builder.visualiser_lights()?;
         }
 
         let mut controller = builder.build();

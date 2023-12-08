@@ -40,11 +40,10 @@ Once everything is set up, you can start the WebAPI by simply running:
 cargo run --release -p rustmas-webapi
 ```
 
-If you want to use the visualizer, you will need to start it first, and then start the WebAPI
-with the `websocket` feature:
+If you want to use the visualizer, you can start it once the WebAPI is running.
 
 ```
-cargo run --release -p rustmas-webapi --features websocket
+cargo run --release -p rustmas-bevy-visualizer
 ```
 
 ### Running WebUI
