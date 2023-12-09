@@ -15,32 +15,6 @@ struct Led(usize);
 struct Points(Vec<(f32, f32, f32)>);
 impl Resource for Points {}
 
-/// set up a simple 3D scene
-pub fn create_plane_and_light(
-    mut commands: Commands,
-    mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<StandardMaterial>>,
-) {
-    // plane
-    commands.spawn(PbrBundle {
-        mesh: meshes.add(shape::Plane::from_size(5.0).into()),
-        material: materials.add(Color::rgb(0.3, 0.5, 0.3).into()),
-        transform: Transform::from_xyz(0.0, -1.0, 0.0),
-        ..default()
-    });
-
-    // light
-    commands.spawn(PointLightBundle {
-        point_light: PointLight {
-            intensity: 1500.0,
-            shadows_enabled: false,
-            ..default()
-        },
-        transform: Transform::from_xyz(4.0, 8.0, 4.0),
-        ..default()
-    });
-}
-
 fn add_lights(
     mut commands: Commands,
     points: Res<Points>,
@@ -59,7 +33,11 @@ fn add_lights(
             (
                 PbrBundle {
                     mesh: mesh.clone(),
-                    material: materials.add(Color::RED.into()),
+                    material: materials.add(StandardMaterial {
+                        base_color: Color::rgba(0.1, 0.1, 0.1, 0.5),
+                        emissive: Color::rgb_linear(0.1, 0.1, 0.1),
+                        ..default()
+                    }),
                     transform: Transform::from_xyz(*x, *y, *z),
                     ..default()
                 },
@@ -73,6 +51,9 @@ fn add_lights(
 
 pub fn run(frames_endpoint: Url, points: Vec<(f32, f32, f32)>) {
     App::new()
+        .insert_resource(Msaa::Off)
+        .insert_resource(ClearColor(Color::rgb(0.0, 0.0, 0.0)))
+        .insert_resource(Points(points))
         .add_plugins(DefaultPlugins.set(WindowPlugin {
             primary_window: Some(Window {
                 title: "Rustmas Visualizer".to_string(),
@@ -82,9 +63,7 @@ pub fn run(frames_endpoint: Url, points: Vec<(f32, f32, f32)>) {
             ..default()
         }))
         .add_plugins(websocket::WebsocketPlugin::new(frames_endpoint))
-        .insert_resource(Msaa::Off)
-        .insert_resource(Points(points))
-        .add_systems(Startup, (create_plane_and_light, spawn_camera, add_lights))
+        .add_systems(Startup, (spawn_camera, add_lights))
         .add_systems(Update, pan_orbit_camera)
         .run();
 }

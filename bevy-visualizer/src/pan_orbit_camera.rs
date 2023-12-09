@@ -115,7 +115,9 @@ pub fn pan_orbit_camera(
 
 /// Spawn a camera like this
 pub fn spawn_camera(mut commands: Commands) {
-    let translation = Vec3::new(-2.0, 2.5, 5.0);
+    // Lights fit within a bounding box from -1.0 to 1.0 in all 3 axes.
+    // This places the camera in front of the tree.
+    let translation = Vec3::new(-4.0, 0.0, 0.0);
     let radius = translation.length();
 
     commands.spawn((
