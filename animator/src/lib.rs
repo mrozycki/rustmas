@@ -207,6 +207,10 @@ impl Controller {
         }
     }
 
+    pub fn points(&self) -> &[(f64, f64, f64)] {
+        self.animation_factory.points()
+    }
+
     pub async fn restart_event_generators(&self) {
         info!("Restarting event generators");
         let mut state = self.state.lock().await;
