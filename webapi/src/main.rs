@@ -194,6 +194,13 @@ async fn frames(
     )
 }
 
+#[get("/points")]
+async fn points(app_state: web::Data<AppState>) -> HttpResponse {
+    HttpResponse::Ok().json(json!({
+        "points": app_state.animation_controller.lock().await.points()
+    }))
+}
+
 struct AppState {
     animation_controller: Mutex<rustmas_animator::Controller>,
     animation_name: Mutex<String>,
@@ -265,6 +272,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
             .service(save_params)
             .service(reset_params)
             .service(frames)
+            .service(points)
             .app_data(app_state.clone())
             .app_data(frame_broadcaster.clone())
     })

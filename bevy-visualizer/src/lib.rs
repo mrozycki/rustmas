@@ -3,16 +3,17 @@ mod websocket;
 
 use bevy::prelude::*;
 use bevy::window::PresentMode;
-
-use csv::ReaderBuilder;
+use itertools::Itertools;
 use pan_orbit_camera::{pan_orbit_camera, spawn_camera};
+use url::Url;
 
 /// this component indicates what entities are LEDs
 #[derive(Component, bevy::reflect::TypeUuid)]
 #[uuid = "1F6B746C-C703-47AC-A70D-F531096220E8"]
 struct Led(usize);
 
-static LIGHTS_CSV: &[u8] = include_bytes!("../assets/lights.csv");
+struct Points(Vec<(f32, f32, f32)>);
+impl Resource for Points {}
 
 /// set up a simple 3D scene
 pub fn create_plane_and_light(
@@ -42,6 +43,7 @@ pub fn create_plane_and_light(
 
 fn add_lights(
     mut commands: Commands,
+    points: Res<Points>,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
@@ -49,31 +51,27 @@ fn add_lights(
         radius: 0.03,
         ..Default::default()
     }));
-    let mut rdr = ReaderBuilder::new()
-        .delimiter(b',')
-        .has_headers(false)
-        .from_reader(LIGHTS_CSV);
-    let leds = rdr
-        .deserialize()
-        .filter_map(|record: Result<(f32, f32, f32), _>| record.ok())
+    let leds = points
+        .0
+        .iter()
         .enumerate()
         .map(|(i, (x, y, z))| {
             (
                 PbrBundle {
                     mesh: mesh.clone(),
                     material: materials.add(Color::RED.into()),
-                    transform: Transform::from_xyz(x, y, z),
+                    transform: Transform::from_xyz(*x, *y, *z),
                     ..default()
                 },
                 Led(i),
             )
         })
-        .collect::<Vec<_>>();
+        .collect_vec();
 
     commands.spawn_batch(leds);
 }
 
-fn main() {
+pub fn run(frames_endpoint: Url, points: Vec<(f32, f32, f32)>) {
     App::new()
         .add_plugins(DefaultPlugins.set(WindowPlugin {
             primary_window: Some(Window {
@@ -83,10 +81,9 @@ fn main() {
             }),
             ..default()
         }))
-        .add_plugins(websocket::WebsocketPlugin::new(
-            "ws://127.0.0.1:8081/frames",
-        ))
+        .add_plugins(websocket::WebsocketPlugin::new(frames_endpoint))
         .insert_resource(Msaa::Off)
+        .insert_resource(Points(points))
         .add_systems(Startup, (create_plane_and_light, spawn_camera, add_lights))
         .add_systems(Update, pan_orbit_camera)
         .run();

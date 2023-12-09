@@ -2,7 +2,6 @@
 **/captures
 
 *.csv
-!/bevy-visualizer/assets/lights.csv
 *.log
 
 .env

@@ -2,19 +2,21 @@ use bevy::prelude::*;
 use ewebsock::{WsEvent, WsMessage};
 use itertools::Itertools;
 use serde::{Deserialize, Serialize};
-use std::sync::{mpsc, Mutex};
+use std::{
+    ops::ControlFlow,
+    sync::{mpsc, Mutex},
+};
+use url::Url;
 
 use crate::Led;
 
 pub(crate) struct WebsocketPlugin {
-    endpoint: String,
+    endpoint: Url,
 }
 
 impl WebsocketPlugin {
-    pub(crate) fn new(url: &str) -> Self {
-        Self {
-            endpoint: url.to_string(),
-        }
+    pub(crate) fn new(endpoint: Url) -> Self {
+        Self { endpoint }
     }
 }
 
@@ -22,10 +24,10 @@ impl Plugin for WebsocketPlugin {
     fn build(&self, app: &mut App) {
         let (sender, receiver) = mpsc::channel();
         ewebsock::ws_receive(
-            self.endpoint.clone(),
-            Box::new(move |event| {
-                let _ = sender.send(event);
-                std::ops::ControlFlow::Continue(())
+            self.endpoint.to_string(),
+            Box::new(move |event| match sender.send(event) {
+                Ok(_) => ControlFlow::Continue(()),
+                Err(_) => ControlFlow::Break(()),
             }),
         )
         .unwrap();

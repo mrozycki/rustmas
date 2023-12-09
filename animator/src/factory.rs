@@ -125,4 +125,8 @@ impl AnimationFactory {
 
         Ok(AnimationPlugin::new(plugin.start()?, self.points.clone())?)
     }
+
+    pub fn points(&self) -> &[(f64, f64, f64)] {
+        &self.points
+    }
 }
