@@ -6,11 +6,13 @@ edition = "2021"
 [dependencies]
 clap = { version = "4.4.11", features = ["derive"] }
 ewebsock = "0.4.0"
+gloo-net = "0.5.0"
 itertools = "0.12.0"
 reqwest = { version = "0.11.22", features = ["json", "blocking"] }
 serde = { version = "1.0.164", features = ["derive"] }
 serde_json = "1.0.108"
 url = "2.5.0"
+wasm-bindgen-futures = "0.4.39"
 
 [dependencies.bevy]
 version = "0.12.0"
@@ -25,4 +27,5 @@ features = [
     "ktx2",
     "tonemapping_luts",
     "zstd",
+    "webgl2",
 ]
