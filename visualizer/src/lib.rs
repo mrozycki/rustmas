@@ -22,7 +22,7 @@ fn add_lights(
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
     let mesh: Handle<Mesh> = meshes.add(Mesh::from(shape::UVSphere {
-        radius: 0.03,
+        radius: 0.025,
         ..Default::default()
     }));
     let leds = points
@@ -34,8 +34,7 @@ fn add_lights(
                 PbrBundle {
                     mesh: mesh.clone(),
                     material: materials.add(StandardMaterial {
-                        base_color: Color::rgba(0.1, 0.1, 0.1, 0.5),
-                        emissive: Color::rgb_linear(0.1, 0.1, 0.1),
+                        base_color: Color::rgb(0.7, 0.7, 0.7),
                         ..default()
                     }),
                     transform: Transform::from_xyz(*x, *y, *z),

@@ -1,3 +1,4 @@
+use bevy::core_pipeline::bloom::BloomSettings;
 use bevy::input::mouse::{MouseMotion, MouseWheel};
 use bevy::prelude::*;
 use bevy::render::camera::Projection;
@@ -30,7 +31,12 @@ pub fn pan_orbit_camera(
     mut ev_motion: EventReader<MouseMotion>,
     mut ev_scroll: EventReader<MouseWheel>,
     input_mouse: Res<Input<MouseButton>>,
-    mut query: Query<(&mut PanOrbitCamera, &mut Transform, &Projection)>,
+    mut query: Query<(
+        &mut PanOrbitCamera,
+        &mut FogSettings,
+        &mut Transform,
+        &Projection,
+    )>,
 ) {
     // change input mapping for orbit and panning here
     let orbit_button = MouseButton::Right;
@@ -52,7 +58,7 @@ pub fn pan_orbit_camera(
         orbit_button_changed = true;
     }
 
-    for (mut pan_orbit, mut transform, projection) in query.iter_mut() {
+    for (mut pan_orbit, mut fog, mut transform, projection) in query.iter_mut() {
         if orbit_button_changed {
             // only check for upside down when orbiting started or ended this frame
             // if the camera is "upside" down, panning horizontally would be inverted, so invert the input to make it correct
@@ -105,6 +111,10 @@ pub fn pan_orbit_camera(
             let rot_matrix = Mat3::from_quat(transform.rotation);
             transform.translation =
                 pan_orbit.focus + rot_matrix.mul_vec3(Vec3::new(0.0, 0.0, pan_orbit.radius));
+            fog.falloff = FogFalloff::Linear {
+                start: transform.translation.length() - 1.0,
+                end: transform.translation.length() + 0.5,
+            };
         }
     }
 
@@ -117,17 +127,33 @@ pub fn pan_orbit_camera(
 pub fn spawn_camera(mut commands: Commands) {
     // Lights fit within a bounding box from -1.0 to 1.0 in all 3 axes.
     // This places the camera in front of the tree.
-    let translation = Vec3::new(-4.0, 0.0, 0.0);
+    let translation = Vec3::new(-3.0, 0.0, 0.0);
     let radius = translation.length();
 
     commands.spawn((
         Camera3dBundle {
             transform: Transform::from_translation(translation).looking_at(Vec3::ZERO, Vec3::Y),
-            ..Default::default()
+            camera: Camera {
+                hdr: true,
+                ..default()
+            },
+            ..default()
+        },
+        BloomSettings {
+            intensity: 0.3,
+            ..default()
+        },
+        FogSettings {
+            color: Color::BLACK,
+            falloff: FogFalloff::Linear {
+                start: 2.0,
+                end: 3.5,
+            },
+            ..default()
         },
         PanOrbitCamera {
             radius,
-            ..Default::default()
+            ..default()
         },
     ));
 }

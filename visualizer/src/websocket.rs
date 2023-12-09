@@ -1,7 +1,6 @@
 use bevy::prelude::*;
 use ewebsock::{WsEvent, WsMessage};
 use itertools::Itertools;
-use serde::{Deserialize, Serialize};
 use std::{
     ops::ControlFlow,
     sync::{mpsc, Mutex},
@@ -39,18 +38,6 @@ impl Plugin for WebsocketPlugin {
 struct Receiver(Mutex<mpsc::Receiver<WsEvent>>);
 impl Resource for Receiver {}
 
-#[derive(Serialize, Deserialize, Debug)]
-pub(crate) struct Color {
-    r: u8,
-    g: u8,
-    b: u8,
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-pub(crate) struct FrameEvent {
-    pixels: Vec<Color>,
-}
-
 fn listen_for_frame(
     recv: Res<Receiver>,
     query: Query<(&Handle<StandardMaterial>, &Led)>,
@@ -67,11 +54,9 @@ fn listen_for_frame(
     if let Some(frame) = last_frame {
         let colors: Vec<_> = frame.into_iter().tuples::<(u8, u8, u8)>().collect();
         for (material, led) in query.iter() {
-            let Some((r, g, b)) = colors.get(led.0) else {
-                continue;
+            if let Some(color) = colors.get(led.0).map(|(r, g, b)| Color::rgb_u8(*r, *g, *b)) {
+                materials.get_mut(material).unwrap().emissive = color;
             };
-            materials.get_mut(material).unwrap().emissive =
-                bevy::prelude::Color::rgb_u8(*r, *g, *b);
         }
     }
 }
