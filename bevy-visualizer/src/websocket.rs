@@ -30,7 +30,7 @@ impl Plugin for WebsocketPlugin {
         )
         .unwrap();
         app.insert_resource(Receiver(Mutex::new(receiver)))
-            .add_system(listen_for_frame);
+            .add_systems(Update, listen_for_frame);
     }
 }
 

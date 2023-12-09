@@ -83,13 +83,11 @@ fn main() {
             }),
             ..default()
         }))
-        .add_plugin(websocket::WebsocketPlugin::new(
+        .add_plugins(websocket::WebsocketPlugin::new(
             "ws://127.0.0.1:8081/frames",
         ))
         .insert_resource(Msaa::Off)
-        .add_startup_system(create_plane_and_light)
-        .add_startup_system(spawn_camera)
-        .add_startup_system(add_lights)
-        .add_system(pan_orbit_camera)
+        .add_systems(Startup, (create_plane_and_light, spawn_camera, add_lights))
+        .add_systems(Update, pan_orbit_camera)
         .run();
 }
