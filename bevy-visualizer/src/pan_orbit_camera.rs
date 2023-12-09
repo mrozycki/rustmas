@@ -42,12 +42,12 @@ pub fn pan_orbit_camera(
     let mut orbit_button_changed = false;
 
     if input_mouse.pressed(orbit_button) {
-        rotation_move += ev_motion.iter().map(|ev| ev.delta).sum::<Vec2>();
+        rotation_move += ev_motion.read().map(|ev| ev.delta).sum::<Vec2>();
     } else if input_mouse.pressed(pan_button) {
         // Pan only if we're not rotating at the moment
-        pan += ev_motion.iter().map(|ev| ev.delta).sum::<Vec2>();
+        pan += ev_motion.read().map(|ev| ev.delta).sum::<Vec2>();
     }
-    scroll += ev_scroll.iter().map(|ev| ev.y.signum() * 0.3).sum::<f32>();
+    scroll += ev_scroll.read().map(|ev| ev.y.signum() * 0.3).sum::<f32>();
     if input_mouse.just_released(orbit_button) || input_mouse.just_pressed(orbit_button) {
         orbit_button_changed = true;
     }
