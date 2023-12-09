@@ -70,7 +70,7 @@ fn listen_for_frame(
             let Some((r, g, b)) = colors.get(led.0) else {
                 continue;
             };
-            materials.get_mut(material).unwrap().base_color =
+            materials.get_mut(material).unwrap().emissive =
                 bevy::prelude::Color::rgb_u8(*r, *g, *b);
         }
     }
