@@ -42,5 +42,5 @@ fn main() {
     let frames_endpoint = get_frames_url(&args.endpoint);
     let points = get_points(&args.endpoint);
 
-    rustmas_bevy_visualizer::run(frames_endpoint, points);
+    rustmas_visualizer::run(frames_endpoint, points);
 }

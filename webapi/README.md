@@ -43,7 +43,7 @@ cargo run --release -p rustmas-webapi
 If you want to use the visualizer, you can start it once the WebAPI is running.
 
 ```
-cargo run --release -p rustmas-bevy-visualizer
+cargo run --release -p rustmas-visualizer
 ```
 
 ### Running WebUI

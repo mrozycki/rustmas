@@ -9,10 +9,9 @@ members = [
     "configurator",
     "animator",
     "lightfx",
-    "visualiser",
     "webapi",
     "webui",
-    "bevy-visualizer",
+    "visualizer",
     "events",
 ]
 
