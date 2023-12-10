@@ -1,12 +1,19 @@
-use animation_api::{AnimationParameters, StepAnimation};
-use lightfx::parameter_schema::{Parameter, ParameterValue, ParametersSchema};
+use animation_api::{event::Event, Animation};
+use animation_utils::ParameterSchema;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 
-#[derive(Serialize, Deserialize)]
-struct Parameters {
+#[derive(Clone, Serialize, Deserialize, ParameterSchema)]
+pub struct Parameters {
     // TODO: Define your animation's parameters
+    #[schema_field(name = "Tail length", number(min = 1.0, max = 10.0, step = 1.0))]
     tail_length: usize,
+}
+
+impl Default for Parameters {
+    fn default() -> Self {
+        Self { tail_length: 3 }
+    }
 }
 
 #[animation_utils::plugin]
@@ -18,20 +25,26 @@ pub struct MyAnimation {
 }
 
 impl MyAnimation {
-    pub fn new(points: Vec<(f64, f64, f64)>) -> Self {
+    pub fn create(points: Vec<(f64, f64, f64)>) -> Self {
         // TODO: Initialize animation state from a set of light locations
         Self {
             points_count: points.len(),
             time: 0.0,
-            parameters: Parameters { tail_length: 3 },
+            parameters: Default::default(),
         }
     }
 }
 
-impl StepAnimation for MyAnimation {
+impl Animation for MyAnimation {
+    type Parameters = Parameters;
+
     fn update(&mut self, time_delta: f64) {
         // TODO: Update your animation state by time_delta seconds
         self.time += time_delta;
+    }
+
+    fn on_event(&mut self, _event: Event) {
+        // TODO: React to selected types of events by matching on `event` parameters
     }
 
     fn render(&self) -> lightfx::Frame {
@@ -48,9 +61,7 @@ impl StepAnimation for MyAnimation {
             })
             .into()
     }
-}
 
-impl AnimationParameters for MyAnimation {
     fn animation_name(&self) -> &str {
         // TODO: Return the name of your animation
         "Animation Plugin Template"
@@ -61,33 +72,13 @@ impl AnimationParameters for MyAnimation {
         8.0
     }
 
-    fn parameter_schema(&self) -> lightfx::parameter_schema::ParametersSchema {
-        // TODO: Describe the schema of your animation
-        ParametersSchema {
-            parameters: vec![Parameter {
-                id: "tail_length".to_owned(),
-                name: "Tail length".to_owned(),
-                description: Some("Number of lights lit at once".into()),
-                value: ParameterValue::Number {
-                    min: 1.0,
-                    max: 20.0,
-                    step: 1.0,
-                },
-            }],
-        }
+    fn get_parameters(&self) -> Self::Parameters {
+        self.parameters.clone()
     }
 
-    fn get_parameters(&self) -> serde_json::Value {
-        json!(self.parameters)
-    }
-
-    fn set_parameters(
-        &mut self,
-        parameters: serde_json::Value,
-    ) -> Result<(), Box<dyn std::error::Error>> {
+    fn set_parameters(&mut self, parameters: Self::Parameters) {
         // You might need to reset the state of your animation in some cases.
         // Otherwise there's nothing to do here.
-        self.parameters = serde_json::from_value(parameters)?;
-        Ok(())
+        self.parameters = parameters;
     }
 }
