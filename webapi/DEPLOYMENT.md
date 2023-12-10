@@ -101,6 +101,16 @@ rustup target add wasm32-unknown-unknown
 trunk build --release
 ```
 
+You can also include a visualizer embedded in the UI by using the `visualizer` feature:
+
+```
+trunk build --release --features visualizer
+```
+
+This will make the compiled WASM file significantly larger and will impact loading time,
+so it is turned off by default. The visualizer will also only show up on large displays
+(tablets, computer screens), and not on a phone.
+
 Reverse proxy
 -------------
 

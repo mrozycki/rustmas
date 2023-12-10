@@ -69,6 +69,12 @@ trunk serve --features local
 
 The `local` feature will connect WebUI to a locally running WebAPI.
 
+You can also include a visualizer embedded in the UI by using the `visualizer` feature:
+
+```
+trunk serve --features local,visualizer
+```
+
 Deployment
 ----------
 

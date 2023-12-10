@@ -57,6 +57,8 @@ pub fn run(frames_endpoint: Url, points: Vec<(f32, f32, f32)>) {
             primary_window: Some(Window {
                 title: "Rustmas Visualizer".to_string(),
                 present_mode: PresentMode::AutoNoVsync,
+                canvas: Some("#visualizer".into()),
+                fit_canvas_to_parent: true,
                 ..default()
             }),
             ..default()
