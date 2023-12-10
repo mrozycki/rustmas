@@ -42,6 +42,11 @@ jobs:
         uses: actions-rs/cargo@v1
         with:
           command: clippy
+      - name: Clippy WebUI with visualizer enabled
+        uses: actions-rs/cargo@v1
+        with:
+          command: clippy
+          args: -p rustmas-webui --features visualizer
       - name: Test
         uses: actions-rs/cargo@v1
         with:

@@ -1,13 +1,24 @@
 mod api;
 mod controls;
 
+#[cfg(feature = "visualizer")]
+mod visualizer;
+
+#[cfg(not(feature = "visualizer"))]
+mod dummy;
+
 use std::error::Error;
 
 use api::Gateway;
 use log::error;
+use url::Url;
 use yew::prelude::*;
 
 use crate::controls::ParameterControlList;
+#[cfg(not(feature = "visualizer"))]
+use crate::dummy::Dummy as Visualizer;
+#[cfg(feature = "visualizer")]
+use crate::visualizer::Visualizer;
 
 enum Msg {
     LoadedAnimations(Vec<api::AnimationEntry>),
@@ -32,11 +43,14 @@ impl Component for AnimationSelector {
     type Properties = ();
 
     fn create(ctx: &Context<Self>) -> Self {
-        let api = if cfg!(feature = "local") {
-            api::Gateway::new("http://127.0.0.1:8081")
+        let api_url = if cfg!(feature = "local") {
+            Url::parse("http://127.0.0.1:8081").unwrap()
+        } else if let Some(url) = web_sys::window().and_then(|w| w.location().href().ok()) {
+            Url::parse(&url).and_then(|u| u.join("api/")).unwrap()
         } else {
-            api::Gateway::new("/api")
+            Url::parse("http://127.0.0.1:8081").unwrap()
         };
+        let api = api::Gateway::new(api_url);
 
         {
             let api = api.clone();
@@ -140,9 +154,14 @@ impl Component for AnimationSelector {
         }
     }
 
+    #[allow(clippy::let_unit_value)]
     fn view(&self, ctx: &Context<Self>) -> Html {
         let link = ctx.link();
         let animations = self.animations.clone();
+        let width = web_sys::window()
+            .and_then(|w| w.screen().ok())
+            .and_then(|s| s.avail_width().ok())
+            .unwrap_or_default();
         html! {
             <ContextProvider<Gateway> context={self.api.clone()}>
             <>
@@ -161,6 +180,13 @@ impl Component for AnimationSelector {
                             }
                         </ul>
                     </nav>
+                    {
+                        if width > 640 {
+                            html!(<Visualizer />)
+                        } else {
+                            html!()
+                        }
+                    }
                     {if let Some(parameters) = &self.parameters {
                         html! {
                             <ParameterControlList
@@ -186,7 +212,7 @@ impl Component for AnimationSelector {
 }
 
 fn main() -> Result<(), Box<dyn Error>> {
-    wasm_logger::init(wasm_logger::Config::default());
+    wasm_logger::init(wasm_logger::Config::new(log::Level::Error));
     yew::start_app::<AnimationSelector>();
 
     Ok(())

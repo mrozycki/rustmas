@@ -4,10 +4,11 @@ use animation_api::parameter_schema::ParametersSchema;
 use gloo_net::http::Request;
 use serde::Deserialize;
 use serde_json::json;
+use url::Url;
 
 #[derive(Clone, PartialEq)]
 pub struct Gateway {
-    endpoint: String,
+    endpoint: Url,
 }
 
 #[derive(Debug)]
@@ -41,6 +42,12 @@ fn extract_response<T>(res: ApiResponse<T>) -> Result<T> {
     }
 }
 
+#[cfg(feature = "visualizer")]
+#[derive(Deserialize)]
+pub struct GetPointsResponse {
+    points: Vec<(f32, f32, f32)>,
+}
+
 #[derive(Clone, Deserialize)]
 pub struct AnimationEntry {
     pub id: String,
@@ -65,14 +72,36 @@ struct GetParamsResponse {
 }
 
 impl Gateway {
-    pub fn new(endpoint: &str) -> Self {
-        Self {
-            endpoint: endpoint.to_owned(),
-        }
+    pub fn new(endpoint: Url) -> Self {
+        Self { endpoint }
     }
 
     fn url(&self, path: &str) -> String {
-        format!("{}/{}", self.endpoint, path)
+        self.endpoint.join(path).unwrap().to_string()
+    }
+
+    #[cfg(feature = "visualizer")]
+    pub fn frames(&self) -> Url {
+        let mut endpoint = self.endpoint.clone();
+        endpoint.set_scheme("ws").unwrap();
+        endpoint.join("frames").unwrap()
+    }
+
+    #[cfg(feature = "visualizer")]
+    pub async fn get_points(&self) -> Result<Vec<(f32, f32, f32)>> {
+        Ok(Request::get(&self.url("points"))
+            .send()
+            .await
+            .map_err(|e| GatewayError::RequestError {
+                reason: e.to_string(),
+            })?
+            .json::<ApiResponse<GetPointsResponse>>()
+            .await
+            .map_err(|e| GatewayError::InvalidResponse {
+                reason: e.to_string(),
+            })
+            .and_then(extract_response)?
+            .points)
     }
 
     pub async fn restart_events(&self) -> Result<()> {
@@ -215,7 +244,7 @@ impl Gateway {
 impl Default for Gateway {
     fn default() -> Self {
         Self {
-            endpoint: "http://localhost/".to_owned(),
+            endpoint: Url::parse("http://localhost/").unwrap(),
         }
     }
 }
