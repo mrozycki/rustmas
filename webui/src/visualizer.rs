@@ -1,4 +1,5 @@
 use log::error;
+use web_sys::MouseEvent;
 use yew::{html, prelude::Html, Callback, Component, Context};
 
 use crate::api;
@@ -53,7 +54,14 @@ impl Component for Visualizer {
     fn view(&self, _ctx: &Context<Self>) -> Html {
         html! {
             <section class="visualizer-container">
-                <canvas id="visualizer"></canvas>
+                <canvas id="visualizer"
+                    oncontextmenu={Callback::from(|e: MouseEvent| e.prevent_default())}
+                    onmousedown={Callback::from(|e: MouseEvent| {
+                        if e.button() == 1 {
+                            e.prevent_default();
+                        }
+                    })}
+                ></canvas>
             </section>
         }
     }
