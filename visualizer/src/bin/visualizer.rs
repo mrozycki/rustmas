@@ -22,38 +22,24 @@ struct GetPointsResponse {
     points: Vec<(f32, f32, f32)>,
 }
 
-fn get_points_endpoint(endpoint: &Url) -> Url {
-    let mut endpoint = endpoint.clone();
-    endpoint.set_scheme("http").unwrap();
-    endpoint.join("points").unwrap()
+fn get_points(endpoint: &Url) -> Vec<(f32, f32, f32)> {
+    let endpoint = {
+        let mut endpoint = endpoint.clone();
+        endpoint.set_scheme("http").unwrap();
+        endpoint.join("points").unwrap()
+    };
+
+    reqwest::blocking::get(endpoint)
+        .unwrap()
+        .json::<GetPointsResponse>()
+        .unwrap()
+        .points
 }
 
 fn main() {
     let endpoint = Args::parse().endpoint;
     let frames_endpoint = get_frames_url(&endpoint);
-    let points_endpoint = get_points_endpoint(&endpoint);
+    let points = get_points(&endpoint);
 
-    #[cfg(not(target_arch = "wasm32"))]
-    {
-        let points = reqwest::blocking::get(points_endpoint)
-            .unwrap()
-            .json::<GetPointsResponse>()
-            .unwrap()
-            .points;
-
-        rustmas_visualizer::run(frames_endpoint, points);
-    }
-
-    #[cfg(target_arch = "wasm32")]
-    wasm_bindgen_futures::spawn_local(async move {
-        let points = gloo_net::http::Request::get(points_endpoint.as_str())
-            .send()
-            .await
-            .unwrap()
-            .json::<GetPointsResponse>()
-            .await
-            .unwrap()
-            .points;
-        rustmas_visualizer::run(frames_endpoint, points);
-    });
+    rustmas_visualizer::run(frames_endpoint, points);
 }

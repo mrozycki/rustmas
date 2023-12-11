@@ -8,19 +8,8 @@ You can run the visualizer as a native binary with:
 cargo run [--release] --bin rustmas-visualizer
 ```
 
-Alternatively, you can run it in the web browser. First you will have to
-install `wasm-server-runner`:
-
-```
-cargo install wasm-server-runner
-```
-
-and then you can start the visualizer with:
-
-```
-cd visualizer
-cargo run [--release] --target wasm32-unknown-unknown --bin rustmas-visualizer
-```
+If you would like to run the visualizer in a web browser, the suggested way
+is to [run is as a part of WebUI](../webapi/README.md#running-webui).
 
 Visualizer needs to be started after WebAPI.
 
