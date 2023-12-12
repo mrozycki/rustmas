@@ -334,8 +334,8 @@ impl ControllerBuilder {
         let points: Vec<_> = csv::ReaderBuilder::new()
             .has_headers(false)
             .from_path(path)
-            .map_err(|_| ControllerError::InternalError {
-                reason: "Could not read CSV file".to_string(),
+            .map_err(|e| ControllerError::InternalError {
+                reason: format!("Could not read CSV file: {}", e),
             })?
             .deserialize()
             .filter_map(|record: Result<(f64, f64, f64), _>| record.ok())
