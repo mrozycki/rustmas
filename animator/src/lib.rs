@@ -333,7 +333,10 @@ impl ControllerBuilder {
     pub fn points_from_file(mut self, path: &str) -> Result<Self, Box<dyn Error>> {
         let points: Vec<_> = csv::ReaderBuilder::new()
             .has_headers(false)
-            .from_path(path)?
+            .from_path(path)
+            .map_err(|_| ControllerError::InternalError {
+                reason: "Could not read CSV file".to_string(),
+            })?
             .deserialize()
             .filter_map(|record: Result<(f64, f64, f64), _>| record.ok())
             .collect();
