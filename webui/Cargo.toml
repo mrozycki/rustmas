@@ -7,6 +7,7 @@ edition = "2021"
 lightfx = { path = "../lightfx" }
 animation-api = { path = "../animation-api" }
 rustmas-visualizer = { path = "../visualizer", optional = true }
+rustmas-webapi-client = { path = "../webapi-client" }
 
 gloo-net = "0.2"
 gloo-utils = "0.1"
@@ -29,4 +30,4 @@ url = "2.5.0"
 [features]
 default = []
 local = []
-visualizer = ["rustmas-visualizer"]
+visualizer = ["rustmas-visualizer", "rustmas-webapi-client/visualizer"]

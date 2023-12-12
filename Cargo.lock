@@ -4874,9 +4874,10 @@ dependencies = [
  "clap",
  "ewebsock",
  "itertools 0.12.0",
- "reqwest",
+ "rustmas-webapi-client",
  "serde",
  "serde_json",
+ "tokio",
  "url",
 ]
 
@@ -4903,6 +4904,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "rustmas-webapi-client"
+version = "0.1.0"
+dependencies = [
+ "animation-api 0.1.0",
+ "reqwest",
+ "serde",
+ "serde_json",
+ "url",
+]
+
+[[package]]
 name = "rustmas-webui"
 version = "0.1.0"
 dependencies = [
@@ -4913,6 +4925,7 @@ dependencies = [
  "lightfx 0.1.0",
  "log",
  "rustmas-visualizer",
+ "rustmas-webapi-client",
  "serde",
  "serde_json",
  "url",

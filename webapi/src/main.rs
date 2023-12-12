@@ -149,7 +149,7 @@ async fn post_params(
         .set_parameters(params.0)
         .await
     {
-        Ok(_) => HttpResponse::Ok().json(json!({})),
+        Ok(_) => HttpResponse::Ok().json(json!(())),
         Err(e) => HttpResponse::InternalServerError().json(json!({"error": e.to_string()})),
     }
 }

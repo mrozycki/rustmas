@@ -10,6 +10,7 @@ members = [
     "animator",
     "lightfx",
     "webapi",
+    "webapi-client",
     "webui",
     "visualizer",
     "events",
