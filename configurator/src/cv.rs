@@ -122,7 +122,6 @@ pub struct Display {
     window_name: String,
 }
 
-#[allow(unused)]
 impl Display {
     pub fn new(window_name: &str) -> Result<Self, Box<dyn Error>> {
         highgui::named_window(window_name, highgui::WINDOW_AUTOSIZE)?;
@@ -146,6 +145,8 @@ impl Display {
 impl Drop for Display {
     fn drop(&mut self) {
         highgui::destroy_window(&self.window_name).unwrap();
+        // hack to get the window to close, see https://stackoverflow.com/a/50710994
+        highgui::wait_key(1).unwrap();
     }
 }
 
