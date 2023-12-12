@@ -51,11 +51,11 @@ the four sides, or you can rotate your tree so that you will be able to capture 
 Once you are ready, run:
 
 ```
-cargo run --bin rustmas-configurator -- capture -n <count> -l <pico_url> -c <camera_url> -s
+cargo run [--release] --bin rustmas-configurator -- capture -n <count> -l <pico_url> -c <camera_url> -s
 ```
 
 where `<count>` is the number of lights, `<pico_url>` is the URL of the pico-w-neopixel-webserver
-endpoint (remember the `/pixels` at the end!) and `<camera_url>` is the URL of the IP camera
+endpoint (remember the `/pixels` at the end if using the [legacy](https://github.com/krzmaz/pico-w-neopixel-server-cpp) driver!) and `<camera_url>` is the URL of the IP camera
 as described above (or skip if using local camera).
 
 Before each direction is captured, the configurator will turn on all the lights to make it easier
@@ -81,7 +81,7 @@ capturing the sides that have been successful by providing paths to the CSV file
 e.g. to skip front and left:
 
 ```
-cargo run --bin rustmas-configurator -- capture -n <count> -l <pico_url> -c <camera> -s \
+cargo run [--release] --bin rustmas-configurator -- capture -n <count> -l <pico_url> -c <camera> -s \
     --front captures/2022-12-05T19:23:07/front.csv --left captures/2022-12-05T19:29:12/left.csv
 ```
 
@@ -97,7 +97,7 @@ the `Testing: Manual Sweep` animation to find the alignment, and then run the `c
 command on your lights CSV file:
 
 ```
-cargo run --bin rustmas-configurator -- center -x 0.08 -z -0.12
+cargo run [--release] --bin rustmas-configurator -- center -x 0.08 -z -0.12
 ```
 
 The coordinates passed as arguments are where the center of the tree is currently located in the

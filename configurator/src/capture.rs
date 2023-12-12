@@ -15,7 +15,7 @@ use nalgebra::Vector3;
 use rustmas_light_client as client;
 use serde::{Deserialize, Serialize};
 
-use crate::cv;
+use crate::cv::{self, Display};
 
 type Point2 = (f64, f64);
 
@@ -77,6 +77,29 @@ impl Capturer {
 
     fn single_light_on(&self, index: usize) -> lightfx::Frame {
         lightfx::Frame::new_black(self.number_of_lights).with_pixel(index, lightfx::Color::white())
+    }
+
+    fn preview(&mut self) -> Result<(), Box<dyn Error>> {
+        let display = Display::new("Preview")?;
+        print!("Press return to continue...");
+        io::stdout().flush().expect("Can't flush to stdout");
+        let handler = thread::spawn(|| {
+            let mut stdin = io::stdin();
+            stdin.read_exact(&mut [0u8]).expect("Can't read from stdin");
+        });
+
+        loop {
+            if handler.is_finished() {
+                break;
+            }
+            display.show(&self.camera.capture()?)?;
+            let key = display.wait_for(Duration::from_millis(10))?;
+            if key > 0 && key != 255 {
+                break;
+            }
+        }
+        thread::sleep(Duration::from_millis(100));
+        Ok(())
     }
 
     pub fn read_coordinates_from_file(
@@ -213,7 +236,7 @@ impl Capturer {
             .display_frame(&self.all_lights_on())
             .await?;
         println!("{}", prompt);
-        pause();
+        self.preview()?;
         Ok(())
     }
 
