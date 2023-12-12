@@ -1,8 +1,7 @@
 use log::error;
+use rustmas_webapi_client::RustmasApiClient;
 use web_sys::MouseEvent;
 use yew::{html, prelude::Html, Callback, Component, Context};
-
-use crate::api;
 
 #[derive(Default)]
 pub struct Visualizer {}
@@ -11,9 +10,9 @@ pub enum Msg {
     PointsLoaded(Vec<(f32, f32, f32)>),
 }
 
-fn get_api(ctx: &Context<Visualizer>) -> api::Gateway {
+fn get_api(ctx: &Context<Visualizer>) -> RustmasApiClient {
     ctx.link()
-        .context::<api::Gateway>(Callback::noop())
+        .context::<RustmasApiClient>(Callback::noop())
         .expect("gateway to be created")
         .0
 }

@@ -1,4 +1,3 @@
-mod api;
 mod controls;
 
 #[cfg(feature = "visualizer")]
@@ -9,8 +8,8 @@ mod dummy;
 
 use std::error::Error;
 
-use api::Gateway;
 use log::error;
+use rustmas_webapi_client::{Animation, AnimationEntry, RustmasApiClient};
 use url::Url;
 use yew::prelude::*;
 
@@ -21,9 +20,9 @@ use crate::dummy::Dummy as Visualizer;
 use crate::visualizer::Visualizer;
 
 enum Msg {
-    LoadedAnimations(Vec<api::AnimationEntry>),
+    LoadedAnimations(Vec<AnimationEntry>),
     SwitchAnimation(String),
-    LoadedParameters(Option<api::Animation>),
+    LoadedParameters(Option<Animation>),
     ParametersDirty(bool),
     TurnOff,
     Discover,
@@ -32,9 +31,9 @@ enum Msg {
 
 #[derive(Default)]
 struct AnimationSelector {
-    api: api::Gateway,
-    animations: Vec<api::AnimationEntry>,
-    parameters: Option<api::Animation>,
+    api: RustmasApiClient,
+    animations: Vec<AnimationEntry>,
+    parameters: Option<Animation>,
     dirty: bool,
 }
 
@@ -50,7 +49,7 @@ impl Component for AnimationSelector {
         } else {
             Url::parse("http://127.0.0.1:8081").unwrap()
         };
-        let api = api::Gateway::new(api_url);
+        let api = RustmasApiClient::new(api_url);
 
         {
             let api = api.clone();
@@ -163,7 +162,7 @@ impl Component for AnimationSelector {
             .and_then(|s| s.avail_width().ok())
             .unwrap_or_default();
         html! {
-            <ContextProvider<Gateway> context={self.api.clone()}>
+            <ContextProvider<RustmasApiClient> context={self.api.clone()}>
             <>
                 <header><h1>{"Rustmas Lights"}</h1></header>
                 <div class="content">
@@ -206,7 +205,7 @@ impl Component for AnimationSelector {
                     }}
                 </div>
             </>
-            </ContextProvider<Gateway>>
+            </ContextProvider<RustmasApiClient>>
         }
     }
 }

@@ -8,6 +8,7 @@ use std::{collections::HashMap, time::Duration};
 
 use animation_api::parameter_schema::{Parameter, ParameterValue, ParametersSchema};
 use log::error;
+use rustmas_webapi_client::{Animation, RustmasApiClient};
 use wasm_bindgen::JsCast;
 use web_sys::{
     Event, EventTarget, FocusEvent, FormData, HtmlFormElement, HtmlInputElement, HtmlSelectElement,
@@ -15,7 +16,6 @@ use web_sys::{
 };
 use yew::{html, Callback, Component, Context, Html, Properties};
 
-use crate::api;
 use color_control::ColorParameterControl;
 use select_control::SelectParameterControl;
 use slider_control::SliderParameterControl;
@@ -50,7 +50,7 @@ pub struct ParameterControlListProps {
     pub name: String,
     pub schema: ParametersSchema,
     pub values: HashMap<String, serde_json::Value>,
-    pub update_values: Callback<Option<api::Animation>>,
+    pub update_values: Callback<Option<Animation>>,
     pub parameters_dirty: Callback<bool>,
 }
 
@@ -78,7 +78,7 @@ impl Component for ParameterControlList {
     fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
         let (api, _) = ctx
             .link()
-            .context::<api::Gateway>(Callback::noop())
+            .context::<RustmasApiClient>(Callback::noop())
             .expect("gateway to be created");
 
         match msg {

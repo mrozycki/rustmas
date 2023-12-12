@@ -4,10 +4,11 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+rustmas-webapi-client = { path = "../webapi-client", features = ["visualizer"] }
+
 clap = { version = "4.4.11", features = ["derive"] }
 ewebsock = "0.4.0"
 itertools = "0.12.0"
-reqwest = { version = "0.11.22", features = ["json", "blocking"] }
 serde = { version = "1.0.164", features = ["derive"] }
 serde_json = "1.0.108"
 url = "2.5.0"
@@ -27,3 +28,6 @@ features = [
     "zstd",
     "webgl2",
 ]
+
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+tokio = { version = "1.35.0", features = ["rt", "rt-multi-thread"] }

@@ -1,5 +1,5 @@
 use clap::Parser;
-use serde::Deserialize;
+use rustmas_webapi_client::RustmasApiClient;
 use url::Url;
 
 /// Visualizer for Rustmas animations
@@ -11,35 +11,15 @@ struct Args {
     endpoint: Url,
 }
 
-fn get_frames_url(endpoint: &Url) -> Url {
-    let mut endpoint = endpoint.clone();
-    endpoint.set_scheme("ws").unwrap();
-    endpoint.join("frames").unwrap()
-}
-
-#[derive(Deserialize)]
-struct GetPointsResponse {
-    points: Vec<(f32, f32, f32)>,
-}
-
-fn get_points(endpoint: &Url) -> Vec<(f32, f32, f32)> {
-    let endpoint = {
-        let mut endpoint = endpoint.clone();
-        endpoint.set_scheme("http").unwrap();
-        endpoint.join("points").unwrap()
-    };
-
-    reqwest::blocking::get(endpoint)
-        .unwrap()
-        .json::<GetPointsResponse>()
-        .unwrap()
-        .points
-}
-
 fn main() {
     let endpoint = Args::parse().endpoint;
-    let frames_endpoint = get_frames_url(&endpoint);
-    let points = get_points(&endpoint);
+    let api = RustmasApiClient::new(endpoint);
+    let frames_endpoint = api.frames();
+    let points = {
+        let rt = tokio::runtime::Runtime::new().unwrap();
+        rt.handle().block_on(async move { api.get_points().await })
+    }
+    .unwrap();
 
     rustmas_visualizer::run(frames_endpoint, points);
 }
