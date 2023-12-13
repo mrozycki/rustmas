@@ -17,6 +17,10 @@ pub enum Event {
         )]
         MidiMsg,
     ),
+    DrawEvent {
+        from: (f32, f32),
+        to: (f32, f32),
+    },
 }
 
 fn serialize_midi_msg<S>(midi_msg: &MidiMsg, serializer: S) -> Result<S::Ok, S::Error>

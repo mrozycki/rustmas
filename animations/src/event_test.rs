@@ -68,5 +68,9 @@ impl Animation for EventTest {
             self.energy = 1.0;
             self.decay = bpm / 60.0;
         }
+
+        if let animation_api::event::Event::DrawEvent { .. } = event {
+            eprintln!("Event received: {:?}", event);
+        }
     }
 }

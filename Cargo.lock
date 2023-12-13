@@ -4871,6 +4871,7 @@ dependencies = [
  "actix-files",
  "actix-web",
  "actix-web-actors",
+ "animation-api 0.1.0",
  "async-stream",
  "dotenvy",
  "env_logger",

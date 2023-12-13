@@ -4,6 +4,7 @@ mod frame_broadcaster;
 use actix::{Actor, Addr};
 use actix_cors::Cors;
 use actix_web_actors::ws;
+use animation_api::event::Event;
 use db::Db;
 use dotenvy::dotenv;
 use log::{error, info};
@@ -23,6 +24,17 @@ async fn restart_events(app_state: web::Data<AppState>) -> HttpResponse {
         .lock()
         .await
         .restart_event_generators()
+        .await;
+    HttpResponse::Ok().json(())
+}
+
+#[post("/event")]
+async fn send_event(app_state: web::Data<AppState>, event: web::Json<Event>) -> HttpResponse {
+    app_state
+        .animation_controller
+        .lock()
+        .await
+        .send_event(event.0)
         .await;
     HttpResponse::Ok().json(())
 }
@@ -262,6 +274,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
         App::new()
             .wrap(cors)
             .service(restart_events)
+            .service(send_event)
             .service(reload)
             .service(switch)
             .service(turn_off)

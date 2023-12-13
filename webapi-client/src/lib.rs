@@ -1,5 +1,6 @@
 use std::{collections::HashMap, fmt};
 
+pub use animation_api::event::Event;
 use animation_api::parameter_schema::ParametersSchema;
 
 use serde::de::DeserializeOwned;
@@ -81,6 +82,10 @@ impl RustmasApiClient {
         }
     }
 
+    pub fn endpoint(&self) -> &Url {
+        &self.endpoint
+    }
+
     fn url(&self, path: &str) -> String {
         self.endpoint.join(path).unwrap().to_string()
     }
@@ -122,6 +127,11 @@ impl RustmasApiClient {
 
     pub async fn restart_events(&self) -> Result<()> {
         self.post::<()>("restart_events", &json!(())).await?;
+        Ok(())
+    }
+
+    pub async fn send_event(&self, event: Event) -> Result<()> {
+        self.post::<()>("event", &json!(event)).await?;
         Ok(())
     }
 

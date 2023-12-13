@@ -30,7 +30,7 @@ impl Component for Visualizer {
             Msg::PointsLoaded(points) => {
                 let api = get_api(ctx);
                 wasm_bindgen_futures::spawn_local(async move {
-                    rustmas_visualizer::run(api.frames(), points);
+                    rustmas_visualizer::run(api.endpoint().clone(), points);
                 });
                 false
             }

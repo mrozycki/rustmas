@@ -179,6 +179,10 @@ impl Controller {
         state.event_generators = Self::start_generators(self.event_sender.clone());
     }
 
+    pub async fn send_event(&self, event: Event) {
+        let _ = self.event_sender.send(event).await;
+    }
+
     pub async fn switch_animation(&self, name: &str) -> Result<(), ControllerError> {
         info!("Trying to switch animation to \"{}\"", name);
         let mut state = self.state.lock().await;
