@@ -67,6 +67,10 @@ Then run the following from the `webui` directory:
 trunk serve --features local
 ```
 
+> [!IMPORTANT]
+> For this to work, you need `trunk` in version 0.17.0 or newer. Earlier versions
+> ignore the `--features` flag.
+
 The `local` feature will connect WebUI to a locally running WebAPI.
 
 You can also include a visualizer embedded in the UI by using the `visualizer` feature:
