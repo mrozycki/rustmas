@@ -1,4 +1,4 @@
-use crate::{LightClient, LightClientError};
+use crate::{backoff_decorator::BackoffDecorator, LightClient, LightClientError};
 use async_trait::async_trait;
 use lightfx::Frame;
 use log::debug;
@@ -22,6 +22,10 @@ impl HttpLightClient {
                 .build()
                 .unwrap(),
         }
+    }
+
+    pub fn with_backoff(self) -> BackoffDecorator<Self> {
+        BackoffDecorator::new(self)
     }
 }
 

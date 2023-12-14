@@ -1,3 +1,4 @@
+pub mod backoff_decorator;
 pub mod combined;
 pub mod feedback;
 pub mod http;
