@@ -1,5 +1,9 @@
 use animation_api::event::Event;
-use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
+use anyhow::anyhow;
+use cpal::{
+    traits::{DeviceTrait, HostTrait, StreamTrait},
+    Sample, SampleFormat,
+};
 use itertools::Itertools;
 use log::error;
 use rustfft::{num_complex::Complex32, FftPlanner};
@@ -32,13 +36,13 @@ impl FftEventGenerator {
         let device = host
             .default_input_device()
             .ok_or_else(|| anyhow::anyhow!("No default input device found"))?;
-        let config: cpal::StreamConfig = device.default_input_config()?.into();
+        let config = device.default_input_config()?;
         let buffer: Arc<Mutex<VecDeque<f32>>> = Arc::new(Mutex::new(vec![0.0; FFT_SIZE].into()));
 
         let input_stream_handle = {
-            let input_data_fn = {
+            let buffer_push = {
                 let buffer = buffer.clone();
-                move |data: &[f32], _: &cpal::InputCallbackInfo| {
+                move |data: &[f32]| {
                     let mut buf = buffer.lock().unwrap();
                     for &sample in data {
                         buf.push_front(sample);
@@ -56,19 +60,56 @@ impl FftEventGenerator {
             // until the generator is dropped.
             let keep_running = keep_running.clone();
             std::thread::spawn(move || {
-                let _input_stream = match device
-                    .build_input_stream(&config, input_data_fn, err_fn, None)
-                    .map_err(|e| anyhow::anyhow!(e))
-                    .and_then(|stream| -> anyhow::Result<_> {
-                        stream.play()?;
-                        Ok(stream)
-                    }) {
-                    Ok(stream) => stream,
-                    Err(e) => {
-                        error!("Failed to build audio input stream, audio animations will not work: {}", e);
+                let stream = match config.sample_format() {
+                    SampleFormat::I8 => device.build_input_stream(
+                        &config.into(),
+                        move |data: &[i8], _: &cpal::InputCallbackInfo| {
+                            buffer_push(&data.iter().copied().map(f32::from_sample).collect_vec())
+                        },
+                        err_fn,
+                        None,
+                    ),
+                    SampleFormat::I16 => device.build_input_stream(
+                        &config.into(),
+                        move |data: &[i16], _: &cpal::InputCallbackInfo| {
+                            buffer_push(&data.iter().copied().map(f32::from_sample).collect_vec())
+                        },
+                        err_fn,
+                        None,
+                    ),
+                    SampleFormat::I32 => device.build_input_stream(
+                        &config.into(),
+                        move |data: &[i32], _: &cpal::InputCallbackInfo| {
+                            buffer_push(&data.iter().copied().map(f32::from_sample).collect_vec())
+                        },
+                        err_fn,
+                        None,
+                    ),
+                    SampleFormat::F32 => device.build_input_stream(
+                        &config.into(),
+                        move |data, _: &cpal::InputCallbackInfo| buffer_push(data),
+                        err_fn,
+                        None,
+                    ),
+                    sample_format => {
+                        error!("Unsupported sample format '{sample_format}'");
                         return;
                     }
+                }
+                .map_err(|e| anyhow!(e))
+                .and_then(|stream| {
+                    stream.play()?;
+                    Ok(stream)
+                });
+
+                if let Err(e) = stream {
+                    error!(
+                        "Failed to build audio input stream, audio animations will not work: {}",
+                        e
+                    );
+                    return;
                 };
+
                 while keep_running.load(Ordering::Relaxed) {
                     std::thread::sleep(Duration::from_millis(1000));
                 }
