@@ -107,6 +107,10 @@ You can also include a visualizer embedded in the UI by using the `visualizer` f
 trunk build --release --features visualizer
 ```
 
+> [!IMPORTANT]
+> For this to work, you need `trunk` in version 0.17.0 or newer. Earlier versions
+> ignore the `--features` flag.
+
 This will make the compiled WASM file significantly larger and will impact loading time,
 so it is turned off by default. The visualizer will also only show up on large displays
 (tablets, computer screens), and not on a phone.
