@@ -35,13 +35,6 @@ pub enum ControllerError {
     AnimationFactoryError(#[from] AnimationFactoryError),
 }
 
-#[derive(PartialEq)]
-enum ConnectionStatus {
-    Healthy,
-    IntermittentFailure,
-    ProlongedFailure,
-}
-
 pub struct ControllerState {
     animation: Option<AnimationPlugin>,
     last_frame: DateTime<Utc>,
@@ -59,7 +52,7 @@ pub struct Controller {
 }
 
 impl Controller {
-    pub fn new<P: AsRef<Path>>(
+    fn new<P: AsRef<Path>>(
         points: Vec<(f64, f64, f64)>,
         plugin_dir: P,
         client: Box<dyn rustmas_light_client::LightClient + Sync + Send>,
@@ -113,28 +106,22 @@ impl Controller {
         client: Box<dyn rustmas_light_client::LightClient + Sync + Send>,
         point_count: usize,
     ) {
-        let start_backoff_delay: Duration = Duration::seconds(1);
-        let max_backoff_delay: Duration = Duration::seconds(8);
-
-        let mut backoff_delay = start_backoff_delay;
-        let mut status = ConnectionStatus::Healthy;
-        let now = Utc::now();
-        let mut next_check = now;
+        let mut next_check = Utc::now();
 
         loop {
+            let now = Utc::now();
             tokio::time::sleep(
-                (next_check - Utc::now())
+                (next_check - now)
                     .clamp(Duration::milliseconds(0), Duration::milliseconds(33))
                     .to_std()
                     .unwrap(),
             )
             .await;
 
-            let now = Utc::now();
             let (Ok(frame),) = ({
                 let mut state = state.lock().await;
                 if now < state.next_frame {
-                    next_check = state.next_frame.min(now + backoff_delay);
+                    next_check = state.next_frame.min(now + Duration::seconds(1));
                     continue;
                 }
                 state.next_frame = if state.fps != 0.0 {
@@ -156,37 +143,10 @@ impl Controller {
                 continue;
             };
 
-            match client.display_frame(&frame).await {
-                Ok(_) => {
-                    if status != ConnectionStatus::Healthy {
-                        info!("Regained connection to light client");
-                    }
-                    status = ConnectionStatus::Healthy;
-                    backoff_delay = start_backoff_delay;
-                }
-                Err(LightClientError::ConnectionLost) => {
-                    next_check = now + backoff_delay;
-                    backoff_delay = (backoff_delay * 2).min(max_backoff_delay);
-                    if backoff_delay < max_backoff_delay {
-                        status = ConnectionStatus::IntermittentFailure;
-                        warn!(
-                            "Failed to send frame to remote lights, will retry in {:.2} seconds",
-                            backoff_delay.num_milliseconds() as f64 / 1000.0
-                        );
-                    } else if status != ConnectionStatus::ProlongedFailure {
-                        status = ConnectionStatus::ProlongedFailure;
-                        warn!(
-                            "Lost connection to lights, will continue retrying every {:.2} seconds",
-                            max_backoff_delay.num_milliseconds() as f64 / 1000.0
-                        );
-                    }
-                }
-                Err(LightClientError::ProcessExited) => {
-                    warn!("Light client exited, exiting");
-                    return;
-                }
-                _ => (),
-            };
+            if client.display_frame(&frame).await == Err(LightClientError::ProcessExited) {
+                warn!("Light client exited, exiting");
+                return;
+            }
         }
     }
 
@@ -348,17 +308,19 @@ impl ControllerBuilder {
 
     pub fn http_lights(mut self, path: &str) -> Result<Self, Box<dyn Error>> {
         info!("Using http light client with endpoint {}", path);
-        self.client_builder = self
-            .client_builder
-            .with(Box::new(client::http::HttpLightClient::new(path)));
+        self.client_builder = self.client_builder.with(Box::new(
+            client::http::HttpLightClient::new(path).with_backoff(),
+        ));
         Ok(self)
     }
 
     pub fn tcp_lights(mut self, path: &str) -> Result<Self, Box<dyn Error>> {
         info!("Using tcp light client with endpoint {}", path);
-        self.client_builder = self
-            .client_builder
-            .with(Box::new(client::tcp::TcpLightClient::new(path)));
+        self.client_builder = self.client_builder.with(Box::new(
+            client::tcp::TcpLightClient::new(path)
+                .with_backoff()
+                .with_start_delay(Duration::milliseconds(125)),
+        ));
         Ok(self)
     }
 

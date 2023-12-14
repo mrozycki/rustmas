@@ -1,4 +1,4 @@
-use crate::{LightClient, LightClientError};
+use crate::{backoff_decorator::BackoffDecorator, LightClient, LightClientError};
 use async_trait::async_trait;
 use lightfx::Frame;
 use log::{debug, error, info};
@@ -20,8 +20,12 @@ impl TcpLightClient {
         }
     }
 
+    pub fn with_backoff(self) -> BackoffDecorator<Self> {
+        BackoffDecorator::new(self)
+    }
+
     async fn connect(&self) -> Result<(), Box<dyn Error>> {
-        info!("Connecting to remote lights via TCP");
+        debug!("Connecting to remote lights via TCP");
         let mut stream = self.stream.lock().await;
         let s = TcpStream::connect(&self.url).await?;
         s.set_nodelay(true)?;
