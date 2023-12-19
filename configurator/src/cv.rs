@@ -82,7 +82,7 @@ impl Camera {
         let _grabber_thread_join = tokio::spawn(async move {
             loop {
                 let _ = camera_handle_clone.lock().unwrap().grab();
-                tokio::time::sleep(Duration::from_millis(30)).await;
+                tokio::time::sleep(Duration::from_millis(10)).await;
             }
         });
         Ok(Self {
