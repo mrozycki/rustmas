@@ -32,12 +32,17 @@ pub struct Picture {
 }
 
 impl Picture {
-    pub fn mark(&mut self, x: usize, y: usize) -> Result<(), Box<dyn Error>> {
+    pub fn mark(&mut self, x: usize, y: usize, confident: bool) -> Result<(), Box<dyn Error>> {
+        let color = if confident {
+            core::VecN::new(0.0, 255.0, 0.0, 255.0) // green
+        } else {
+            core::VecN::new(0.0, 0.0, 255.0, 255.0) // red
+        };
         imgproc::circle(
             &mut self.inner,
             core::Point::new(x as i32, y as i32),
             20,
-            core::VecN::new(0.0, 0.0, 255.0, 255.0),
+            color,
             2,
             imgproc::LINE_AA,
             0,
@@ -54,7 +59,9 @@ impl Picture {
 
 impl From<Mat> for Picture {
     fn from(inner: Mat) -> Self {
-        Self { inner }
+        Self {
+            inner: inner.clone(),
+        }
     }
 }
 
@@ -101,7 +108,6 @@ impl Camera {
     pub fn capture(&mut self) -> Result<Picture, Box<dyn Error>> {
         let mut frame = Mat::default();
         let mut camera_handle = self.camera_handle.lock().unwrap();
-        camera_handle.grab()?;
         camera_handle.read(&mut frame)?;
 
         if frame.size()?.width > 0 {
