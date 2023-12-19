@@ -20,6 +20,7 @@ struct Cli {
 
 #[derive(Subcommand, Debug)]
 enum Commands {
+    /// Capture 3D coordinates of lights by measuring from 4 sides
     Capture {
         #[arg(short, long, default_value = "lights.csv")]
         output: String,
@@ -40,6 +41,7 @@ enum Commands {
         #[arg(long = "back")]
         back_coordinates: Option<String>,
     },
+    /// Capture 2D coordinates of lights by measuring from 1 side
     Capture2d {
         #[arg(short, long, default_value = "lights_2d.csv")]
         output: String,
@@ -54,6 +56,20 @@ enum Commands {
         #[arg(long = "override")]
         override_coordinates: Option<String>,
     },
+    /// Merge measurements taken from 4 perspectives to produce 3D coordinates
+    Merge {
+        #[arg(short, long, default_value = "lights.csv")]
+        output: String,
+        #[arg(long = "left")]
+        left_coordinates: String,
+        #[arg(long = "right")]
+        right_coordinates: String,
+        #[arg(long = "front")]
+        front_coordinates: String,
+        #[arg(long = "back")]
+        back_coordinates: String,
+    },
+    /// Translate lights in 3D space to match tree's center
     Center {
         #[arg(short, long, default_value = "lights.csv")]
         input: String,
@@ -219,6 +235,30 @@ async fn main() -> Result<(), Box<dyn Error>> {
             let light_positions = Capturer::extrapolate_ends(light_positions);
 
             Capturer::save_3d_coordinates(output, &light_positions)?;
+            Ok(())
+        }
+        Commands::Merge {
+            output,
+            left_coordinates,
+            right_coordinates,
+            front_coordinates,
+            back_coordinates,
+        } => {
+            let left = Capturer::read_coordinates_from_file(&left_coordinates)?;
+            let right = Capturer::read_coordinates_from_file(&right_coordinates)?;
+            let front = Capturer::read_coordinates_from_file(&front_coordinates)?;
+            let back = Capturer::read_coordinates_from_file(&back_coordinates)?;
+
+            let light_positions = Capturer::merge_perspectives(front, right, back, left);
+            let light_positions = Capturer::interpolate_gaps(light_positions);
+            let light_positions =
+                Capturer::mark_outliers_by_distance(light_positions, |a, b| a.metric_distance(b));
+            let light_positions = Capturer::interpolate_gaps(light_positions);
+            let light_positions = Capturer::extrapolate_ends(light_positions);
+
+            debug!("Mapped 3D light positions: {:?}", &light_positions);
+            Capturer::save_3d_coordinates(output, &light_positions)?;
+
             Ok(())
         }
         Commands::Center {
