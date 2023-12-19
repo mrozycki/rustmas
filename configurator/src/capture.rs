@@ -191,7 +191,7 @@ impl Capturer {
         for i in (0..self.number_of_lights).progress_with(pb) {
             self.display_frame_with_retry(&self.all_lights_off()).await;
 
-            thread::sleep(Duration::from_millis(30));
+            thread::sleep(Duration::from_millis(100));
             let base_picture = self.camera.capture()?;
             if save_pictures {
                 base_picture.save_to_file((format!("{}/img/off/{:03}.jpg", dir, i)).as_str())?;
@@ -202,7 +202,7 @@ impl Capturer {
                 warn!("Failed to light up light #{}, skipping", i);
                 continue;
             }
-            thread::sleep(Duration::from_millis(30));
+            thread::sleep(Duration::from_millis(100));
 
             let mut led_picture = self.capture_with_retry();
 
