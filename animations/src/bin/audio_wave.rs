@@ -1,9 +1,10 @@
 use std::collections::VecDeque;
+use std::f64::consts::PI;
 use std::sync::{Arc, Mutex};
 
 use animation_api::Animation;
 use animation_utils::decorators::{BrightnessControlled, SpeedControlled};
-use animation_utils::ParameterSchema;
+use animation_utils::{to_polar, EnumSchema, ParameterSchema};
 use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
 use cpal::Stream;
 use lightfx::Color;
@@ -13,20 +14,44 @@ use serde_json::json;
 
 const BUFFER_SIZE: usize = 1024;
 
+#[derive(Clone, Serialize, Deserialize, EnumSchema)]
+pub enum ColorScheme {
+    #[schema_variant(name = "Selected color")]
+    Selected,
+    #[schema_variant(name = "Rainbow")]
+    Rainbow,
+}
+
+#[derive(Clone, Serialize, Deserialize, EnumSchema)]
+pub enum Orientation {
+    #[schema_variant(name = "XY")]
+    XY,
+    #[schema_variant(name = "Around")]
+    Around,
+}
+
 #[derive(Clone, Serialize, Deserialize, ParameterSchema)]
 pub struct Parameters {
-    #[schema_field(name = "Color", color)]
-    color: lightfx::Color,
+    #[schema_field(name = "Color scheme", enum_options)]
+    color_scheme: ColorScheme,
+
+    #[schema_field(name = "Selected color", color)]
+    selected_color: lightfx::Color,
 
     #[schema_field(name = "Band height", number(min = 0.0, max = 1.0, step = 0.05))]
     height: f64,
+
+    #[schema_field(name = "Orientation", enum_options)]
+    orientation: Orientation,
 }
 
 impl Default for Parameters {
     fn default() -> Self {
         Self {
-            color: lightfx::Color::rgb(255, 0, 0),
-            height: 0.5,
+            color_scheme: ColorScheme::Selected,
+            selected_color: lightfx::Color::kelvin(2700),
+            height: 0.1,
+            orientation: Orientation::Around,
         }
     }
 }
@@ -85,15 +110,24 @@ impl Animation for AudioVisualizer {
 
         self.points
             .iter()
-            .map(|x| (x.0, x.1))
+            .copied()
+            .map(match self.parameters.orientation {
+                Orientation::XY => |(x, y, _)| (x, y),
+                Orientation::Around => |p| {
+                    let p = to_polar(p);
+                    ((p.1 / PI).rem_euclid(2.0) - 1.0, p.2)
+                },
+            })
+            .map(|(x, y)| ((x + 1.0) / 2.0, y))
             .map(|(x, y)| {
-                if (buf[((((x + 1.0) / 2.0) * BUFFER_SIZE as f64) as usize).clamp(0, buf.len() - 1)]
-                    as f64
-                    - y)
+                if (buf[((x * BUFFER_SIZE as f64) as usize).clamp(0, buf.len() - 1)] as f64 - y)
                     .abs()
                     < self.parameters.height / 2.0
                 {
-                    Color::gray(200)
+                    match self.parameters.color_scheme {
+                        ColorScheme::Selected => self.parameters.selected_color,
+                        ColorScheme::Rainbow => Color::hsv(x, 1.0, 1.0),
+                    }
                 } else {
                     Color::black()
                 }
@@ -113,6 +147,6 @@ impl Animation for AudioVisualizer {
         self.parameters.clone()
     }
     fn get_fps(&self) -> f64 {
-        100.0
+        60.0
     }
 }

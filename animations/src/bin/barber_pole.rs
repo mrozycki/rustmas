@@ -14,6 +14,9 @@ pub struct Parameters {
     #[schema_field(name = "Second color", color)]
     color_b: lightfx::Color,
 
+    #[schema_field(name = "Transition width", number(min = 0.0, max = 1.0, step = 0.1))]
+    transition: f64,
+
     #[schema_field(name = "Twistiness", number(min = "-5.0", max = 5.0, step = 0.02))]
     twistiness: f64,
 }
@@ -23,6 +26,7 @@ impl Default for Parameters {
         Self {
             color_a: lightfx::Color::rgb(255, 0, 0),
             color_b: lightfx::Color::rgb(255, 255, 255),
+            transition: 0.5,
             twistiness: 1.0,
         }
     }
@@ -56,12 +60,26 @@ impl Animation for BarberPole {
         self.points_polar
             .iter()
             .map(|(_, a, h)| {
-                if animation_utils::cycle(a / PI + self.time + h * self.parameters.twistiness, 2.0)
-                    < 1.0
-                {
+                let p = (a / PI + self.time + h * self.parameters.twistiness).rem_euclid(2.0);
+                if p < self.parameters.transition / 2.0 {
+                    self.parameters.color_b.lerp(
+                        &self.parameters.color_a,
+                        p / (self.parameters.transition / 2.0) + 0.5,
+                    )
+                } else if p < 1.0 - self.parameters.transition / 2.0 {
                     self.parameters.color_a
-                } else {
+                } else if p < 1.0 + self.parameters.transition / 2.0 {
+                    self.parameters.color_a.lerp(
+                        &self.parameters.color_b,
+                        (p - 1.0 + self.parameters.transition / 2.0) / self.parameters.transition,
+                    )
+                } else if p < 2.0 - self.parameters.transition / 2.0 {
                     self.parameters.color_b
+                } else {
+                    self.parameters.color_b.lerp(
+                        &self.parameters.color_a,
+                        (p - 2.0 + self.parameters.transition / 2.0) / self.parameters.transition,
+                    )
                 }
             })
             .into()

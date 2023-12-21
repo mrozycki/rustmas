@@ -1,6 +1,8 @@
+use std::f64::consts::PI;
+
 use animation_api::Animation;
 use animation_utils::decorators::BrightnessControlled;
-use animation_utils::{EnumSchema, ParameterSchema};
+use animation_utils::{to_polar, EnumSchema, ParameterSchema};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 
@@ -15,6 +17,12 @@ pub enum Axis {
 
     #[schema_variant(name = "Z: Front-Back")]
     Z,
+
+    #[schema_variant(name = "R: Inside-Outside")]
+    R,
+
+    #[schema_variant(name = "Theta: Around")]
+    Theta,
 }
 
 #[derive(Clone, Default, Serialize, Deserialize, EnumSchema)]
@@ -93,6 +101,8 @@ impl Animation for ManualSweep {
                 Axis::X => *x,
                 Axis::Y => *y,
                 Axis::Z => *z,
+                Axis::R => to_polar((*x, *y, *z)).0,
+                Axis::Theta => to_polar((*x, *y, *z)).1 / PI,
             })
             .map(|h| {
                 let (start, end) = match self.parameters.band_alignment {
