@@ -1,7 +1,7 @@
 use animation_api::Animation;
 use animation_utils::{
     decorators::{BrightnessControlled, SpeedControlled},
-    ParameterSchema,
+    EnumSchema, ParameterSchema,
 };
 use lightfx::{Color, Gradient};
 use rand::{thread_rng, Rng};
@@ -9,8 +9,8 @@ use serde::{Deserialize, Serialize};
 use serde_json::json;
 
 struct Particle {
-    position: (f64, f64),
-    speed: (f64, f64),
+    position: (f64, f64, f64),
+    speed: (f64, f64, f64),
     decay_rate: f64,
     power: f64,
 }
@@ -24,8 +24,8 @@ impl Default for Particle {
 impl Particle {
     fn new() -> Self {
         Self {
-            position: (-1.0, -1.0),
-            speed: (0.0, 0.0),
+            position: (-1.0, -1.0, -1.0),
+            speed: (0.0, 0.0, 0.01),
             decay_rate: 1.0,
             power: 0.0,
         }
@@ -42,21 +42,31 @@ impl Particle {
         }
         .clamp(0.0, 1.0);
 
+        let z = match parameters.dimension {
+            Dimension::Dim2D => 0.0,
+            Dimension::Dim3D => thread_rng().gen_range(-1.0..1.0),
+        };
+
         Self {
             position: (
                 thread_rng().gen_range(-1.0..1.0),
                 parameters.bottom_line - parameters.particle_range,
+                z,
             ),
-            speed: (0.0, thread_rng().gen_range(0.5..1.0)),
+            speed: (0.0, thread_rng().gen_range(0.5..1.0), 0.0),
             decay_rate,
             power: 1.0,
         }
     }
 
-    fn update(&mut self, delta: f64, wind: f64) -> bool {
-        let (x, y) = self.position;
-        let (vx, vy) = self.speed;
-        self.position = ((1.0 + x + vx * delta).rem_euclid(2.0) - 1.0, y + vy * delta);
+    fn update(&mut self, delta: f64, wind: f64, wind_direction: f64) -> bool {
+        let (x, y, z) = self.position;
+        let (vx, vy, vz) = self.speed;
+        self.position = (
+            (1.0 + x + vx * delta).rem_euclid(2.0) - 1.0,
+            y + vy * delta,
+            (1.0 + z + vz * delta).rem_euclid(2.0) - 1.0,
+        );
 
         let wind = if wind == 0.0 {
             0.0
@@ -65,19 +75,35 @@ impl Particle {
         } else {
             thread_rng().gen_range(wind / 1.1..wind * 1.1)
         };
-        self.speed = (vx + wind, vy);
+        let (wz, wx) = wind_direction.to_radians().sin_cos();
+        self.speed = (vx + wx * wind, vy, vz + wz * wind);
         self.power = (self.power - self.decay_rate * delta).clamp(0.0, 1.0);
 
         self.power > 0.0
     }
 
-    fn distance_to(&self, x: f64, y: f64) -> f64 {
-        ((x - self.position.0).powi(2) + (y - self.position.1).powi(2)).sqrt()
+    fn distance_to(&self, x: f64, y: f64, z: f64) -> f64 {
+        ((x - self.position.0).powi(2)
+            + (y - self.position.1).powi(2)
+            + (z - self.position.2).powi(2))
+        .sqrt()
     }
+}
+
+#[derive(Clone, Serialize, Deserialize, EnumSchema)]
+pub enum Dimension {
+    #[schema_variant(name = "2D")]
+    Dim2D,
+
+    #[schema_variant(name = "3D")]
+    Dim3D,
 }
 
 #[derive(Clone, Serialize, Deserialize, ParameterSchema)]
 pub struct Parameters {
+    #[schema_field(name = "Dimension", enum_options)]
+    dimension: Dimension,
+
     #[schema_field(name = "Generation rate", number(min = 0.0, max = 500.0, step = 10.0))]
     gen_rate: usize,
 
@@ -95,17 +121,22 @@ pub struct Parameters {
 
     #[schema_field(name = "Wind", number(min = "-0.1", max = 0.1, step = 0.001))]
     wind: f64,
+
+    #[schema_field(name = "Wind direction", number(min = 0.0, max = 360.0, step = 10.0))]
+    wind_direction: f64,
 }
 
 impl Default for Parameters {
     fn default() -> Self {
         Self {
-            gen_rate: 200,
-            decay_rate: 0.5,
+            dimension: Dimension::Dim3D,
+            gen_rate: 250,
+            decay_rate: 0.3,
             decay_rate_spread: 0.1,
             bottom_line: -1.0,
-            particle_range: 0.2,
+            particle_range: 0.3,
             wind: 0.0,
+            wind_direction: 0.0,
         }
     }
 }
@@ -142,8 +173,13 @@ impl Animation for DoomFireAnimation {
     type Parameters = Parameters;
 
     fn update(&mut self, delta: f64) {
+        let wind_direction = match self.parameters.dimension {
+            Dimension::Dim2D => 0.0,
+            Dimension::Dim3D => self.parameters.wind_direction,
+        };
+
         self.particles
-            .retain_mut(|p| p.update(delta, self.parameters.wind));
+            .retain_mut(|p| p.update(delta, self.parameters.wind, wind_direction));
 
         self.to_generate += self.parameters.gen_rate as f64 * delta;
         if self.to_generate <= 0.0 {
@@ -164,13 +200,18 @@ impl Animation for DoomFireAnimation {
     fn render(&self) -> lightfx::Frame {
         self.points
             .iter()
-            .map(|(x, y, _z)| {
-                if *y < self.parameters.bottom_line {
+            .copied()
+            .map(match self.parameters.dimension {
+                Dimension::Dim2D => |(x, y, _)| (x, y, 0.0),
+                Dimension::Dim3D => |p| p,
+            })
+            .map(|(x, y, z)| {
+                if y < self.parameters.bottom_line {
                     self.gradient.at(1.0)
                 } else {
                     self.particles
                         .iter()
-                        .map(|p| (p.power, p.distance_to(*x, *y)))
+                        .map(|p| (p.power, p.distance_to(x, y, z)))
                         .fold(
                             Color::black().with_alpha(0.0),
                             |color, (power, distance)| {

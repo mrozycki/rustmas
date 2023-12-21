@@ -29,6 +29,9 @@ pub struct Parameters {
 
     #[schema_field(name = "Axis", enum_options)]
     axis: Axis,
+
+    #[schema_field(name = "Transition width", number(min = 0.0, max = 1.0, step = 0.1))]
+    transition: f64,
 }
 
 impl Default for Parameters {
@@ -37,6 +40,7 @@ impl Default for Parameters {
             color_a: lightfx::Color::rgb(255, 0, 0),
             color_b: lightfx::Color::rgb(0, 255, 0),
             axis: Default::default(),
+            transition: 0.0,
         }
     }
 }
@@ -74,11 +78,13 @@ impl Animation for SpinningHalves {
                 Axis::Z => (*x, *y),
             })
             .map(|(x, y)| {
-                if animation_utils::cycle(y.atan2(x) / PI + self.time, 2.0) < 1.0 {
-                    self.parameters.color_a
-                } else {
-                    self.parameters.color_b
-                }
+                let (ny, nx) = (PI * self.time).sin_cos();
+                let p = nx * x + ny * y;
+                self.parameters.color_a.lerp(
+                    &self.parameters.color_b,
+                    ((p + self.parameters.transition / 2.0) / self.parameters.transition)
+                        .clamp(0.0, 1.0),
+                )
             })
             .into()
     }

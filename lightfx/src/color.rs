@@ -182,7 +182,18 @@ impl Color {
     /// self and other, 0.0 meaning the result will be equal to self,
     /// and 1.0 meaning the result will be equal to other.
     pub fn lerp(self, other: &Self, d: f64) -> Self {
-        let lerp_component = |a, b| ((a as f64) * (1.0 - d) + (b as f64) * d) as u8;
+        self.lerp_with_gamma(other, d, 2.0)
+    }
+
+    /// Returns a color which is a linear interpolation between self and the other
+    /// provided color using the provided gamma value. The second parameter determines
+    /// where the result lies between self and other, 0.0 meaning the result will
+    /// be equal to self, and 1.0 meaning the result will be equal to other.
+    pub fn lerp_with_gamma(self, other: &Self, d: f64, gamma: f64) -> Self {
+        let lerp_component = |a, b| {
+            ((a as f64).powf(gamma) * (1.0 - d) + (b as f64).powf(gamma) * d).powf(1.0 / gamma)
+                as u8
+        };
 
         Self {
             r: lerp_component(self.r, other.r),
@@ -226,6 +237,10 @@ impl ColorWithAlpha {
 
     pub fn blend(&self, other: &Self) -> Self {
         self.blend_with_gamma(other, 2.0)
+    }
+
+    pub fn multiply_alpha(&self, alpha_factor: f64) -> Self {
+        Self::new(self.color, self.alpha * alpha_factor)
     }
 
     pub fn apply_alpha(&self) -> Color {

@@ -23,6 +23,9 @@ pub enum Axis {
 pub struct Parameters {
     #[schema_field(name = "Axis of rotation", enum_options)]
     axis: Axis,
+
+    #[schema_field(name = "Transition width", number(min = 0.0, max = 1.0, step = 0.1))]
+    transition: f64,
 }
 
 #[animation_utils::plugin]
@@ -57,11 +60,17 @@ impl Animation for RainbowHalves {
                 Axis::Z => (*x, *y),
             })
             .map(|(x, y)| {
-                if animation_utils::cycle(y.atan2(x) / PI + self.time, 2.0) < 1.0 {
-                    lightfx::Color::hsv(self.time / (2.0 * std::f64::consts::PI), 1.0, 1.0)
-                } else {
-                    lightfx::Color::hsv(self.time / (2.0 * std::f64::consts::PI) + 0.5, 1.0, 1.0)
-                }
+                let color_a =
+                    lightfx::Color::hsv(self.time / (2.0 * std::f64::consts::PI), 1.0, 1.0);
+                let color_b =
+                    lightfx::Color::hsv(self.time / (2.0 * std::f64::consts::PI) + 0.5, 1.0, 1.0);
+                let (ny, nx) = (PI * self.time).sin_cos();
+                let p = nx * x + ny * y;
+                color_a.lerp(
+                    &color_b,
+                    ((p + self.parameters.transition / 2.0) / self.parameters.transition)
+                        .clamp(0.0, 1.0),
+                )
             })
             .into()
     }

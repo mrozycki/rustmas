@@ -3,9 +3,9 @@ use std::f64::consts::PI;
 use animation_api::Animation;
 use animation_utils::{
     decorators::{BrightnessControlled, SpeedControlled},
-    ParameterSchema,
+    EnumSchema, ParameterSchema,
 };
-use lightfx::Color;
+use lightfx::{Color, ColorWithAlpha};
 use rand::{thread_rng, Rng};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
@@ -15,7 +15,7 @@ struct Pillar {
     position: f64,
     speed: f64,
     width: f64,
-    alpha: f64,
+    color: ColorWithAlpha,
     gradient: f64,
 }
 
@@ -31,7 +31,7 @@ impl Pillar {
             position: -1.0,
             speed: 1.0,
             width: 0.2,
-            alpha: 0.5,
+            color: Color::white().with_alpha(0.5),
             gradient: 0.15_f64.tan(),
         }
     }
@@ -41,6 +41,11 @@ impl Pillar {
         let width = thread_rng().gen_range(0.5..1.0) * parameters.max_width;
         let max_angle = parameters.max_angle / 180.0 * PI;
         let gradient = thread_rng().gen_range(-max_angle..max_angle).tan();
+        let alpha = thread_rng().gen_range(0.5..1.0) * parameters.max_alpha;
+        let color = match parameters.color_scheme {
+            ColorScheme::Selected => parameters.color.with_alpha(alpha),
+            ColorScheme::Random => animation_utils::random_hue(1.0, 1.0).with_alpha(alpha),
+        };
         Self {
             position: if left_to_right {
                 parameters.left_boundary - width / 2.0 - gradient.abs()
@@ -51,7 +56,7 @@ impl Pillar {
                 * parameters.max_speed
                 * if left_to_right { 1.0 } else { -1.0 },
             width,
-            alpha: thread_rng().gen_range(0.5..1.0) * parameters.max_alpha,
+            color,
             gradient,
         }
     }
@@ -66,18 +71,40 @@ impl Pillar {
         }
     }
 
-    fn power_at(&self, x: f64, y: f64) -> f64 {
+    fn color_at(&self, x: f64, y: f64) -> Option<ColorWithAlpha> {
         let x = x + y * self.gradient;
         if x > self.position - self.width / 2.0 && x < self.position + self.width / 2.0 {
-            (1.0 - (self.position - x).abs() / (self.width / 2.0)) * self.alpha
+            Some(
+                self.color
+                    .multiply_alpha(1.0 - (self.position - x).abs() / (self.width / 2.0)),
+            )
         } else {
-            0.0
+            None
         }
     }
 }
 
+#[derive(Clone, Serialize, Deserialize, EnumSchema)]
+pub enum ColorScheme {
+    #[schema_variant(name = "Selected color")]
+    Selected,
+    #[schema_variant(name = "Random")]
+    Random,
+}
+
+#[derive(Clone, Serialize, Deserialize, EnumSchema)]
+pub enum Orientation {
+    #[schema_variant(name = "Top-down")]
+    TopDown,
+    #[schema_variant(name = "Side-side")]
+    SideSide,
+}
+
 #[derive(Clone, Serialize, Deserialize, ParameterSchema)]
 pub struct Parameters {
+    #[schema_field(name = "Orientation", enum_options)]
+    orientation: Orientation,
+
     #[schema_field(name = "Gen rate", number(min = 0.0, max = 10.0, step = 0.1))]
     gen_rate: f64,
 
@@ -99,13 +126,20 @@ pub struct Parameters {
     #[schema_field(name = "Max alpha", number(min = 0.0, max = 1.0, step = 0.05))]
     max_alpha: f64,
 
+    #[schema_field(name = "Color scheme", enum_options)]
+    color_scheme: ColorScheme,
+
     #[schema_field(name = "Color", color)]
     color: Color,
+
+    #[schema_field(name = "Background color", color)]
+    background_color: Color,
 }
 
 impl Default for Parameters {
     fn default() -> Self {
         Self {
+            orientation: Orientation::SideSide,
             gen_rate: 1.0,
             left_boundary: -1.0,
             right_boundary: 1.0,
@@ -113,7 +147,9 @@ impl Default for Parameters {
             max_speed: 0.5,
             max_angle: 15.0,
             max_alpha: 0.7,
+            color_scheme: ColorScheme::Selected,
             color: Color::white(),
+            background_color: Color::black(),
         }
     }
 }
@@ -163,11 +199,19 @@ impl Animation for Pillars {
     fn render(&self) -> lightfx::Frame {
         self.points
             .iter()
-            .map(|(x, y, _z)| {
+            .copied()
+            .map(match self.parameters.orientation {
+                Orientation::TopDown => |(_x, y, z)| (y, z),
+                Orientation::SideSide => |(x, y, _z)| (x, y),
+            })
+            .map(|(x, y)| {
                 self.pillars
                     .iter()
-                    .map(|p| self.parameters.color.with_alpha(p.power_at(*x, *y)))
-                    .fold(Color::black().with_alpha(1.0), |acc, c| c.blend(&acc))
+                    .flat_map(|p| p.color_at(x, y))
+                    .fold(
+                        self.parameters.background_color.with_alpha(1.0),
+                        |acc, c| c.blend(&acc),
+                    )
                     .apply_alpha()
             })
             .into()
