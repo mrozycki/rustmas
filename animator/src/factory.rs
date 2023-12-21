@@ -1,9 +1,10 @@
 use std::{
     collections::HashMap,
     path::{Path, PathBuf},
+    process::{Command, Stdio},
 };
 
-use log::info;
+use log::{info, warn};
 use serde::Deserialize;
 use thiserror::Error;
 
@@ -38,14 +39,26 @@ pub struct Plugin {
 }
 
 impl Plugin {
-    fn start(&self) -> std::io::Result<JsonRpcEndpoint> {
+    fn executable_path(&self) -> PathBuf {
         #[cfg(windows)]
         let executable_name = "plugin.exe";
 
         #[cfg(not(windows))]
         let executable_name = "plugin";
 
-        JsonRpcEndpoint::new(self.path.join(executable_name))
+        self.path.join(executable_name)
+    }
+
+    fn start(&self) -> std::io::Result<JsonRpcEndpoint> {
+        JsonRpcEndpoint::new(self.executable_path())
+    }
+
+    fn is_executable(&self) -> bool {
+        Command::new(self.executable_path())
+            .stdout(Stdio::null())
+            .stdin(Stdio::null())
+            .spawn()
+            .is_ok()
     }
 }
 
@@ -65,7 +78,7 @@ impl AnimationFactory {
     }
 
     pub fn discover(&mut self) -> Result<(), AnimationFactoryError> {
-        self.plugins = glob::glob(&format!(
+        let (valid_plugins, invalid_plugins) = glob::glob(&format!(
             "{}/*/manifest.json",
             self.plugin_dir
                 .to_str()
@@ -104,7 +117,15 @@ impl AnimationFactory {
                 Ok((id, Plugin { path, manifest }))
             })
         })
-        .collect::<Result<_, _>>()?;
+        .collect::<Result<Vec<_>, _>>()?
+        .into_iter()
+        .partition::<HashMap<_, _>, _>(|(_id, plugin)| plugin.is_executable());
+
+        if !invalid_plugins.is_empty() {
+            warn!("Discovered {} plugins which are not executable. Please make sure the animations were built and have correct permissions.", invalid_plugins.len());
+        }
+
+        self.plugins = valid_plugins;
 
         Ok(())
     }
