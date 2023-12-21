@@ -37,7 +37,7 @@ fn add_lights(
                         base_color: Color::rgb(0.7, 0.7, 0.7),
                         ..default()
                     }),
-                    transform: Transform::from_xyz(*x, *y, *z),
+                    transform: Transform::from_xyz(*x, *y, -z),
                     ..default()
                 },
                 Led(i),
