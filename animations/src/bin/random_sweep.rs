@@ -73,7 +73,7 @@ impl Animation for RandomSweep {
     type Parameters = Parameters;
 
     fn update(&mut self, delta: f64) {
-        if self.current_height > self.max_height + self.parameters.tail_length {
+        if self.heights.is_empty() {
             let rotation = match self.parameters.sweep_type {
                 SweepType::Sweep2D => animation_utils::random_rotation_around(&Vector3::z_axis()),
                 SweepType::Sweep3D => animation_utils::random_rotation(),
@@ -93,6 +93,10 @@ impl Animation for RandomSweep {
         }
 
         self.current_height += delta;
+
+        if self.current_height > self.max_height + self.parameters.tail_length {
+            self.heights = Vec::new();
+        }
     }
 
     fn render(&self) -> lightfx::Frame {
