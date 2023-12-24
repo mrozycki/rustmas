@@ -57,3 +57,4 @@ Attribution
 -----------
 
 * [Christmas lights icons created by BomSymbols - Flaticon](https://www.flaticon.com/free-icons/christmas-lights)
+* [Settings icons created by Freepik - Flaticon](https://www.flaticon.com/free-icons/settings)

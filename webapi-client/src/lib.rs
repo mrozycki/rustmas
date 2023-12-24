@@ -55,8 +55,8 @@ struct ListAnimationsResponse {
     animations: Vec<AnimationEntry>,
 }
 
-#[derive(Debug, Deserialize)]
-pub struct Animation {
+#[derive(Clone, Debug, Deserialize, PartialEq)]
+pub struct ParamsSchemaEntry {
     pub name: String,
     pub schema: ParametersSchema,
     pub values: HashMap<String, serde_json::Value>,
@@ -64,7 +64,7 @@ pub struct Animation {
 
 #[derive(Debug, Deserialize)]
 struct GetParamsResponse {
-    animation: Option<Animation>,
+    animation: Option<ParamsSchemaEntry>,
 }
 
 #[derive(Clone)]
@@ -121,8 +121,16 @@ impl RustmasApiClient {
     }
 
     pub async fn restart_events(&self) -> Result<()> {
-        self.post::<()>("restart_events", &json!(())).await?;
-        Ok(())
+        self.post::<()>("events/restart", &json!(())).await
+    }
+
+    pub async fn events_schema(&self) -> Result<HashMap<String, ParamsSchemaEntry>> {
+        self.get::<HashMap<String, ParamsSchemaEntry>>("events/schema")
+            .await
+    }
+
+    pub async fn set_events_params(&self, params: &serde_json::Value) -> Result<()> {
+        self.post::<()>("events/values", params).await
     }
 
     pub async fn list_animations(&self) -> Result<Vec<AnimationEntry>> {
@@ -136,7 +144,10 @@ impl RustmasApiClient {
             .animations)
     }
 
-    pub async fn switch_animation(&self, animation_id: String) -> Result<Option<Animation>> {
+    pub async fn switch_animation(
+        &self,
+        animation_id: String,
+    ) -> Result<Option<ParamsSchemaEntry>> {
         Ok(self
             .post::<GetParamsResponse>("switch", &json!({ "animation": animation_id}))
             .await?
@@ -147,7 +158,7 @@ impl RustmasApiClient {
         self.post::<()>("turn_off", &json!(())).await
     }
 
-    pub async fn get_params(&self) -> Result<Option<Animation>> {
+    pub async fn get_params(&self) -> Result<Option<ParamsSchemaEntry>> {
         Ok(self.get::<GetParamsResponse>("params").await?.animation)
     }
 
@@ -160,14 +171,14 @@ impl RustmasApiClient {
         Ok(())
     }
 
-    pub async fn reset_params(&self) -> Result<Option<Animation>> {
+    pub async fn reset_params(&self) -> Result<Option<ParamsSchemaEntry>> {
         Ok(self
             .post::<GetParamsResponse>("params/reset", &json!(()))
             .await?
             .animation)
     }
 
-    pub async fn reload_animation(&self) -> Result<Option<Animation>> {
+    pub async fn reload_animation(&self) -> Result<Option<ParamsSchemaEntry>> {
         Ok(self
             .post::<GetParamsResponse>("reload", &json!(()))
             .await?

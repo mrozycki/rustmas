@@ -33,7 +33,7 @@ impl Component for SelectParameterControl {
                 .unwrap_or(0);
 
             html! {
-                <select name={id} ref={self.node_ref.clone()} data-selected-index={selected_index.to_string()}>
+                <select name={id} class="parameter-select" ref={self.node_ref.clone()} data-selected-index={selected_index.to_string()}>
                     {values.into_iter().map(|item| {
                         let value = format!("\"{}\"", item.value);
                         html!(

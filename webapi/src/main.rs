@@ -16,7 +16,7 @@ use actix_web::{get, post, web, App, HttpRequest, HttpResponse, HttpServer};
 
 use crate::frame_broadcaster::{FrameBroadcaster, FrameBroadcasterSession};
 
-#[post("/restart_events")]
+#[post("/events/restart")]
 async fn restart_events(app_state: web::Data<AppState>) -> HttpResponse {
     app_state
         .animation_controller
@@ -25,6 +25,35 @@ async fn restart_events(app_state: web::Data<AppState>) -> HttpResponse {
         .restart_event_generators()
         .await;
     HttpResponse::Ok().json(())
+}
+
+#[get("/events/schema")]
+async fn events_schema(app_state: web::Data<AppState>) -> HttpResponse {
+    HttpResponse::Ok().json(
+        app_state
+            .animation_controller
+            .lock()
+            .await
+            .event_generator_parameter_schema()
+            .await,
+    )
+}
+
+#[post("/events/values")]
+async fn set_event_parameters(
+    params: web::Json<serde_json::Value>,
+    app_state: web::Data<AppState>,
+) -> HttpResponse {
+    match app_state
+        .animation_controller
+        .lock()
+        .await
+        .set_event_generator_parameters(params.0)
+        .await
+    {
+        Ok(_) => HttpResponse::Ok().json(json!(())),
+        Err(e) => HttpResponse::InternalServerError().json(json!({"error": e.to_string()})),
+    }
 }
 
 #[derive(Deserialize)]
@@ -262,6 +291,8 @@ async fn main() -> Result<(), Box<dyn Error>> {
         App::new()
             .wrap(cors)
             .service(restart_events)
+            .service(events_schema)
+            .service(set_event_parameters)
             .service(reload)
             .service(switch)
             .service(turn_off)

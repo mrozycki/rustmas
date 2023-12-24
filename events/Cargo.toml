@@ -7,12 +7,14 @@ edition = "2021"
 
 [dependencies]
 animation-api = { path = "../animation-api" }
+
+anyhow = "1.0.75"
 cpal = "0.15.2"
 itertools = "0.11.0"
-rustfft = "6.1.0"
 log = "0.4.20"
 midi-msg = "0.4.0"
 midir = "0.9.1"
-
+rustfft = "6.1.0"
+serde = { version = "1.0.193", features = ["derive"] }
+serde_json = "1.0.108"
 tokio = { version = "1", features = ["full"] }
-anyhow = "1.0.75"

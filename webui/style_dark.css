@@ -29,12 +29,52 @@ header {
     width: 100%;
     background-color: black;
     color: #ccc;
-    padding: 1rem;
+    display: flex;
+    padding: 0 1rem;
+    justify-content: space-between;
+}
+
+header h1,
+header h2 {
+    line-height: 3rem;
+    font-weight: 400;
 }
 
 header h1 {
     font-size: 1rem;
-    font-weight: 400;
+}
+
+header h2 {
+    font-size: 2rem;
+}
+
+header .button {
+    font-size: 2rem;
+    line-height: 3rem;
+    text-decoration: none;
+}
+
+header .button img {
+    height: 3rem;
+    filter: invert();
+    padding: 0.5rem 0;
+}
+
+.settings header {
+    background-color: white;
+    color: black;
+    padding: 0;
+}
+
+.settings header .button {
+    color: black;
+}
+
+.settings h3 {
+    margin-top: 1rem;
+    font-size: 1.5rem;
+    line-height: 2rem;
+    font-weight: normal;
 }
 
 .content {
@@ -201,16 +241,25 @@ nav hr {
     border: none;
 }
 
-.parameter-control select {
+select {
     width: 100%;
     height: 2rem;
     margin-top: 0.5rem;
     padding-left: 0.5rem;
-    border: 1px solid #888;
     border-radius: 0;
+    font-size: 1rem;
+}
+
+.parameter-control select {
+    border: 1px solid #888;
     background-color: black;
     color: #ccc;
-    font-size: 1rem;
+}
+
+.settings select {
+    border: 1px solid #888;
+    background-color: #eee;
+    color: black;
 }
 
 .slider-control {
@@ -273,6 +322,17 @@ input[type=range]::-ms-fill-upper {
     font-size: 1rem;
 }
 
+.settings {
+    width: 50vw;
+    height: 80vh;
+    margin: 10vh 25vw;
+    padding: 3rem;
+}
+
+.settings::backdrop {
+    background-color: rgba(0, 0, 0, 0.5);
+}
+
 @media screen and (max-width: 560px) {
     .content {
         flex-direction: column;
@@ -291,5 +351,10 @@ input[type=range]::-ms-fill-upper {
 
     .parameter-control-list {
         padding: 0 1.5rem;
+    }
+
+    .settings {
+        width: 100vw;
+        height: 100vh;
     }
 }

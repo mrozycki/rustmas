@@ -1,4 +1,6 @@
 mod controls;
+mod settings;
+mod utils;
 
 #[cfg(feature = "visualizer")]
 mod visualizer;
@@ -9,32 +11,35 @@ mod dummy;
 use std::error::Error;
 
 use log::error;
-use rustmas_webapi_client::{Animation, AnimationEntry, RustmasApiClient};
+use rustmas_webapi_client::{AnimationEntry, ParamsSchemaEntry, RustmasApiClient};
 use url::Url;
 use yew::prelude::*;
 
 use crate::controls::ParameterControlList;
 #[cfg(not(feature = "visualizer"))]
 use crate::dummy::Dummy as Visualizer;
+use crate::settings::SettingsModal;
 #[cfg(feature = "visualizer")]
 use crate::visualizer::Visualizer;
 
 enum Msg {
     LoadedAnimations(Vec<AnimationEntry>),
     SwitchAnimation(String),
-    LoadedParameters(Option<Animation>),
+    LoadedParameters(Option<ParamsSchemaEntry>),
     ParametersDirty(bool),
     TurnOff,
     Discover,
     RestartEvents,
+    ToggleSettings,
 }
 
 #[derive(Default)]
 struct AnimationSelector {
     api: RustmasApiClient,
     animations: Vec<AnimationEntry>,
-    parameters: Option<Animation>,
+    parameters: Option<ParamsSchemaEntry>,
     dirty: bool,
+    modal_open_dummy: usize,
 }
 
 impl Component for AnimationSelector {
@@ -150,6 +155,10 @@ impl Component for AnimationSelector {
                 });
                 false
             }
+            Msg::ToggleSettings => {
+                self.modal_open_dummy += 1;
+                true
+            }
         }
     }
 
@@ -164,7 +173,12 @@ impl Component for AnimationSelector {
         html! {
             <ContextProvider<RustmasApiClient> context={self.api.clone()}>
             <>
-                <header><h1>{"Rustmas Lights"}</h1></header>
+                <header>
+                    <h1>{"Rustmas Lights"}</h1>
+                    <a href="#settings" class="button" onclick={link.callback(|_| Msg::ToggleSettings)}>
+                        <img src="/settings.png" alt="Settings" />
+                    </a>
+                </header>
                 <div class="content">
                     <nav>
                         <ul>
@@ -204,6 +218,7 @@ impl Component for AnimationSelector {
                         }
                     }}
                 </div>
+                <SettingsModal open_dummy={self.modal_open_dummy} />
             </>
             </ContextProvider<RustmasApiClient>>
         }
