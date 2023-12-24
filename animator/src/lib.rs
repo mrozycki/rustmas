@@ -10,6 +10,7 @@ use animation_api::event::Event;
 use chrono::{DateTime, Duration, Utc};
 use client::combined::{CombinedLightClient, CombinedLightClientBuilder};
 use events::beat_generator::BeatEventGenerator;
+use events::event_generator::EventGenerator;
 use events::fft_generator::FftEventGenerator;
 use events::midi_generator::MidiEventGenerator;
 use factory::{AnimationFactory, AnimationFactoryError, Plugin};
@@ -17,7 +18,7 @@ use jsonrpc_animation::{AnimationPlugin, AnimationPluginError};
 use log::{info, warn};
 use rustmas_light_client as client;
 use rustmas_light_client::LightClientError;
-use serde_json::json;
+use serde_json::{json, Map};
 use thiserror::Error;
 use tokio::sync::mpsc::Sender;
 use tokio::sync::{mpsc, Mutex};
@@ -40,7 +41,7 @@ pub struct ControllerState {
     last_frame: DateTime<Utc>,
     next_frame: DateTime<Utc>,
     fps: f64,
-    event_generators: Vec<Box<dyn Send + Sync>>,
+    event_generators: HashMap<String, Box<dyn EventGenerator>>,
 }
 
 pub struct Controller {
@@ -48,7 +49,6 @@ pub struct Controller {
     event_generator_join_handle: JoinHandle<()>,
     state: Arc<Mutex<ControllerState>>,
     animation_factory: AnimationFactory,
-    event_sender: Sender<Event>,
 }
 
 impl Controller {
@@ -65,7 +65,7 @@ impl Controller {
             next_frame: now,
             fps: 0.0,
             animation: None,
-            event_generators: Self::start_generators(event_sender.clone()),
+            event_generators: Self::start_generators(event_sender),
         }));
 
         let animation_join_handle = tokio::spawn(Self::run(state.clone(), client, points.len()));
@@ -78,27 +78,25 @@ impl Controller {
             animation_join_handle,
             event_generator_join_handle,
             animation_factory,
-            event_sender,
         }
     }
 
-    fn start_generators(event_sender: Sender<Event>) -> Vec<Box<dyn Send + Sync>> {
-        let mut generators = vec![
-            Box::new(BeatEventGenerator::new(60.0, event_sender.clone())) as Box<dyn Send + Sync>,
-        ];
-        match FftEventGenerator::new(30.0, event_sender.clone()) {
-            Ok(generator) => generators.push(Box::new(generator)),
-            Err(e) => {
-                warn!("Failed to initialize FFT generator: {}", e);
-            }
-        };
-        match MidiEventGenerator::new(event_sender) {
-            Ok(generator) => generators.push(Box::new(generator)),
-            Err(e) => {
-                warn!("Failed to initialize MIDI generator: {}", e);
-            }
-        };
-        generators
+    fn start_generators(event_sender: Sender<Event>) -> HashMap<String, Box<dyn EventGenerator>> {
+        HashMap::from_iter([
+            (
+                "beat".into(),
+                Box::new(BeatEventGenerator::new(60.0, event_sender.clone()))
+                    as Box<dyn EventGenerator>,
+            ),
+            (
+                "fft".into(),
+                Box::new(FftEventGenerator::new(30.0, event_sender.clone())),
+            ),
+            (
+                "midi".into(),
+                Box::new(MidiEventGenerator::new(event_sender)),
+            ),
+        ])
     }
 
     async fn run(
@@ -173,10 +171,57 @@ impl Controller {
 
     pub async fn restart_event_generators(&self) {
         info!("Restarting event generators");
+        self.state
+            .lock()
+            .await
+            .event_generators
+            .iter_mut()
+            .for_each(|(_, evg)| evg.restart());
+    }
+
+    pub async fn event_generator_parameter_schema(&self) -> serde_json::Value {
+        self.state
+            .lock()
+            .await
+            .event_generators
+            .iter()
+            .map(|(id, evg)| {
+                (
+                    id.clone(),
+                    json!({
+                        "name": evg.get_name(),
+                        "schema": evg.get_parameter_schema(),
+                        "values": evg.get_parameters(),
+                    }),
+                )
+            })
+            .collect()
+    }
+
+    pub async fn set_event_generator_parameters(
+        &self,
+        values: serde_json::Value,
+    ) -> Result<(), ControllerError> {
         let mut state = self.state.lock().await;
 
-        state.event_generators = Vec::new();
-        state.event_generators = Self::start_generators(self.event_sender.clone());
+        for (id, parameters) in values.as_object().unwrap_or(&Map::new()) {
+            let Some(evg) = state.event_generators.get_mut(id) else {
+                warn!("No such event generator: {}", id);
+                continue;
+            };
+            let parameters = serde_json::from_value(parameters.clone()).map_err(|e| {
+                ControllerError::InternalError {
+                    reason: e.to_string(),
+                }
+            })?;
+
+            evg.set_parameters(parameters)
+                .map_err(|e| ControllerError::InternalError {
+                    reason: e.to_string(),
+                })?;
+        }
+
+        Ok(())
     }
 
     pub async fn switch_animation(&self, name: &str) -> Result<(), ControllerError> {

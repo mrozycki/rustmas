@@ -2372,6 +2372,8 @@ dependencies = [
  "midi-msg",
  "midir",
  "rustfft",
+ "serde",
+ "serde_json",
  "tokio",
 ]
 
@@ -4903,6 +4905,7 @@ dependencies = [
  "gloo-net",
  "gloo-utils",
  "instant",
+ "itertools 0.12.0",
  "lightfx 0.1.0",
  "log",
  "rustmas-visualizer",

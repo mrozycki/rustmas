@@ -1,14 +1,14 @@
-mod color_control;
+pub(crate) mod color_control;
 mod debouncer;
-mod select_control;
-mod slider_control;
-mod speed_control;
+pub(crate) mod select_control;
+pub(crate) mod slider_control;
+pub(crate) mod speed_control;
 
 use std::{collections::HashMap, time::Duration};
 
 use animation_api::parameter_schema::{Parameter, ParameterValue, ParametersSchema};
 use log::error;
-use rustmas_webapi_client::{Animation, RustmasApiClient};
+use rustmas_webapi_client::{ParamsSchemaEntry, RustmasApiClient};
 use wasm_bindgen::JsCast;
 use web_sys::{
     Event, EventTarget, FocusEvent, FormData, HtmlFormElement, HtmlInputElement, HtmlSelectElement,
@@ -35,9 +35,9 @@ fn get_form(target: Option<EventTarget>) -> Option<HtmlFormElement> {
 
 #[derive(Properties, PartialEq, Clone)]
 pub struct ParameterControlProps {
-    schema: Parameter,
-    value: Option<serde_json::Value>,
-    dummy_update: usize,
+    pub schema: Parameter,
+    pub value: Option<serde_json::Value>,
+    pub dummy_update: usize,
 }
 
 pub struct ParameterControlList {
@@ -50,7 +50,7 @@ pub struct ParameterControlListProps {
     pub name: String,
     pub schema: ParametersSchema,
     pub values: HashMap<String, serde_json::Value>,
-    pub update_values: Callback<Option<Animation>>,
+    pub update_values: Callback<Option<ParamsSchemaEntry>>,
     pub parameters_dirty: Callback<bool>,
 }
 

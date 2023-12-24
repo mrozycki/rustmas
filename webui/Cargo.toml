@@ -19,13 +19,17 @@ wasm-bindgen = "0.2"
 wasm-bindgen-futures = "0.4"
 wasm-logger = "0.2.0"
 web-sys = { version = "0.3.60", features = [
+    "DomRect",
+    "Element",
     "FormData",
     "HtmlFormElement",
     "HtmlSelectElement",
+    "HtmlDialogElement",
     "Screen",
 ] }
 yew = "0.19"
 url = "2.5.0"
+itertools = "0.12.0"
 
 [features]
 default = []

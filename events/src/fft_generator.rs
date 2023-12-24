@@ -1,12 +1,17 @@
-use animation_api::event::Event;
+use animation_api::{
+    event::Event,
+    parameter_schema::{EnumOption, Parameter, ParameterValue, ParametersSchema},
+};
 use anyhow::anyhow;
 use cpal::{
     traits::{DeviceTrait, HostTrait, StreamTrait},
-    Sample, SampleFormat,
+    DeviceNameError, Sample, SampleFormat,
 };
 use itertools::Itertools;
-use log::error;
+use log::{error, info};
 use rustfft::{num_complex::Complex32, FftPlanner};
+use serde::{Deserialize, Serialize};
+use serde_json::json;
 use tokio::sync::mpsc;
 
 use std::{
@@ -20,22 +25,49 @@ use std::{
     time::Duration,
 };
 
+use crate::event_generator::EventGenerator;
+
 const FFT_SIZE: usize = 1024;
 const SAMPLE_RATE: usize = 48000;
 
-pub struct FftEventGenerator {
+#[derive(Deserialize, Serialize, Clone)]
+pub struct Parameters {
+    device: String,
+}
+
+impl Default for Parameters {
+    fn default() -> Self {
+        let host = cpal::default_host();
+        Self {
+            device: host
+                .default_input_device()
+                .and_then(|d| d.name().ok())
+                .unwrap_or("default".into()),
+        }
+    }
+}
+
+struct AudioStream {
     keep_running: Arc<AtomicBool>,
     _input_stream_handle: std::thread::JoinHandle<()>,
     _fft_loop_handle: std::thread::JoinHandle<()>,
 }
 
-impl FftEventGenerator {
-    pub fn new(fps: f64, channel: mpsc::Sender<Event>) -> Result<Self, Box<dyn Error>> {
+impl AudioStream {
+    fn new(
+        fps: f64,
+        channel: mpsc::Sender<Event>,
+        device_name: &str,
+    ) -> Result<Self, Box<dyn Error>> {
         let keep_running = Arc::new(AtomicBool::new(true));
+
         let host = cpal::default_host();
         let device = host
-            .default_input_device()
-            .ok_or_else(|| anyhow::anyhow!("No default input device found"))?;
+            .input_devices()?
+            .find(|d| d.name().is_ok_and(|n| n == device_name))
+            .ok_or_else(|| anyhow::anyhow!(format!("Device '{}' not found", device_name)))?;
+        info!("Using audio device: {:?}", device.name());
+
         let config = device.default_input_config()?;
         let buffer: Arc<Mutex<VecDeque<f32>>> = Arc::new(Mutex::new(vec![0.0; FFT_SIZE].into()));
 
@@ -156,8 +188,77 @@ impl FftEventGenerator {
     }
 }
 
-impl Drop for FftEventGenerator {
+impl Drop for AudioStream {
     fn drop(&mut self) {
         self.keep_running.store(false, Ordering::Relaxed);
+    }
+}
+
+pub struct FftEventGenerator {
+    fps: f64,
+    event_sender: mpsc::Sender<Event>,
+    audio_stream: Mutex<Option<AudioStream>>,
+    parameters: Parameters,
+}
+
+impl FftEventGenerator {
+    pub fn new(fps: f64, event_sender: mpsc::Sender<Event>) -> Self {
+        let parameters = Parameters::default();
+        Self {
+            audio_stream: Mutex::new(
+                AudioStream::new(fps, event_sender.clone(), &parameters.device).ok(),
+            ),
+            fps,
+            event_sender,
+            parameters,
+        }
+    }
+}
+
+impl EventGenerator for FftEventGenerator {
+    fn get_name(&self) -> &str {
+        "Audio"
+    }
+
+    fn restart(&mut self) {
+        *self.audio_stream.lock().unwrap() =
+            AudioStream::new(self.fps, self.event_sender.clone(), &self.parameters.device).ok();
+    }
+
+    fn get_parameter_schema(&self) -> ParametersSchema {
+        let host = cpal::default_host();
+
+        ParametersSchema {
+            parameters: vec![Parameter {
+                id: "device".to_owned(),
+                name: "Input device".to_owned(),
+                description: None,
+                value: ParameterValue::Enum {
+                    values: host
+                        .input_devices()
+                        .unwrap()
+                        .map(|device| -> Result<EnumOption, DeviceNameError> {
+                            let name = device.name()?;
+                            Ok(EnumOption {
+                                name: name.clone(),
+                                description: None,
+                                value: name,
+                            })
+                        })
+                        .flat_map(|d| d.ok())
+                        .collect(),
+                },
+            }],
+        }
+    }
+
+    fn get_parameters(&self) -> serde_json::Value {
+        json!(self.parameters)
+    }
+
+    fn set_parameters(&mut self, parameters: serde_json::Value) -> Result<(), serde_json::Error> {
+        self.parameters = serde_json::from_value(parameters)?;
+        self.restart();
+        Ok(())
     }
 }

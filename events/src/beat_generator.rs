@@ -3,6 +3,8 @@ use tokio::sync::mpsc;
 
 use std::time::Duration;
 
+use crate::event_generator::EventGenerator;
+
 pub struct BeatEventGenerator {
     _join_handle: tokio::task::JoinHandle<()>,
 }
@@ -16,5 +18,11 @@ impl BeatEventGenerator {
                 }
             }),
         }
+    }
+}
+
+impl EventGenerator for BeatEventGenerator {
+    fn get_name(&self) -> &str {
+        "Beats"
     }
 }
