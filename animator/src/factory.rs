@@ -28,7 +28,7 @@ pub enum AnimationFactoryError {
     AnimationError(#[from] AnimationPluginError),
 }
 
-#[derive(Deserialize)]
+#[derive(Clone, Deserialize)]
 pub struct PluginManifest {
     pub display_name: String,
 }
