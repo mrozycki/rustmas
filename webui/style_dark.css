@@ -86,7 +86,7 @@ header .button img {
 }
 
 nav {
-    flex: 0 1 360px;
+    flex: 0 1 240px;
     background-color: black;
 }
 
@@ -129,7 +129,7 @@ nav hr {
 }
 
 .parameter-control-list {
-    flex: 1 0 400px;
+    flex: 1 0 300px;
     padding: 0 3rem;
     margin-bottom: 2rem;
     max-height: 100%;
