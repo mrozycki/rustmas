@@ -21,12 +21,12 @@ impl Db {
 
     pub async fn set_parameters(
         &self,
-        animation_name: &str,
+        animation_id: &str,
         parameters: &serde_json::Value,
     ) -> Result<(), Box<dyn Error>> {
         let query =
             sqlx::query("INSERT INTO animation_parameters(animation, parameters) VALUES (?, ?) ON CONFLICT(animation) DO UPDATE SET parameters=excluded.parameters;")
-                .bind(animation_name)
+                .bind(animation_id)
                 .bind(parameters.to_string());
         self.conn.lock().await.execute(query).await?;
         Ok(())
@@ -34,10 +34,10 @@ impl Db {
 
     pub async fn get_parameters(
         &self,
-        animation_name: &str,
+        animation_id: &str,
     ) -> Result<Option<serde_json::Value>, Box<dyn Error>> {
         let query = sqlx::query("SELECT parameters FROM animation_parameters WHERE animation = ?;")
-            .bind(animation_name);
+            .bind(animation_id);
 
         let result = self
             .conn

@@ -237,28 +237,6 @@ impl Controller {
         Ok(())
     }
 
-    pub async fn reload_animation(&self) -> Result<(), ControllerError> {
-        let mut state = self.state.lock().await;
-        let Some(name) = state
-            .animation
-            .as_ref()
-            .map(AnimationPlugin::animation_name)
-            .transpose()?
-        else {
-            return Ok(());
-        };
-
-        info!("Reloading animation \"{}\"", name);
-        let new_animation = self.animation_factory.make(&name)?;
-
-        let now = Utc::now();
-        state.fps = new_animation.get_fps()?;
-        state.last_frame = now;
-        state.next_frame = now;
-        state.animation = Some(new_animation);
-        Ok(())
-    }
-
     pub async fn turn_off(&self) {
         info!("Turning off the animation");
         let mut state = self.state.lock().await;

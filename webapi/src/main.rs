@@ -63,24 +63,24 @@ struct SwitchForm {
 }
 
 async fn switch_inner(
-    animation_name: &str,
+    animation_id: &str,
     params: &Option<serde_json::Value>,
     app_state: web::Data<AppState>,
 ) -> HttpResponse {
     let mut controller = app_state.animation_controller.lock().await;
-    if let Err(e) = controller.switch_animation(animation_name).await {
+    if let Err(e) = controller.switch_animation(animation_id).await {
         return HttpResponse::InternalServerError().json(json!({ "error": format!("{:#}", e) }));
     }
 
     if let Some(params) = params {
         let _ = controller.set_parameters(params.clone()).await;
-    } else if let Ok(Some(params)) = app_state.db.get_parameters(animation_name).await {
+    } else if let Ok(Some(params)) = app_state.db.get_parameters(animation_id).await {
         let _ = controller.set_parameters(params).await;
     } else if let Ok(params) = controller.parameter_values().await {
-        let _ = app_state.db.set_parameters(animation_name, &params).await;
+        let _ = app_state.db.set_parameters(animation_id, &params).await;
     }
 
-    *app_state.animation_name.lock().await = animation_name.to_owned();
+    *app_state.animation_id.lock().await = animation_id.to_owned();
     match controller.parameters().await {
         Ok(animation) => HttpResponse::Ok().json(json!({ "animation": animation })),
         Err(e) => HttpResponse::InternalServerError().json(json!({"error": e.to_string() })),
@@ -89,8 +89,8 @@ async fn switch_inner(
 
 #[post("/reload")]
 async fn reload(app_state: web::Data<AppState>) -> HttpResponse {
-    let name = app_state.animation_name.lock().await.clone();
-    switch_inner(&name, &None, app_state).await
+    let id = app_state.animation_id.lock().await.clone();
+    switch_inner(&id, &None, app_state).await
 }
 
 #[post("/switch")]
@@ -135,7 +135,7 @@ async fn save_params(app_state: web::Data<AppState>) -> HttpResponse {
 
     match app_state
         .db
-        .set_parameters(&app_state.animation_name.lock().await, &parameter_values)
+        .set_parameters(&app_state.animation_id.lock().await, &parameter_values)
         .await
     {
         Ok(_) => HttpResponse::Ok().json(json!(())),
@@ -147,7 +147,7 @@ async fn save_params(app_state: web::Data<AppState>) -> HttpResponse {
 async fn reset_params(app_state: web::Data<AppState>) -> HttpResponse {
     match app_state
         .db
-        .get_parameters(&app_state.animation_name.lock().await)
+        .get_parameters(&app_state.animation_id.lock().await)
         .await
     {
         Ok(Some(params)) => {
@@ -232,7 +232,7 @@ async fn points(app_state: web::Data<AppState>) -> HttpResponse {
 
 struct AppState {
     animation_controller: Mutex<rustmas_animator::Controller>,
-    animation_name: Mutex<String>,
+    animation_id: Mutex<String>,
     db: Db,
 }
 
@@ -280,7 +280,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
     info!("Starting http server");
     let app_state = web::Data::new(AppState {
         animation_controller: Mutex::new(controller),
-        animation_name: Mutex::new("blank".to_owned()),
+        animation_id: Mutex::new("blank".to_owned()),
         db,
     });
 
