@@ -69,38 +69,40 @@ where
         let mut state = self.state.lock().await;
         let now = Utc::now();
         if now < state.next_check && state.status != ConnectionStatus::Healthy {
-            return Err(LightClientError::ConnectionLost);
+            return Err(LightClientError::ConnectionLost {
+                reason: "Waiting to reconnect".into(),
+            });
         }
 
-        match tokio::time::timeout(self.timeout, self.inner.display_frame(frame)).await {
-            Ok(Ok(_)) => {
+        match self.inner.display_frame(frame).await {
+            Ok(_) => {
                 if state.status != ConnectionStatus::Healthy {
-                    info!("Regained connection to light client");
+                    info!("Regained connection to lights");
                 }
                 state.status = ConnectionStatus::Healthy;
                 state.delay = self.start_delay;
                 state.next_check = now;
                 Ok(())
             }
-            Ok(Err(LightClientError::ConnectionLost)) | Err(_) => {
+            Err(LightClientError::ConnectionLost { reason }) => {
                 state.next_check = now + state.delay;
                 if state.delay < self.max_delay {
                     state.status = ConnectionStatus::IntermittentFailure;
                     warn!(
-                        "Failed to send frame to remote lights, will retry in {:.2} seconds",
-                        state.delay.num_milliseconds() as f64 / 1000.0
+                        "Failed to send frame to remote lights, will retry in {:.2} seconds; reason: {}",
+                        state.delay.num_milliseconds() as f64 / 1000.0, reason
                     );
                 } else if state.status != ConnectionStatus::ProlongedFailure {
                     state.status = ConnectionStatus::ProlongedFailure;
                     warn!(
-                        "Lost connection to lights, will continue retrying every {:.2} seconds",
-                        self.max_delay.num_milliseconds() as f64 / 1000.0
+                        "Lost connection to lights, will continue retrying every {:.2} seconds; reason: {}",
+                        self.max_delay.num_milliseconds() as f64 / 1000.0, reason
                     );
                 }
                 state.delay = (state.delay * 2).min(self.max_delay);
-                Err(LightClientError::ConnectionLost)
+                Err(LightClientError::ConnectionLost { reason })
             }
-            Ok(Err(LightClientError::ProcessExited)) => {
+            Err(LightClientError::ProcessExited) => {
                 warn!("Light client exited, exiting");
                 Err(LightClientError::ProcessExited)
             }

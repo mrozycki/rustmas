@@ -50,7 +50,9 @@ impl LightClient for HttpLightClient {
             Ok(_) => Ok(()),
             Err(err) => {
                 debug!("Failed to send frame to light client: {}", err);
-                Err(LightClientError::ConnectionLost)
+                Err(LightClientError::ConnectionLost {
+                    reason: err.to_string(),
+                })
             }
         }
     }
