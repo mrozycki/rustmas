@@ -1,5 +1,4 @@
 use async_trait::async_trait;
-use log::error;
 use tokio::sync::mpsc;
 
 use crate::{LightClient, LightClientError};
@@ -17,10 +16,12 @@ impl FeedbackLightClient {
 #[async_trait]
 impl LightClient for FeedbackLightClient {
     async fn display_frame(&self, frame: &lightfx::Frame) -> Result<(), LightClientError> {
-        self.sender.send(frame.clone()).await.map_err(|e| {
-            error!("Error sending frame: {}", e);
-            LightClientError::ConnectionLost
-        })?;
+        self.sender
+            .send(frame.clone())
+            .await
+            .map_err(|e| LightClientError::ConnectionLost {
+                reason: e.to_string(),
+            })?;
         Ok(())
     }
 }

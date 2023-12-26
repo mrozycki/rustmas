@@ -1,8 +1,9 @@
 use crate::{LightClient, LightClientError};
 use async_trait::async_trait;
+use futures_util::TryFutureExt;
 use lightfx::Frame;
-use log::{debug, error, info};
-use std::{error::Error, sync::Arc};
+use log::{debug, info};
+use std::sync::Arc;
 use tokio::{net::UdpSocket, sync::Mutex};
 
 #[derive(Clone)]
@@ -20,20 +21,26 @@ impl UdpLightClient {
         }
     }
 
-    async fn connect(&self) -> Result<(), Box<dyn Error>> {
-        let mut socket = self.socket.lock().await;
-        if socket.is_none() {
-            info!("Connecting to remote lights via UDP");
-            let s = UdpSocket::bind("0.0.0.0:0").await?;
+    async fn connect(&self) -> Result<UdpSocket, LightClientError> {
+        debug!("Connecting to remote lights via UDP");
+        let connect = UdpSocket::bind("0.0.0.0").and_then(|s| async {
             s.connect(&self.url).await?;
             // hopefully this gets us some priority, see:
             // https://linuxreviews.org/Type_of_Service_(ToS)_and_DSCP_Values
             // this sets `high throughput` and `low delay` along with high precedence
             s.set_tos(152)?;
-            *socket = Some(s);
-        }
+            Ok(s)
+        });
 
-        Ok(())
+        match connect.await {
+            Ok(socket) => {
+                info!("Successfully connected to UDP lights");
+                Ok(socket)
+            }
+            Err(e) => Err(LightClientError::ConnectionLost {
+                reason: e.to_string(),
+            }),
+        }
     }
 }
 
@@ -47,21 +54,16 @@ impl LightClient for UdpLightClient {
             .flat_map(|pixel| vec![pixel.g, pixel.r, pixel.b])
             .collect();
 
-        if self.socket.lock().await.is_none() {
-            if let Err(e) = self.connect().await {
-                error!("Failed to connect to UDP endpoint: {}", e);
-            } else {
-                info!("Successfully connected to UDP endpoint");
-            }
-        }
+        let mut socket = self.socket.lock().await;
 
         let res = {
-            let mut stream = self.socket.lock().await;
-            let Some(stream) = stream.as_mut() else {
-                debug!("UDP endpoint not connected!");
-                return Err(LightClientError::ConnectionLost);
+            let socket = if let Some(ref mut socket) = *socket {
+                socket
+            } else {
+                *socket = Some(self.connect().await?);
+                socket.as_mut().unwrap()
             };
-            stream
+            socket
                 .send(&[&(pixels.len() as u16).to_le_bytes(), pixels.as_slice()].concat())
                 .await
         };
@@ -69,9 +71,10 @@ impl LightClient for UdpLightClient {
         match res {
             Ok(_) => Ok(()),
             Err(e) => {
-                error!("Failed to send frame to light client: {}", e);
-                *self.socket.lock().await = None;
-                Err(LightClientError::ConnectionLost)
+                *socket = None;
+                Err(LightClientError::ConnectionLost {
+                    reason: e.to_string(),
+                })
             }
         }
     }

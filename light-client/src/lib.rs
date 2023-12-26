@@ -14,10 +14,10 @@ use std::{
 use async_trait::async_trait;
 use lightfx::{Color, Frame};
 
-#[derive(Debug, Copy, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum LightClientError {
     Unlikely, // inspired by https://github.com/bluez/bluez/blob/58e6ef54e672798e2621cae87356c66de14d011f/attrib/att.h#L61
-    ConnectionLost,
+    ConnectionLost { reason: String },
     ProcessExited,
 }
 

@@ -36,7 +36,9 @@ fn get_port() -> Result<String, Box<dyn Error>> {
             }
         }
     }
-    Err(Box::new(LightClientError::ConnectionLost))
+    Err(Box::new(LightClientError::ConnectionLost {
+        reason: "TTY endpoint not found".into(),
+    }))
 }
 
 fn component_gamma_correction(component: u8) -> u8 {

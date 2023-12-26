@@ -1,14 +1,17 @@
 use crate::{backoff_decorator::BackoffDecorator, LightClient, LightClientError};
 use async_trait::async_trait;
+use bytes::Buf;
+use futures_util::TryFutureExt;
 use lightfx::Frame;
 use log::{debug, error, info};
-use std::{error::Error, sync::Arc};
+use std::{io::Cursor, sync::Arc, time::Duration};
 use tokio::{io::AsyncWriteExt, net::TcpStream, sync::Mutex};
 
 #[derive(Clone)]
 pub struct TcpLightClient {
     url: String,
     stream: Arc<Mutex<Option<TcpStream>>>,
+    timeout: Duration,
 }
 
 impl TcpLightClient {
@@ -17,6 +20,7 @@ impl TcpLightClient {
         Self {
             url: url.to_owned(),
             stream: Arc::new(Mutex::new(None)),
+            timeout: Duration::from_secs(1),
         }
     }
 
@@ -24,13 +28,24 @@ impl TcpLightClient {
         BackoffDecorator::new(self)
     }
 
-    async fn connect(&self) -> Result<(), Box<dyn Error>> {
+    async fn connect(&self) -> Result<TcpStream, LightClientError> {
         debug!("Connecting to remote lights via TCP");
-        let mut stream = self.stream.lock().await;
-        let s = TcpStream::connect(&self.url).await?;
-        s.set_nodelay(true)?;
-        *stream = Some(s);
-        Ok(())
+        let connect = TcpStream::connect(&self.url).and_then(|s| async {
+            s.set_nodelay(true)?;
+            Ok(s)
+        });
+        match tokio::time::timeout(self.timeout, connect).await {
+            Ok(Ok(stream)) => {
+                info!("Successfully connected to TCP lights");
+                Ok(stream)
+            }
+            Ok(Err(e)) => Err(LightClientError::ConnectionLost {
+                reason: e.to_string(),
+            }),
+            Err(_) => Err(LightClientError::ConnectionLost {
+                reason: "Timeout".into(),
+            }),
+        }
     }
 }
 
@@ -44,31 +59,41 @@ impl LightClient for TcpLightClient {
             .flat_map(|pixel| vec![pixel.g, pixel.r, pixel.b])
             .collect();
 
-        if self.stream.lock().await.is_none() {
-            if let Err(e) = self.connect().await {
-                error!("Failed to connect to TCP endpoint: {}", e);
-            } else {
-                info!("Successfully connected to TCP endpoint");
-            }
-        }
+        let mut stream = self.stream.lock().await;
 
         let res = {
-            let mut stream = self.stream.lock().await;
-            let Some(stream) = stream.as_mut() else {
-                debug!("TCP stream not connected!");
-                return Err(LightClientError::ConnectionLost);
+            let stream = if let Some(ref mut stream) = *stream {
+                stream
+            } else {
+                *stream = Some(self.connect().await?);
+                stream.as_mut().unwrap()
             };
-            stream
-                .write_all(&[&(pixels.len() as u16).to_le_bytes(), pixels.as_slice()].concat())
-                .await
+            let mut buf =
+                Cursor::new([&(pixels.len() as u16).to_le_bytes(), pixels.as_slice()].concat());
+            let result = tokio::time::timeout(self.timeout, stream.write_all_buf(&mut buf)).await;
+            if buf.remaining() != 0 && buf.remaining() != buf.get_ref().len() {
+                error!(
+                    "Write failed, {} out of {} bytes were not written",
+                    buf.remaining(),
+                    buf.get_ref().len()
+                );
+            }
+            result
         };
 
         match res {
-            Ok(_) => Ok(()),
-            Err(e) => {
-                error!("Failed to send frame to light client: {}", e);
-                *self.stream.lock().await = None;
-                Err(LightClientError::ConnectionLost)
+            Ok(Ok(_)) => Ok(()),
+            Ok(Err(e)) => {
+                *stream = None;
+                Err(LightClientError::ConnectionLost {
+                    reason: e.to_string(),
+                })
+            }
+            Err(_) => {
+                *stream = None;
+                Err(LightClientError::ConnectionLost {
+                    reason: "Timeout".into(),
+                })
             }
         }
     }

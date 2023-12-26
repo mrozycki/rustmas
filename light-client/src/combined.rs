@@ -1,5 +1,6 @@
 use async_trait::async_trait;
 use futures_util::future::join_all;
+use itertools::Itertools;
 
 use crate::{LightClient, LightClientError};
 
@@ -31,7 +32,13 @@ impl LightClient for CombinedLightClient {
             if errors.iter().all(|e| *e == LightClientError::ProcessExited) {
                 Err(LightClientError::ProcessExited)
             } else {
-                Err(LightClientError::ConnectionLost)
+                Err(LightClientError::ConnectionLost {
+                    reason: Itertools::intersperse(
+                        errors.iter().map(|e| e.to_string()),
+                        "; ".to_string(),
+                    )
+                    .collect(),
+                })
             }
         } else {
             Ok(())
