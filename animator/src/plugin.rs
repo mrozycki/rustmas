@@ -102,6 +102,7 @@ pub enum AnimationPluginError {
 }
 
 pub trait Plugin {
+    fn config(&self) -> &PluginConfig;
     fn update(&mut self, time_delta: f64) -> Result<(), AnimationPluginError>;
     fn render(&self) -> Result<lightfx::Frame, AnimationPluginError>;
     fn animation_name(&self) -> Result<String, AnimationPluginError>;
