@@ -7,11 +7,14 @@ use std::{
 };
 
 use animation_api::{
-    AnimationError, JsonRpcMessage, JsonRpcMethod, JsonRpcResponse, JsonRpcResult,
+    parameter_schema::ParametersSchema, AnimationError, JsonRpcMessage, JsonRpcMethod,
+    JsonRpcResponse, JsonRpcResult,
 };
 use log::error;
 use serde::de::DeserializeOwned;
 use thiserror::Error;
+
+use crate::plugin::{AnimationPluginError, Plugin, PluginConfig};
 
 #[derive(Debug, Error)]
 pub enum JsonRpcEndpointError {
@@ -107,106 +110,95 @@ impl JsonRpcEndpoint {
     }
 }
 
-pub struct AnimationPlugin {
+pub struct JsonRpcPlugin {
     endpoint: JsonRpcEndpoint,
 }
 
-#[derive(Debug, Error)]
-pub enum AnimationPluginError {
-    #[error("animation error: {0}")]
-    AnimationError(#[from] AnimationError),
-
-    #[error("JSON RPC error: {0}")]
-    JsonRpcError(#[from] JsonRpcEndpointError),
-}
-
-impl AnimationPlugin {
+impl JsonRpcPlugin {
     pub fn new(
-        endpoint: JsonRpcEndpoint,
+        config: &PluginConfig,
         points: Vec<(f64, f64, f64)>,
     ) -> Result<Self, AnimationPluginError> {
+        let endpoint = config
+            .start()
+            .map_err(|e| AnimationPluginError::CommunicationError(Box::new(e)))?;
+
         match endpoint.send_message::<()>(JsonRpcMethod::Initialize { points }) {
             Ok(JsonRpcResult::Result(_)) => Ok(Self { endpoint }),
             Ok(JsonRpcResult::Error(e)) => Err(AnimationPluginError::AnimationError(e.data)),
-            Err(e) => Err(AnimationPluginError::JsonRpcError(e)),
+            Err(e) => Err(AnimationPluginError::CommunicationError(Box::new(e))),
         }
     }
+}
 
-    pub fn update(&mut self, time_delta: f64) -> Result<(), AnimationPluginError> {
+impl Plugin for JsonRpcPlugin {
+    fn update(&mut self, time_delta: f64) -> Result<(), AnimationPluginError> {
         if let Err(e) = self
             .endpoint
             .send_notification(JsonRpcMethod::Update { time_delta })
         {
-            Err(AnimationPluginError::JsonRpcError(e))
+            Err(AnimationPluginError::CommunicationError(Box::new(e)))
         } else {
             Ok(())
         }
     }
 
-    pub fn render(&self) -> Result<lightfx::Frame, AnimationPluginError> {
+    fn render(&self) -> Result<lightfx::Frame, AnimationPluginError> {
         match self.endpoint.send_message(JsonRpcMethod::Render) {
             Ok(JsonRpcResult::Result(frame)) => Ok(frame),
             Ok(JsonRpcResult::Error(e)) => Err(AnimationPluginError::AnimationError(e.data)),
-            Err(e) => Err(AnimationPluginError::JsonRpcError(e)),
+            Err(e) => Err(AnimationPluginError::CommunicationError(Box::new(e))),
         }
     }
 
-    pub fn animation_name(&self) -> Result<String, AnimationPluginError> {
+    fn animation_name(&self) -> Result<String, AnimationPluginError> {
         match self.endpoint.send_message(JsonRpcMethod::AnimationName) {
             Ok(JsonRpcResult::Result(name)) => Ok(name),
             Ok(JsonRpcResult::Error(e)) => Err(AnimationPluginError::AnimationError(e.data)),
-            Err(e) => Err(AnimationPluginError::JsonRpcError(e)),
+            Err(e) => Err(AnimationPluginError::CommunicationError(Box::new(e))),
         }
     }
 
-    pub fn parameter_schema(
-        &self,
-    ) -> Result<animation_api::parameter_schema::ParametersSchema, AnimationPluginError> {
+    fn parameter_schema(&self) -> Result<ParametersSchema, AnimationPluginError> {
         match self.endpoint.send_message(JsonRpcMethod::ParameterSchema) {
             Ok(JsonRpcResult::Result(schema)) => Ok(schema),
             Ok(JsonRpcResult::Error(e)) => Err(AnimationPluginError::AnimationError(e.data)),
-            Err(e) => Err(AnimationPluginError::JsonRpcError(e)),
+            Err(e) => Err(AnimationPluginError::CommunicationError(Box::new(e))),
         }
     }
 
-    pub fn set_parameters(
-        &mut self,
-        params: serde_json::Value,
-    ) -> Result<(), AnimationPluginError> {
+    fn set_parameters(&mut self, params: serde_json::Value) -> Result<(), AnimationPluginError> {
         match self
             .endpoint
             .send_message(JsonRpcMethod::SetParameters { params })
         {
             Ok(JsonRpcResult::Result(())) => Ok(()),
             Ok(JsonRpcResult::Error(e)) => Err(AnimationPluginError::AnimationError(e.data)),
-            Err(e) => Err(AnimationPluginError::JsonRpcError(e)),
+            Err(e) => Err(AnimationPluginError::CommunicationError(Box::new(e))),
         }
     }
 
-    pub fn get_parameters(&self) -> Result<serde_json::Value, AnimationPluginError> {
+    fn get_parameters(&self) -> Result<serde_json::Value, AnimationPluginError> {
         match self.endpoint.send_message(JsonRpcMethod::GetParameters) {
             Ok(JsonRpcResult::Result(parameters)) => Ok(parameters),
             Ok(JsonRpcResult::Error(e)) => Err(AnimationPluginError::AnimationError(e.data)),
-            Err(e) => Err(AnimationPluginError::JsonRpcError(e)),
+            Err(e) => Err(AnimationPluginError::CommunicationError(Box::new(e))),
         }
     }
 
-    pub fn get_fps(&self) -> Result<f64, AnimationPluginError> {
+    fn get_fps(&self) -> Result<f64, AnimationPluginError> {
         match self.endpoint.send_message(JsonRpcMethod::GetFps) {
             Ok(JsonRpcResult::Result(fps)) => Ok(fps),
             Ok(JsonRpcResult::Error(e)) => Err(AnimationPluginError::AnimationError(e.data)),
-            Err(e) => Err(AnimationPluginError::JsonRpcError(e)),
+            Err(e) => Err(AnimationPluginError::CommunicationError(Box::new(e))),
         }
     }
 
-    pub fn send_event(
-        &self,
-        event: animation_api::event::Event,
-    ) -> Result<(), AnimationPluginError> {
+    fn send_event(&self, event: animation_api::event::Event) -> Result<(), AnimationPluginError> {
         match self.endpoint.send_message(JsonRpcMethod::OnEvent { event }) {
             Ok(JsonRpcResult::Result(())) => Ok(()),
             Ok(JsonRpcResult::Error(e)) => Err(AnimationPluginError::AnimationError(e.data)),
-            Err(e) => Err(AnimationPluginError::JsonRpcError(e)),
+            Err(e) => Err(AnimationPluginError::CommunicationError(Box::new(e))),
         }
     }
 }

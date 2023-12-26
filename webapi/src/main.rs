@@ -191,7 +191,7 @@ async fn discover(app_state: web::Data<AppState>) -> HttpResponse {
             "animations": controller
                 .list_animations()
                 .iter()
-                .map(|(id, plugin)| json!({"id": id, "name": plugin.manifest.display_name}))
+                .map(|(id, plugin)| json!({"id": id, "name": plugin.animation_name()}))
                 .collect::<Vec<_>>()})),
         Err(e) => HttpResponse::InternalServerError().json(json!({"error": e.to_string()})),
     }
@@ -206,7 +206,7 @@ async fn list(app_state: web::Data<AppState>) -> HttpResponse {
             .await
             .list_animations()
             .iter()
-            .map(|(id, plugin)| json!({"id": id, "name": plugin.manifest.display_name}))
+            .map(|(id, plugin)| json!({"id": id, "name": plugin.animation_name()}))
             .collect::<Vec<_>>()}))
 }
 
