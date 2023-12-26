@@ -111,12 +111,13 @@ impl JsonRpcEndpoint {
 }
 
 pub struct JsonRpcPlugin {
+    config: PluginConfig,
     endpoint: JsonRpcEndpoint,
 }
 
 impl JsonRpcPlugin {
     pub fn new(
-        config: &PluginConfig,
+        config: PluginConfig,
         points: Vec<(f64, f64, f64)>,
     ) -> Result<Self, AnimationPluginError> {
         let endpoint = config
@@ -124,7 +125,7 @@ impl JsonRpcPlugin {
             .map_err(|e| AnimationPluginError::CommunicationError(Box::new(e)))?;
 
         match endpoint.send_message::<()>(JsonRpcMethod::Initialize { points }) {
-            Ok(JsonRpcResult::Result(_)) => Ok(Self { endpoint }),
+            Ok(JsonRpcResult::Result(_)) => Ok(Self { endpoint, config }),
             Ok(JsonRpcResult::Error(e)) => Err(AnimationPluginError::AnimationError(e.data)),
             Err(e) => Err(AnimationPluginError::CommunicationError(Box::new(e))),
         }
@@ -132,6 +133,10 @@ impl JsonRpcPlugin {
 }
 
 impl Plugin for JsonRpcPlugin {
+    fn config(&self) -> &PluginConfig {
+        &self.config
+    }
+
     fn update(&mut self, time_delta: f64) -> Result<(), AnimationPluginError> {
         if let Err(e) = self
             .endpoint

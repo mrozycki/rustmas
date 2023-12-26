@@ -89,7 +89,7 @@ impl AnimationFactory {
             return Err(AnimationFactoryError::AnimationNotFound);
         };
 
-        Ok(JsonRpcPlugin::new(plugin, self.points.clone())?)
+        Ok(JsonRpcPlugin::new(plugin.clone(), self.points.clone())?)
     }
 
     pub fn points(&self) -> &[(f64, f64, f64)] {

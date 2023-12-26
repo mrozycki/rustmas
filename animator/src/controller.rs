@@ -80,6 +80,15 @@ impl Controller {
         }
     }
 
+    pub async fn current_animation(&self) -> Option<PluginConfig> {
+        self.state
+            .lock()
+            .await
+            .animation
+            .as_ref()
+            .map(|animation| animation.config().clone())
+    }
+
     fn start_generators(event_sender: Sender<Event>) -> HashMap<String, Box<dyn EventGenerator>> {
         HashMap::from_iter([
             (
@@ -223,6 +232,22 @@ impl Controller {
         Ok(())
     }
 
+    pub async fn reload_animation(&self) -> Result<(), ControllerError> {
+        let mut state = self.state.lock().await;
+        let Some(id) = state.animation.as_ref().map(|a| a.config().animation_id()) else {
+            return Ok(());
+        };
+        info!("Reloading animation \"{}\"", id);
+        let new_animation = self.animation_factory.make(id)?;
+
+        let now = Utc::now();
+        state.fps = new_animation.get_fps()?;
+        state.last_frame = now;
+        state.next_frame = now;
+        state.animation = Some(new_animation);
+        Ok(())
+    }
+
     pub async fn switch_animation(&self, name: &str) -> Result<(), ControllerError> {
         info!("Trying to switch animation to \"{}\"", name);
         let mut state = self.state.lock().await;
@@ -250,7 +275,8 @@ impl Controller {
     pub async fn parameters(&self) -> Result<serde_json::Value, ControllerError> {
         if let Some(animation) = &self.state.lock().await.animation {
             Ok(json!({
-                "name": animation.animation_name()?,
+                "id": animation.config().animation_id(),
+                "name": animation.config().animation_name(),
                 "schema": animation.parameter_schema()?,
                 "values": animation.get_parameters()?,
             }))
