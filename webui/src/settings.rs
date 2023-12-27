@@ -19,7 +19,7 @@ use crate::utils;
 
 #[derive(Default)]
 pub struct SettingsModal {
-    schema: Vec<(String, ParamsSchemaEntry)>,
+    schema: Vec<ParamsSchemaEntry>,
     open_dummy: usize,
     modal_ref: NodeRef,
 }
@@ -37,7 +37,7 @@ pub enum Msg {
         form: Option<HtmlFormElement>,
         force: bool,
     },
-    SchemaLoaded(HashMap<String, ParamsSchemaEntry>),
+    SchemaLoaded(Vec<ParamsSchemaEntry>),
 }
 
 fn get_api(ctx: &Context<SettingsModal>) -> RustmasApiClient {
@@ -115,9 +115,9 @@ impl Component for SettingsModal {
                 let params = self
                     .schema
                     .iter()
-                    .map(|(id, evg)| {
+                    .map(|evg| {
                         (
-                            id.clone(),
+                            evg.id.clone(),
                             evg.schema
                                 .parameters
                                 .iter()
@@ -126,7 +126,7 @@ impl Component for SettingsModal {
                                         schema.id.clone(),
                                         serde_json::from_str::<serde_json::Value>(
                                             &form_data
-                                                .get(&format!("{}.{}", id, schema.id))
+                                                .get(&format!("{}.{}", evg.id, schema.id))
                                                 .as_string()
                                                 .unwrap(),
                                         )
@@ -136,7 +136,13 @@ impl Component for SettingsModal {
                                 .collect::<HashMap<_, _>>(),
                         )
                     })
-                    .collect::<HashMap<_, _>>();
+                    .map(|(id, values)| {
+                        json!({
+                            "id": id,
+                            "values": values
+                        })
+                    })
+                    .collect_vec();
                 let params = serde_json::to_value(params).unwrap();
 
                 let api = get_api(ctx);
@@ -151,7 +157,7 @@ impl Component for SettingsModal {
             Msg::SchemaLoaded(schema) => {
                 self.schema = schema
                     .into_iter()
-                    .sorted_by(|(_, evg1), (_, evg2)| evg1.name.cmp(&evg2.name))
+                    .sorted_by(|evg1, evg2| evg1.name.cmp(&evg2.name))
                     .collect();
                 true
             }
@@ -178,7 +184,7 @@ impl Component for SettingsModal {
                         Msg::ValuesChanged { form: utils::get_form(e.target()), force: true }
                     })}>
                     {
-                        self.schema.iter().map(|(id, evg)| {
+                        self.schema.iter().map(|evg| {
                             if evg.schema.parameters.is_empty() {
                                 html! { }
                             } else {
@@ -189,7 +195,7 @@ impl Component for SettingsModal {
                                             evg.schema.parameters.iter().cloned().map(|schema| {
                                                 let value = evg.values.get(&schema.id).unwrap_or(&json!(())).clone();
                                                 let schema = Parameter {
-                                                    id: format!("{}.{}", id, schema.id),
+                                                    id: format!("{}.{}", evg.id, schema.id),
                                                     ..schema
                                                 };
                                                 error!("evg: {}, param: {}, value: {}", evg.name, &schema.id, value);

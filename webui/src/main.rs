@@ -170,6 +170,11 @@ impl Component for AnimationSelector {
             .and_then(|w| w.screen().ok())
             .and_then(|s| s.avail_width().ok())
             .unwrap_or_default();
+        let animation_id = self
+            .parameters
+            .as_ref()
+            .map(|a| a.id.as_str())
+            .unwrap_or_default();
         html! {
             <ContextProvider<RustmasApiClient> context={self.api.clone()}>
             <>
@@ -188,7 +193,13 @@ impl Component for AnimationSelector {
                             <hr />
                             {
                                 animations.into_iter().map(|animation| html! {
-                                    <li><a onclick={link.callback(move |_| Msg::SwitchAnimation(animation.id.clone()))}>{ animation.name }</a></li>
+                                    <li class={
+                                        if animation.id == animation_id {
+                                            "selected"
+                                        } else {
+                                            ""
+                                        }
+                                    }><a onclick={link.callback(move |_| Msg::SwitchAnimation(animation.id.clone()))}>{ animation.name }</a></li>
                                 }).collect::<Html>()
                             }
                         </ul>
