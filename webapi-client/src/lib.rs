@@ -57,6 +57,7 @@ struct ListAnimationsResponse {
 
 #[derive(Clone, Debug, Deserialize, PartialEq)]
 pub struct ParamsSchemaEntry {
+    pub id: String,
     pub name: String,
     pub schema: ParametersSchema,
     pub values: HashMap<String, serde_json::Value>,
@@ -121,16 +122,15 @@ impl RustmasApiClient {
     }
 
     pub async fn restart_events(&self) -> Result<()> {
-        self.post::<()>("events/restart", &json!(())).await
+        self.post("events/restart", &json!(())).await
     }
 
-    pub async fn events_schema(&self) -> Result<HashMap<String, ParamsSchemaEntry>> {
-        self.get::<HashMap<String, ParamsSchemaEntry>>("events/schema")
-            .await
+    pub async fn events_schema(&self) -> Result<Vec<ParamsSchemaEntry>> {
+        self.get("events/schema").await
     }
 
     pub async fn set_events_params(&self, params: &serde_json::Value) -> Result<()> {
-        self.post::<()>("events/values", params).await
+        self.post("events/values", params).await
     }
 
     pub async fn list_animations(&self) -> Result<Vec<AnimationEntry>> {
@@ -155,7 +155,7 @@ impl RustmasApiClient {
     }
 
     pub async fn turn_off(&self) -> Result<()> {
-        self.post::<()>("turn_off", &json!(())).await
+        self.post("turn_off", &json!(())).await
     }
 
     pub async fn get_params(&self) -> Result<Option<ParamsSchemaEntry>> {
@@ -163,7 +163,7 @@ impl RustmasApiClient {
     }
 
     pub async fn set_params(&self, params: &serde_json::Value) -> Result<()> {
-        self.post::<()>("params", params).await
+        self.post("params", params).await
     }
 
     pub async fn save_params(&self) -> Result<()> {

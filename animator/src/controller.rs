@@ -13,7 +13,7 @@ use events::midi_generator::MidiEventGenerator;
 use log::{info, warn};
 use rustmas_light_client as client;
 use rustmas_light_client::LightClientError;
-use serde_json::{json, Map};
+use serde_json::json;
 use thiserror::Error;
 use tokio::sync::mpsc::Sender;
 use tokio::sync::{mpsc, Mutex};
@@ -194,14 +194,12 @@ impl Controller {
             .event_generators
             .iter()
             .map(|(id, evg)| {
-                (
-                    id.clone(),
-                    json!({
-                        "name": evg.get_name(),
-                        "schema": evg.get_parameter_schema(),
-                        "values": evg.get_parameters(),
-                    }),
-                )
+                json!({
+                    "id": id.clone(),
+                    "name": evg.get_name(),
+                    "schema": evg.get_parameter_schema(),
+                    "values": evg.get_parameters(),
+                })
             })
             .collect()
     }
@@ -212,11 +210,25 @@ impl Controller {
     ) -> Result<(), ControllerError> {
         let mut state = self.state.lock().await;
 
-        for (id, parameters) in values.as_object().unwrap_or(&Map::new()) {
+        for parameters in values.as_array().unwrap_or(&Vec::new()) {
+            let Some(id) = parameters
+                .as_object()
+                .and_then(|p| p.get("id"))
+                .and_then(|p| p.as_str())
+            else {
+                warn!("No event generator id provided");
+                continue;
+            };
             let Some(evg) = state.event_generators.get_mut(id) else {
                 warn!("No such event generator: {}", id);
                 continue;
             };
+
+            let Some(parameters) = parameters.as_object().and_then(|o| o.get("values")) else {
+                warn!("No parameters provided for event generator: {}", id);
+                continue;
+            };
+
             let parameters = serde_json::from_value(parameters.clone()).map_err(|e| {
                 ControllerError::InternalError {
                     reason: e.to_string(),
