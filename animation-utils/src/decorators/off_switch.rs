@@ -1,5 +1,5 @@
-use animation_api::parameter_schema::{
-    GetEnumOptions, GetParametersSchema, Parameter, ParameterValue, ParametersSchema,
+use animation_api::schema::{
+    ConfigurationSchema, GetEnumOptions, GetSchema, ParameterSchema, ValueSchema,
 };
 use animation_api::Animation;
 use animation_plugin_macro::EnumSchema;
@@ -17,7 +17,7 @@ pub enum Switch {
 }
 
 #[derive(Clone, Default, Serialize, Deserialize)]
-pub struct Parameters<P: GetParametersSchema> {
+pub struct Parameters<P: GetSchema> {
     off_switch_delay: f64,
     off_switch_state: Switch,
 
@@ -25,22 +25,22 @@ pub struct Parameters<P: GetParametersSchema> {
     inner: P,
 }
 
-impl<P: GetParametersSchema> GetParametersSchema for Parameters<P> {
-    fn schema() -> ParametersSchema {
+impl<P: GetSchema> GetSchema for Parameters<P> {
+    fn schema() -> ConfigurationSchema {
         let mut parameters = vec![
-            Parameter {
+            ParameterSchema {
                 id: "off_switch_state".to_owned(),
                 name: "State".to_owned(),
                 description: None,
-                value: ParameterValue::Enum {
+                value: ValueSchema::Enum {
                     values: Switch::enum_options(),
                 },
             },
-            Parameter {
+            ParameterSchema {
                 id: "off_switch_delay".to_owned(),
                 name: "Switch delay".to_owned(),
                 description: None,
-                value: ParameterValue::Number {
+                value: ValueSchema::Number {
                     min: 0.0,
                     max: 5.0,
                     step: 0.1,
@@ -48,11 +48,11 @@ impl<P: GetParametersSchema> GetParametersSchema for Parameters<P> {
             },
         ];
         parameters.extend(P::schema().parameters);
-        ParametersSchema { parameters }
+        ConfigurationSchema { parameters }
     }
 }
 
-pub struct OffSwitch<P: GetParametersSchema, A: Animation<Parameters = P>> {
+pub struct OffSwitch<P: GetSchema, A: Animation<Parameters = P>> {
     animation: A,
     parameters: Parameters<P>,
     energy: f64,
@@ -61,7 +61,7 @@ pub struct OffSwitch<P: GetParametersSchema, A: Animation<Parameters = P>> {
 impl<A, P> Animation for OffSwitch<P, A>
 where
     A: Animation<Parameters = P>,
-    P: GetParametersSchema + Default + Clone + Serialize + DeserializeOwned,
+    P: GetSchema + Default + Clone + Serialize + DeserializeOwned,
 {
     type Parameters = Parameters<P>;
 
@@ -96,7 +96,7 @@ where
         self.animation.animation_name()
     }
 
-    fn parameter_schema(&self) -> ParametersSchema {
+    fn get_schema(&self) -> ConfigurationSchema {
         Self::Parameters::schema()
     }
 
@@ -118,7 +118,7 @@ where
     }
 }
 
-impl<P: GetParametersSchema + Default, A: Animation<Parameters = P>> OffSwitch<P, A> {
+impl<P: GetSchema + Default, A: Animation<Parameters = P>> OffSwitch<P, A> {
     pub fn new(animation: A) -> Self {
         Self {
             animation,

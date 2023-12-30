@@ -7,8 +7,8 @@ use std::{
 };
 
 use animation_api::{
-    parameter_schema::ParametersSchema, AnimationError, JsonRpcMessage, JsonRpcMethod,
-    JsonRpcResponse, JsonRpcResult,
+    schema::ConfigurationSchema, AnimationError, JsonRpcMessage, JsonRpcMethod, JsonRpcResponse,
+    JsonRpcResult,
 };
 use log::error;
 use serde::de::DeserializeOwned;
@@ -164,7 +164,7 @@ impl Plugin for JsonRpcPlugin {
         }
     }
 
-    fn parameter_schema(&self) -> Result<ParametersSchema, AnimationPluginError> {
+    fn get_schema(&self) -> Result<ConfigurationSchema, AnimationPluginError> {
         match self.endpoint.send_message(JsonRpcMethod::ParameterSchema) {
             Ok(JsonRpcResult::Result(schema)) => Ok(schema),
             Ok(JsonRpcResult::Error(e)) => Err(AnimationPluginError::AnimationError(e.data)),

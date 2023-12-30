@@ -1,31 +1,29 @@
-use animation_api::parameter_schema::{
-    GetParametersSchema, Parameter, ParameterValue, ParametersSchema,
-};
+use animation_api::schema::{ConfigurationSchema, GetSchema, ParameterSchema, ValueSchema};
 use animation_api::Animation;
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Default, Serialize, Deserialize)]
-pub struct Parameters<P: GetParametersSchema> {
+pub struct Parameters<P: GetSchema> {
     brightness_factor: f64,
     #[serde(flatten)]
     inner: P,
 }
 
-impl<P: GetParametersSchema> GetParametersSchema for Parameters<P> {
-    fn schema() -> ParametersSchema {
-        let mut parameters = vec![Parameter {
+impl<P: GetSchema> GetSchema for Parameters<P> {
+    fn schema() -> ConfigurationSchema {
+        let mut parameters = vec![ParameterSchema {
             id: "brightness_factor".to_owned(),
             name: "Brightness".to_owned(),
             description: None,
-            value: ParameterValue::Percentage,
+            value: ValueSchema::Percentage,
         }];
         parameters.extend(P::schema().parameters);
-        ParametersSchema { parameters }
+        ConfigurationSchema { parameters }
     }
 }
 
-pub struct BrightnessControlled<P: GetParametersSchema, A: Animation<Parameters = P>> {
+pub struct BrightnessControlled<P: GetSchema, A: Animation<Parameters = P>> {
     animation: A,
     parameters: Parameters<P>,
 }
@@ -33,7 +31,7 @@ pub struct BrightnessControlled<P: GetParametersSchema, A: Animation<Parameters 
 impl<A, P> Animation for BrightnessControlled<P, A>
 where
     A: Animation<Parameters = P>,
-    P: GetParametersSchema + Default + Clone + Serialize + DeserializeOwned,
+    P: GetSchema + Default + Clone + Serialize + DeserializeOwned,
 {
     type Parameters = Parameters<P>;
 
@@ -75,7 +73,7 @@ where
     }
 }
 
-impl<P: GetParametersSchema + Default, A: Animation<Parameters = P>> BrightnessControlled<P, A> {
+impl<P: GetSchema + Default, A: Animation<Parameters = P>> BrightnessControlled<P, A> {
     pub fn new(animation: A) -> Self {
         Self {
             animation,

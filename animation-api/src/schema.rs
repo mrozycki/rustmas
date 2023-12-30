@@ -9,7 +9,7 @@ pub struct EnumOption {
 
 #[derive(Serialize, Deserialize, PartialEq, Clone, Debug)]
 #[serde(tag = "type", rename_all = "snake_case")]
-pub enum ParameterValue {
+pub enum ValueSchema {
     Number { min: f64, max: f64, step: f64 },
     Color,
     Enum { values: Vec<EnumOption> },
@@ -18,26 +18,26 @@ pub enum ParameterValue {
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Clone, Debug)]
-pub struct Parameter {
+pub struct ParameterSchema {
     pub id: String,
     pub name: String,
     pub description: Option<String>,
     #[serde(flatten)]
-    pub value: ParameterValue,
+    pub value: ValueSchema,
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Clone, Debug, Default)]
-pub struct ParametersSchema {
-    pub parameters: Vec<Parameter>,
+pub struct ConfigurationSchema {
+    pub parameters: Vec<ParameterSchema>,
 }
 
-pub trait GetParametersSchema {
-    fn schema() -> ParametersSchema;
+pub trait GetSchema {
+    fn schema() -> ConfigurationSchema;
 }
 
-impl GetParametersSchema for () {
-    fn schema() -> ParametersSchema {
-        ParametersSchema {
+impl GetSchema for () {
+    fn schema() -> ConfigurationSchema {
+        ConfigurationSchema {
             parameters: Vec::new(),
         }
     }

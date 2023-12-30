@@ -2,7 +2,7 @@ use std::f64::consts::PI;
 
 use animation_api::Animation;
 use animation_utils::decorators::BrightnessControlled;
-use animation_utils::{to_polar, EnumSchema, ParameterSchema};
+use animation_utils::{to_polar, EnumSchema, Schema};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 
@@ -38,7 +38,7 @@ pub enum Alignment {
     After,
 }
 
-#[derive(Clone, Serialize, Deserialize, ParameterSchema)]
+#[derive(Clone, Serialize, Deserialize, Schema)]
 pub struct Parameters {
     #[schema_field(name = "Axis", enum_options)]
     axis: Axis,

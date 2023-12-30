@@ -4,7 +4,7 @@ use animation_api::event::Event;
 use animation_api::Animation;
 use animation_utils::{
     decorators::{BrightnessControlled, SpeedControlled},
-    to_polar, EnumSchema, ParameterSchema,
+    to_polar, Schema, EnumSchema,
 };
 use lightfx::Color;
 use serde::{Deserialize, Serialize};
@@ -26,7 +26,7 @@ pub enum Orientation {
     Around,
 }
 
-#[derive(Clone, Serialize, Deserialize, ParameterSchema)]
+#[derive(Clone, Serialize, Deserialize, Schema)]
 pub struct Parameters {
     #[schema_field(name = "Color scheme", enum_options)]
     color_scheme: ColorScheme,

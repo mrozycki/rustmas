@@ -4,7 +4,7 @@ use std::{
     process::{Command, Stdio},
 };
 
-use animation_api::{parameter_schema::ParametersSchema, AnimationError};
+use animation_api::{schema::ConfigurationSchema, AnimationError};
 use log::info;
 use serde::Deserialize;
 
@@ -106,7 +106,7 @@ pub trait Plugin {
     fn update(&mut self, time_delta: f64) -> Result<(), AnimationPluginError>;
     fn render(&self) -> Result<lightfx::Frame, AnimationPluginError>;
     fn animation_name(&self) -> Result<String, AnimationPluginError>;
-    fn parameter_schema(&self) -> Result<ParametersSchema, AnimationPluginError>;
+    fn get_schema(&self) -> Result<ConfigurationSchema, AnimationPluginError>;
     fn set_parameters(&mut self, params: serde_json::Value) -> Result<(), AnimationPluginError>;
     fn get_parameters(&self) -> Result<serde_json::Value, AnimationPluginError>;
     fn get_fps(&self) -> Result<f64, AnimationPluginError>;

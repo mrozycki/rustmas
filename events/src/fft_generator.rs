@@ -1,6 +1,6 @@
 use animation_api::{
     event::Event,
-    parameter_schema::{EnumOption, Parameter, ParameterValue, ParametersSchema},
+    schema::{ConfigurationSchema, EnumOption, ParameterSchema, ValueSchema},
 };
 use anyhow::anyhow;
 use cpal::{
@@ -225,15 +225,15 @@ impl EventGenerator for FftEventGenerator {
             AudioStream::new(self.fps, self.event_sender.clone(), &self.parameters.device).ok();
     }
 
-    fn get_parameter_schema(&self) -> ParametersSchema {
+    fn get_schema(&self) -> ConfigurationSchema {
         let host = cpal::default_host();
 
-        ParametersSchema {
-            parameters: vec![Parameter {
+        ConfigurationSchema {
+            parameters: vec![ParameterSchema {
                 id: "device".to_owned(),
                 name: "Input device".to_owned(),
                 description: None,
-                value: ParameterValue::Enum {
+                value: ValueSchema::Enum {
                     values: host
                         .input_devices()
                         .unwrap()

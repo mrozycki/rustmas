@@ -2,7 +2,7 @@ use std::f64::consts::{FRAC_PI_2, PI};
 
 use animation_api::Animation;
 use animation_utils::decorators::{BrightnessControlled, SpeedControlled};
-use animation_utils::{EnumSchema, ParameterSchema};
+use animation_utils::{EnumSchema, Schema};
 use itertools::Itertools;
 use lightfx::Color;
 use serde::{Deserialize, Serialize};
@@ -21,7 +21,7 @@ enum Mode {
     Static,
 }
 
-#[derive(Clone, Serialize, Deserialize, ParameterSchema)]
+#[derive(Clone, Serialize, Deserialize, Schema)]
 pub struct Parameters {
     #[schema_field(name = "Color A (Red)", color)]
     color_red: Color,

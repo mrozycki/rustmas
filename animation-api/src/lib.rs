@@ -1,7 +1,7 @@
 mod api;
 pub mod event;
 mod msg;
-pub mod parameter_schema;
+pub mod schema;
 
 pub use api::Animation;
 pub use api::AnimationError;

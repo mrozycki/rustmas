@@ -1,6 +1,6 @@
 use std::{collections::HashMap, fmt};
 
-use animation_api::parameter_schema::ParametersSchema;
+use animation_api::schema::ConfigurationSchema;
 
 use serde::de::DeserializeOwned;
 use serde::Deserialize;
@@ -59,7 +59,7 @@ struct ListAnimationsResponse {
 pub struct ParamsSchemaEntry {
     pub id: String,
     pub name: String,
-    pub schema: ParametersSchema,
+    pub schema: ConfigurationSchema,
     pub values: HashMap<String, serde_json::Value>,
 }
 

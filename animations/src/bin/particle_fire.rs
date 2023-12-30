@@ -1,7 +1,7 @@
 use animation_api::Animation;
 use animation_utils::{
     decorators::{BrightnessControlled, SpeedControlled},
-    EnumSchema, ParameterSchema,
+    EnumSchema, Schema,
 };
 use lightfx::{Color, Gradient};
 use rand::{thread_rng, Rng};
@@ -99,7 +99,7 @@ pub enum Dimension {
     Dim3D,
 }
 
-#[derive(Clone, Serialize, Deserialize, ParameterSchema)]
+#[derive(Clone, Serialize, Deserialize, Schema)]
 pub struct Parameters {
     #[schema_field(name = "Dimension", enum_options)]
     dimension: Dimension,

@@ -6,7 +6,7 @@ pub(crate) mod speed_control;
 
 use std::{collections::HashMap, time::Duration};
 
-use animation_api::parameter_schema::{Parameter, ParameterValue, ParametersSchema};
+use animation_api::schema::{ConfigurationSchema, ParameterSchema, ValueSchema};
 use log::error;
 use rustmas_webapi_client::{ParamsSchemaEntry, RustmasApiClient};
 use wasm_bindgen::JsCast;
@@ -35,7 +35,7 @@ fn get_form(target: Option<EventTarget>) -> Option<HtmlFormElement> {
 
 #[derive(Properties, PartialEq, Clone)]
 pub struct ParameterControlProps {
-    pub schema: Parameter,
+    pub schema: ParameterSchema,
     pub value: Option<serde_json::Value>,
     pub dummy_update: usize,
 }
@@ -48,7 +48,7 @@ pub struct ParameterControlList {
 #[derive(Clone, PartialEq, Properties)]
 pub struct ParameterControlListProps {
     pub name: String,
-    pub schema: ParametersSchema,
+    pub schema: ConfigurationSchema,
     pub values: HashMap<String, serde_json::Value>,
     pub update_values: Callback<Option<ParamsSchemaEntry>>,
     pub parameters_dirty: Callback<bool>,
@@ -175,7 +175,7 @@ impl Component for ParameterControlList {
                                     let dummy_update = self.dummy_update;
                                     html! {
                                     <div class={match schema.value {
-                                        ParameterValue::Color => "parameter-control color-control",
+                                        ValueSchema::Color => "parameter-control color-control",
                                         _ => "parameter-control",
                                     }}>
                                         <h3>{ &schema.name }</h3>
@@ -188,12 +188,12 @@ impl Component for ParameterControlList {
                                         }
                                         {
                                             match schema.value {
-                                                ParameterValue::Enum {..} => html!{<SelectParameterControl {schema} {value} {dummy_update} />},
-                                                ParameterValue::Color => html!{<ColorParameterControl {schema} {value} {dummy_update} />},
-                                                ParameterValue::Number {..} | ParameterValue::Percentage => {
+                                                ValueSchema::Enum {..} => html!{<SelectParameterControl {schema} {value} {dummy_update} />},
+                                                ValueSchema::Color => html!{<ColorParameterControl {schema} {value} {dummy_update} />},
+                                                ValueSchema::Number {..} | ValueSchema::Percentage => {
                                                     html!{<SliderParameterControl {schema} {value} {dummy_update} />}
                                                 },
-                                                ParameterValue::Speed => html!{<SpeedParameterControl {schema} {value} {dummy_update} />}
+                                                ValueSchema::Speed => html!{<SpeedParameterControl {schema} {value} {dummy_update} />}
                                             }
                                         }
                                     </div>

@@ -2,7 +2,7 @@ use std::{error::Error, sync::Mutex};
 
 use animation_api::{
     event::Event,
-    parameter_schema::{EnumOption, Parameter, ParameterValue, ParametersSchema},
+    schema::{ConfigurationSchema, EnumOption, ParameterSchema, ValueSchema},
 };
 use anyhow::anyhow;
 use log::info;
@@ -113,14 +113,14 @@ impl EventGenerator for MidiEventGenerator {
             MidiStream::new(self.event_sender.clone(), &self.parameters.device).ok();
     }
 
-    fn get_parameter_schema(&self) -> ParametersSchema {
+    fn get_schema(&self) -> ConfigurationSchema {
         let midi_input = self.midi_input.lock().unwrap();
-        ParametersSchema {
-            parameters: vec![Parameter {
+        ConfigurationSchema {
+            parameters: vec![ParameterSchema {
                 id: "device".into(),
                 name: "MIDI Input Device".into(),
                 description: None,
-                value: ParameterValue::Enum {
+                value: ValueSchema::Enum {
                     values: midi_input
                         .ports()
                         .into_iter()

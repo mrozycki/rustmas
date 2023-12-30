@@ -1,7 +1,7 @@
 use animation_api::Animation;
 use animation_utils::{
     decorators::{BrightnessControlled, SpeedControlled},
-    ParameterSchema,
+    Schema,
 };
 use lightfx::{Color, Gradient};
 use nalgebra::{Rotation3, Vector3};
@@ -95,7 +95,7 @@ impl DoomFire {
     }
 }
 
-#[derive(Clone, Serialize, Deserialize, ParameterSchema)]
+#[derive(Clone, Serialize, Deserialize, Schema)]
 pub struct Parameters {
     #[schema_field(name = "Upward spread", number(min = 0.0, max = 1.0, step = 0.05))]
     upward_spread: f64,

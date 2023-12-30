@@ -1,4 +1,4 @@
-use animation_api::parameter_schema::ParameterValue;
+use animation_api::schema::ValueSchema;
 use web_sys::HtmlInputElement;
 use yew::{html, Component, Context, Html, NodeRef};
 
@@ -38,7 +38,7 @@ impl Component for SliderParameterControl {
                     .map(|elem| elem.value())
                     .and_then(|v| v.parse::<f64>().ok())
                     .unwrap_or(0.0);
-                let percent = matches!(ctx.props().schema.value, ParameterValue::Percentage);
+                let percent = matches!(ctx.props().schema.value, ValueSchema::Percentage);
 
                 self.value_display_ref
                     .cast::<HtmlInputElement>()
@@ -52,8 +52,8 @@ impl Component for SliderParameterControl {
     fn view(&self, ctx: &Context<Self>) -> Html {
         let schema = &ctx.props().schema;
         let (min, max, step, percent) = match &schema.value {
-            ParameterValue::Number { min, max, step } => (*min, *max, *step, false),
-            ParameterValue::Percentage => (0.0, 1.0, 0.01, true),
+            ValueSchema::Number { min, max, step } => (*min, *max, *step, false),
+            ValueSchema::Percentage => (0.0, 1.0, 0.01, true),
             _ => return html!(),
         };
 
