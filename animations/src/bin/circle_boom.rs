@@ -2,11 +2,11 @@ use std::f64::consts::FRAC_PI_2;
 
 use animation_api::Animation;
 use animation_utils::decorators::BrightnessControlled;
-use animation_utils::ParameterSchema;
+use animation_utils::Schema;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 
-#[derive(Clone, Serialize, Deserialize, ParameterSchema)]
+#[derive(Clone, Serialize, Deserialize, Schema)]
 pub struct Parameters {
     #[schema_field(name = "Center X", number(min = "-1.0", max = 1.0, step = 0.1))]
     center_x: f64,

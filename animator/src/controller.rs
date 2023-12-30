@@ -188,7 +188,7 @@ impl Controller {
             .for_each(|(_, evg)| evg.restart());
     }
 
-    pub fn event_generator_parameter_schema(&self) -> serde_json::Value {
+    pub fn get_event_generator_parameters(&self) -> serde_json::Value {
         self.state
             .lock()
             .unwrap()
@@ -198,7 +198,7 @@ impl Controller {
                 json!({
                     "id": id.clone(),
                     "name": evg.get_name(),
-                    "schema": evg.get_parameter_schema(),
+                    "schema": evg.get_schema(),
                     "values": evg.get_parameters(),
                 })
             })
@@ -285,12 +285,12 @@ impl Controller {
         state.animation = None;
     }
 
-    pub fn parameters(&self) -> Result<serde_json::Value, ControllerError> {
+    pub fn get_parameters(&self) -> Result<serde_json::Value, ControllerError> {
         if let Some(animation) = &self.state.lock().unwrap().animation {
             Ok(json!({
                 "id": animation.config().animation_id(),
                 "name": animation.config().animation_name(),
-                "schema": animation.parameter_schema()?,
+                "schema": animation.get_schema()?,
                 "values": animation.get_parameters()?,
             }))
         } else {
@@ -298,7 +298,7 @@ impl Controller {
         }
     }
 
-    pub fn parameter_values(&self) -> Result<serde_json::Value, ControllerError> {
+    pub fn get_parameter_values(&self) -> Result<serde_json::Value, ControllerError> {
         if let Some(animation) = &self.state.lock().unwrap().animation {
             Ok(animation.get_parameters()?)
         } else {

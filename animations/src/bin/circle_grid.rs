@@ -3,13 +3,13 @@ use std::f64::consts::TAU;
 use animation_api::Animation;
 use animation_utils::{
     decorators::{BrightnessControlled, OffSwitch},
-    ParameterSchema,
+    Schema,
 };
 use lightfx::Color;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 
-#[derive(Clone, Serialize, Deserialize, ParameterSchema)]
+#[derive(Clone, Serialize, Deserialize, Schema)]
 pub struct Parameters {
     #[schema_field(name = "Center X", number(min = "-1.0", max = 1.0, step = 0.1))]
     center_x: f64,

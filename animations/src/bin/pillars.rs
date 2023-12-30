@@ -3,7 +3,7 @@ use std::f64::consts::PI;
 use animation_api::Animation;
 use animation_utils::{
     decorators::{BrightnessControlled, SpeedControlled},
-    EnumSchema, ParameterSchema,
+    EnumSchema, Schema,
 };
 use lightfx::{Color, ColorWithAlpha};
 use rand::{thread_rng, Rng};
@@ -100,7 +100,7 @@ pub enum Orientation {
     SideSide,
 }
 
-#[derive(Clone, Serialize, Deserialize, ParameterSchema)]
+#[derive(Clone, Serialize, Deserialize, Schema)]
 pub struct Parameters {
     #[schema_field(name = "Orientation", enum_options)]
     orientation: Orientation,

@@ -4,7 +4,7 @@ use animation_api::event::Event;
 use animation_api::Animation;
 use animation_utils::{
     decorators::{BrightnessControlled, SpeedControlled},
-    to_polar, EnumSchema, ParameterSchema,
+    to_polar, EnumSchema, Schema,
 };
 use itertools::Itertools;
 use lightfx::Color;
@@ -19,7 +19,7 @@ pub enum ColorScheme {
     Rainbow,
 }
 
-#[derive(Clone, Serialize, Deserialize, ParameterSchema)]
+#[derive(Clone, Serialize, Deserialize, Schema)]
 pub struct Parameters {
     #[schema_field(name = "Color scheme", enum_options)]
     color_scheme: ColorScheme,

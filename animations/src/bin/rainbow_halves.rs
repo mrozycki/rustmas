@@ -2,7 +2,7 @@ use std::f64::consts::PI;
 
 use animation_api::Animation;
 use animation_utils::decorators::{BrightnessControlled, SpeedControlled};
-use animation_utils::{EnumSchema, ParameterSchema};
+use animation_utils::{EnumSchema, Schema};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 
@@ -19,7 +19,7 @@ pub enum Axis {
     Z,
 }
 
-#[derive(Clone, Default, Serialize, Deserialize, ParameterSchema)]
+#[derive(Clone, Default, Serialize, Deserialize, Schema)]
 pub struct Parameters {
     #[schema_field(name = "Axis of rotation", enum_options)]
     axis: Axis,

@@ -2,14 +2,14 @@ use std::f64::consts::TAU;
 
 use animation_api::Animation;
 use animation_utils::decorators::{BrightnessControlled, OffSwitch};
-use animation_utils::ParameterSchema;
+use animation_utils::Schema;
 use bracket_noise::prelude::FastNoise;
 use lightfx::Color;
 use nalgebra::Vector3;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 
-#[derive(Clone, Serialize, Deserialize, ParameterSchema)]
+#[derive(Clone, Serialize, Deserialize, Schema)]
 pub struct Parameters {
     #[schema_field(name = "Radius", number(min = 0.0, max = 1.0, step = 0.05))]
     radius: f64,

@@ -1,4 +1,4 @@
-use animation_api::parameter_schema::ParametersSchema;
+use animation_api::schema::ConfigurationSchema;
 use serde_json::json;
 
 pub trait EventGenerator: Send + Sync {
@@ -6,8 +6,8 @@ pub trait EventGenerator: Send + Sync {
 
     fn restart(&mut self) {}
 
-    fn get_parameter_schema(&self) -> ParametersSchema {
-        ParametersSchema {
+    fn get_schema(&self) -> ConfigurationSchema {
+        ConfigurationSchema {
             parameters: Vec::new(),
         }
     }

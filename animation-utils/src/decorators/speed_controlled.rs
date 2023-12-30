@@ -1,32 +1,30 @@
-use animation_api::parameter_schema::{
-    GetParametersSchema, Parameter, ParameterValue, ParametersSchema,
-};
+use animation_api::schema::{ConfigurationSchema, GetSchema, ParameterSchema, ValueSchema};
 use animation_api::Animation;
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Default, Serialize, Deserialize)]
-pub struct Parameters<P: GetParametersSchema> {
+pub struct Parameters<P: GetSchema> {
     speed_factor: f64,
 
     #[serde(flatten)]
     inner: P,
 }
 
-impl<P: GetParametersSchema> GetParametersSchema for Parameters<P> {
-    fn schema() -> ParametersSchema {
-        let mut parameters = vec![Parameter {
+impl<P: GetSchema> GetSchema for Parameters<P> {
+    fn schema() -> ConfigurationSchema {
+        let mut parameters = vec![ParameterSchema {
             id: "speed_factor".to_owned(),
             name: "Speed Factor".to_owned(),
             description: None,
-            value: ParameterValue::Speed,
+            value: ValueSchema::Speed,
         }];
         parameters.extend(P::schema().parameters);
-        ParametersSchema { parameters }
+        ConfigurationSchema { parameters }
     }
 }
 
-pub struct SpeedControlled<P: GetParametersSchema, A: Animation<Parameters = P>> {
+pub struct SpeedControlled<P: GetSchema, A: Animation<Parameters = P>> {
     animation: A,
     parameters: Parameters<P>,
 }
@@ -34,7 +32,7 @@ pub struct SpeedControlled<P: GetParametersSchema, A: Animation<Parameters = P>>
 impl<A, P> Animation for SpeedControlled<P, A>
 where
     A: Animation<Parameters = P>,
-    P: GetParametersSchema + Default + Clone + Serialize + DeserializeOwned,
+    P: GetSchema + Default + Clone + Serialize + DeserializeOwned,
 {
     type Parameters = Parameters<P>;
 
@@ -54,7 +52,7 @@ where
         self.animation.animation_name()
     }
 
-    fn parameter_schema(&self) -> ParametersSchema {
+    fn get_schema(&self) -> ConfigurationSchema {
         Self::Parameters::schema()
     }
 
@@ -76,7 +74,7 @@ where
     }
 }
 
-impl<P: GetParametersSchema + Default, A: Animation<Parameters = P>> SpeedControlled<P, A> {
+impl<P: GetSchema + Default, A: Animation<Parameters = P>> SpeedControlled<P, A> {
     pub fn new(animation: A) -> Self {
         Self {
             animation,

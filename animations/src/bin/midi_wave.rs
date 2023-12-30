@@ -1,11 +1,11 @@
 use animation_api::{event::Event, Animation};
-use animation_utils::{decorators::SpeedControlled, ParameterSchema};
+use animation_utils::{decorators::SpeedControlled, Schema};
 use itertools::Itertools;
 use midi_msg::{ChannelVoiceMsg, MidiMsg};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 
-#[derive(Clone, Serialize, Deserialize, ParameterSchema)]
+#[derive(Clone, Serialize, Deserialize, Schema)]
 pub struct Parameters {
     #[schema_field(name = "Radius", number(min = 0.0, max = 2.0, step = 0.1))]
     radius: f64,

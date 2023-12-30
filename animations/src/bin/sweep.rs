@@ -1,6 +1,6 @@
 use animation_api::Animation;
 use animation_utils::decorators::{BrightnessControlled, SpeedControlled};
-use animation_utils::{EnumSchema, ParameterSchema};
+use animation_utils::{EnumSchema, Schema};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 
@@ -26,7 +26,7 @@ enum Direction {
     RightToLeft,
 }
 
-#[derive(Clone, Serialize, Deserialize, ParameterSchema)]
+#[derive(Clone, Serialize, Deserialize, Schema)]
 pub struct Parameters {
     #[schema_field(name = "Direction", enum_options)]
     direction: Direction,

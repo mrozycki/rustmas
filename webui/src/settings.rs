@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use animation_api::parameter_schema::{Parameter, ParameterValue};
+use animation_api::schema::{ParameterSchema, ValueSchema};
 use itertools::Itertools;
 use log::error;
 use rustmas_webapi_client::{ParamsSchemaEntry, RustmasApiClient};
@@ -194,19 +194,19 @@ impl Component for SettingsModal {
                                         {
                                             evg.schema.parameters.iter().cloned().map(|schema| {
                                                 let value = evg.values.get(&schema.id).unwrap_or(&json!(())).clone();
-                                                let schema = Parameter {
+                                                let schema = ParameterSchema {
                                                     id: format!("{}.{}", evg.id, schema.id),
                                                     ..schema
                                                 };
                                                 error!("evg: {}, param: {}, value: {}", evg.name, &schema.id, value);
                                                 let dummy_update = 0;
                                                 match schema.value {
-                                                    ParameterValue::Enum {..} => html!{<SelectParameterControl {schema} {value} {dummy_update} />},
-                                                    ParameterValue::Color => html!{<ColorParameterControl {schema} {value} {dummy_update} />},
-                                                    ParameterValue::Number {..} | ParameterValue::Percentage => {
+                                                    ValueSchema::Enum {..} => html!{<SelectParameterControl {schema} {value} {dummy_update} />},
+                                                    ValueSchema::Color => html!{<ColorParameterControl {schema} {value} {dummy_update} />},
+                                                    ValueSchema::Number {..} | ValueSchema::Percentage => {
                                                         html!{<SliderParameterControl {schema} {value} {dummy_update} />}
                                                     },
-                                                    ParameterValue::Speed => html!{<SpeedParameterControl {schema} {value} {dummy_update} />}
+                                                    ValueSchema::Speed => html!{<SpeedParameterControl {schema} {value} {dummy_update} />}
                                                 }
                                             }).collect::<Html>()
                                         }

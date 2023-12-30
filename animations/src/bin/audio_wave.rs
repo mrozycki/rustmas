@@ -4,7 +4,7 @@ use std::sync::{Arc, Mutex};
 
 use animation_api::Animation;
 use animation_utils::decorators::{BrightnessControlled, SpeedControlled};
-use animation_utils::{to_polar, EnumSchema, ParameterSchema};
+use animation_utils::{to_polar, EnumSchema, Schema};
 use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
 use cpal::Stream;
 use lightfx::Color;
@@ -30,7 +30,7 @@ pub enum Orientation {
     Around,
 }
 
-#[derive(Clone, Serialize, Deserialize, ParameterSchema)]
+#[derive(Clone, Serialize, Deserialize, Schema)]
 pub struct Parameters {
     #[schema_field(name = "Color scheme", enum_options)]
     color_scheme: ColorScheme,

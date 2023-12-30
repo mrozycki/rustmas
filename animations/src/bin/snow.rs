@@ -1,12 +1,12 @@
 use animation_api::Animation;
 use animation_utils::decorators::{BrightnessControlled, SpeedControlled};
-use animation_utils::ParameterSchema;
+use animation_utils::Schema;
 use lightfx::Color;
 use nalgebra::Vector3;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 
-#[derive(Clone, Serialize, Deserialize, ParameterSchema)]
+#[derive(Clone, Serialize, Deserialize, Schema)]
 pub struct Parameters {
     #[schema_field(name = "Count", number(min = 50.0, max = 150.0, step = 10.0))]
     count: f64,

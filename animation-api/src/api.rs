@@ -2,7 +2,7 @@ use std::fmt;
 
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 
-use crate::parameter_schema::{GetParametersSchema, ParametersSchema};
+use crate::schema::{ConfigurationSchema, GetSchema};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct AnimationError {
@@ -18,13 +18,13 @@ impl fmt::Display for AnimationError {
 impl std::error::Error for AnimationError {}
 
 pub trait Animation {
-    type Parameters: GetParametersSchema + DeserializeOwned + Serialize + Default + Clone;
+    type Parameters: GetSchema + DeserializeOwned + Serialize + Default + Clone;
 
     fn animation_name(&self) -> &str;
 
-    fn parameter_schema(&self) -> ParametersSchema
+    fn get_schema(&self) -> ConfigurationSchema
     where
-        Self::Parameters: GetParametersSchema,
+        Self::Parameters: GetSchema,
     {
         Self::Parameters::schema()
     }

@@ -1,12 +1,12 @@
 use animation_api::Animation;
 use animation_utils::{
     decorators::{BrightnessControlled, OffSwitch},
-    ParameterSchema,
+    Schema,
 };
 use lightfx::Color;
 use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Serialize, Deserialize, ParameterSchema)]
+#[derive(Clone, Serialize, Deserialize, Schema)]
 pub struct Parameters {
     #[schema_field(name = "Color", color)]
     color: Color,

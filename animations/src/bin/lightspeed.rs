@@ -3,7 +3,7 @@ use std::f64::consts::{PI, TAU};
 use animation_api::Animation;
 use animation_utils::{
     decorators::{BrightnessControlled, SpeedControlled},
-    ParameterSchema,
+    Schema,
 };
 use lightfx::Color;
 use rand::{thread_rng, Rng};
@@ -63,7 +63,7 @@ impl Particle {
     }
 }
 
-#[derive(Clone, Serialize, Deserialize, ParameterSchema)]
+#[derive(Clone, Serialize, Deserialize, Schema)]
 pub struct Parameters {
     #[schema_field(name = "Center X", number(min = "-1.0", max = 1.0, step = 0.05))]
     center_x: f64,

@@ -24,7 +24,7 @@ async fn restart_events(controller: web::Data<AnimationController>) -> HttpRespo
 
 #[get("/events/schema")]
 async fn events_schema(controller: web::Data<AnimationController>) -> HttpResponse {
-    HttpResponse::Ok().json(controller.0.lock().await.event_generator_parameter_schema())
+    HttpResponse::Ok().json(controller.0.lock().await.get_event_generator_parameters())
 }
 
 #[post("/events/values")]
@@ -63,11 +63,11 @@ async fn restore_params(
         let _ = controller.set_parameters(params.clone());
     } else if let Ok(Some(params)) = db.get_parameters(animation_id).await {
         let _ = controller.set_parameters(params);
-    } else if let Ok(params) = controller.parameter_values() {
+    } else if let Ok(params) = controller.get_parameter_values() {
         let _ = db.set_parameters(animation_id, &params).await;
     }
 
-    controller.parameters().map_err(|e| e.to_string())
+    controller.get_parameters().map_err(|e| e.to_string())
 }
 
 #[post("/reload")]
@@ -108,7 +108,7 @@ async fn turn_off(controller: web::Data<AnimationController>) -> HttpResponse {
 
 #[get("/params")]
 async fn get_params(controller: web::Data<AnimationController>) -> HttpResponse {
-    match controller.0.lock().await.parameters() {
+    match controller.0.lock().await.get_parameters() {
         Ok(animation) => HttpResponse::Ok().json(json!({ "animation": animation })),
         Err(e) => HttpResponse::InternalServerError().json(json!({ "error": e.to_string() })),
     }
@@ -120,7 +120,7 @@ async fn save_params(
     db: web::Data<Db>,
 ) -> HttpResponse {
     let controller = controller.0.lock().await;
-    let parameter_values = match controller.parameter_values() {
+    let parameter_values = match controller.get_parameter_values() {
         Ok(params) => params,
         Err(e) => {
             return HttpResponse::InternalServerError().json(json!({"error": e.to_string() }))
@@ -152,7 +152,7 @@ async fn reset_params(
     match db.0.get_parameters(animation_id).await {
         Ok(Some(params)) => {
             let _ = controller.set_parameters(params);
-            match controller.parameters() {
+            match controller.get_parameters() {
                 Ok(animation) => HttpResponse::Ok().json(json!({ "animation": animation })),
                 Err(e) => {
                     HttpResponse::InternalServerError().json(json!({ "error": e.to_string() }))

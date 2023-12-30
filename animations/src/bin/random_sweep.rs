@@ -1,6 +1,6 @@
 use animation_api::Animation;
 use animation_utils::decorators::{BrightnessControlled, SpeedControlled};
-use animation_utils::{EnumSchema, ParameterSchema};
+use animation_utils::{EnumSchema, Schema};
 use itertools::Itertools;
 use nalgebra::Vector3;
 use serde::{Deserialize, Serialize};
@@ -16,7 +16,7 @@ pub enum SweepType {
     Sweep3D,
 }
 
-#[derive(Clone, Serialize, Deserialize, ParameterSchema)]
+#[derive(Clone, Serialize, Deserialize, Schema)]
 pub struct Parameters {
     #[schema_field(name = "Tail length", number(min = 0.0, max = 2.0, step = 0.05))]
     tail_length: f64,

@@ -2,12 +2,12 @@ use std::f64::consts::PI;
 
 use animation_api::Animation;
 use animation_utils::decorators::{BrightnessControlled, OffSwitch};
-use animation_utils::ParameterSchema;
+use animation_utils::Schema;
 use lightfx::Color;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 
-#[derive(Clone, Serialize, Deserialize, ParameterSchema)]
+#[derive(Clone, Serialize, Deserialize, Schema)]
 pub struct Parameters {
     #[schema_field(name = "Boundary left", number(min = "-1.0", max = 1.0, step = 0.05))]
     boundary_left: f64,

@@ -1,4 +1,4 @@
-use animation_api::parameter_schema::{Parameter, ParameterValue};
+use animation_api::schema::{ParameterSchema, ValueSchema};
 use web_sys::HtmlSelectElement;
 use yew::{html, Component, Context, Html, NodeRef};
 
@@ -18,9 +18,9 @@ impl Component for SelectParameterControl {
     }
 
     fn view(&self, ctx: &Context<Self>) -> Html {
-        if let Parameter {
+        if let ParameterSchema {
             id,
-            value: ParameterValue::Enum { values },
+            value: ValueSchema::Enum { values },
             ..
         } = ctx.props().schema.clone()
         {

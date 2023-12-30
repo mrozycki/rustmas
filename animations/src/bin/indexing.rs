@@ -1,5 +1,5 @@
-use animation_api::parameter_schema::{
-    EnumOption, GetParametersSchema, Parameter, ParameterValue, ParametersSchema,
+use animation_api::schema::{
+    ConfigurationSchema, EnumOption, GetSchema, ParameterSchema, ValueSchema,
 };
 use animation_api::Animation;
 use animation_utils::decorators::BrightnessControlled;
@@ -11,14 +11,14 @@ pub struct Parameters {
     bit: usize,
 }
 
-impl GetParametersSchema for Parameters {
-    fn schema() -> ParametersSchema {
-        ParametersSchema {
-            parameters: vec![Parameter {
+impl GetSchema for Parameters {
+    fn schema() -> ConfigurationSchema {
+        ConfigurationSchema {
+            parameters: vec![ParameterSchema {
                 id: "bit".to_owned(),
                 name: "Bit".to_owned(),
                 description: None,
-                value: ParameterValue::Enum {
+                value: ValueSchema::Enum {
                     values: (0..10)
                         .map(|i| EnumOption {
                             name: format!("{}s", 1 << i),
