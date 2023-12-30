@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use std::error::Error;
 use std::path::{Path, PathBuf};
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 
 use animation_api::event::Event;
 use chrono::{DateTime, Duration, Utc};
@@ -15,8 +15,7 @@ use rustmas_light_client as client;
 use rustmas_light_client::LightClientError;
 use serde_json::json;
 use thiserror::Error;
-use tokio::sync::mpsc::Sender;
-use tokio::sync::{mpsc, Mutex};
+use tokio::sync::mpsc;
 use tokio::task::JoinHandle;
 
 use crate::factory::{AnimationFactory, AnimationFactoryError};
@@ -80,16 +79,18 @@ impl Controller {
         }
     }
 
-    pub async fn current_animation(&self) -> Option<PluginConfig> {
+    pub fn current_animation(&self) -> Option<PluginConfig> {
         self.state
             .lock()
-            .await
+            .unwrap()
             .animation
             .as_ref()
             .map(|animation| animation.config().clone())
     }
 
-    fn start_generators(event_sender: Sender<Event>) -> HashMap<String, Box<dyn EventGenerator>> {
+    fn start_generators(
+        event_sender: mpsc::Sender<Event>,
+    ) -> HashMap<String, Box<dyn EventGenerator>> {
         HashMap::from_iter([
             (
                 "beat".into(),
@@ -125,7 +126,7 @@ impl Controller {
             .await;
 
             let (Ok(frame),) = ({
-                let mut state = state.lock().await;
+                let mut state = state.lock().unwrap();
                 if now < state.next_frame {
                     next_check = state.next_frame.min(now + Duration::seconds(1));
                     continue;
@@ -158,7 +159,7 @@ impl Controller {
 
     async fn event_loop(state: Arc<Mutex<ControllerState>>, mut receiver: mpsc::Receiver<Event>) {
         while let Some(event) = receiver.recv().await {
-            let state = state.lock().await;
+            let state = state.lock().unwrap();
             if let Some(animation) = &state.animation {
                 let _ = animation.send_event(event);
             }
@@ -177,20 +178,20 @@ impl Controller {
         self.animation_factory.points()
     }
 
-    pub async fn restart_event_generators(&self) {
+    pub fn restart_event_generators(&self) {
         info!("Restarting event generators");
         self.state
             .lock()
-            .await
+            .unwrap()
             .event_generators
             .iter_mut()
             .for_each(|(_, evg)| evg.restart());
     }
 
-    pub async fn event_generator_parameter_schema(&self) -> serde_json::Value {
+    pub fn event_generator_parameter_schema(&self) -> serde_json::Value {
         self.state
             .lock()
-            .await
+            .unwrap()
             .event_generators
             .iter()
             .map(|(id, evg)| {
@@ -204,11 +205,11 @@ impl Controller {
             .collect()
     }
 
-    pub async fn set_event_generator_parameters(
+    pub fn set_event_generator_parameters(
         &self,
         values: serde_json::Value,
     ) -> Result<(), ControllerError> {
-        let mut state = self.state.lock().await;
+        let mut state = self.state.lock().unwrap();
 
         for parameters in values.as_array().unwrap_or(&Vec::new()) {
             let Some(id) = parameters
@@ -244,8 +245,8 @@ impl Controller {
         Ok(())
     }
 
-    pub async fn reload_animation(&self) -> Result<(), ControllerError> {
-        let mut state = self.state.lock().await;
+    pub fn reload_animation(&self) -> Result<(), ControllerError> {
+        let mut state = self.state.lock().unwrap();
         let Some(id) = state.animation.as_ref().map(|a| a.config().animation_id()) else {
             return Ok(());
         };
@@ -260,9 +261,9 @@ impl Controller {
         Ok(())
     }
 
-    pub async fn switch_animation(&self, name: &str) -> Result<(), ControllerError> {
+    pub fn switch_animation(&self, name: &str) -> Result<(), ControllerError> {
         info!("Trying to switch animation to \"{}\"", name);
-        let mut state = self.state.lock().await;
+        let mut state = self.state.lock().unwrap();
         let new_animation = self.animation_factory.make(name)?;
 
         let now = Utc::now();
@@ -273,9 +274,9 @@ impl Controller {
         Ok(())
     }
 
-    pub async fn turn_off(&self) {
+    pub fn turn_off(&self) {
         info!("Turning off the animation");
-        let mut state = self.state.lock().await;
+        let mut state = self.state.lock().unwrap();
 
         let now = Utc::now();
         state.fps = 0.0;
@@ -284,8 +285,8 @@ impl Controller {
         state.animation = None;
     }
 
-    pub async fn parameters(&self) -> Result<serde_json::Value, ControllerError> {
-        if let Some(animation) = &self.state.lock().await.animation {
+    pub fn parameters(&self) -> Result<serde_json::Value, ControllerError> {
+        if let Some(animation) = &self.state.lock().unwrap().animation {
             Ok(json!({
                 "id": animation.config().animation_id(),
                 "name": animation.config().animation_name(),
@@ -297,19 +298,16 @@ impl Controller {
         }
     }
 
-    pub async fn parameter_values(&self) -> Result<serde_json::Value, ControllerError> {
-        if let Some(animation) = &self.state.lock().await.animation {
+    pub fn parameter_values(&self) -> Result<serde_json::Value, ControllerError> {
+        if let Some(animation) = &self.state.lock().unwrap().animation {
             Ok(animation.get_parameters()?)
         } else {
             Ok(json!(()))
         }
     }
 
-    pub async fn set_parameters(
-        &mut self,
-        parameters: serde_json::Value,
-    ) -> Result<(), ControllerError> {
-        let mut state = self.state.lock().await;
+    pub fn set_parameters(&mut self, parameters: serde_json::Value) -> Result<(), ControllerError> {
+        let mut state = self.state.lock().unwrap();
         if let Some(ref mut animation) = state.animation {
             animation.set_parameters(parameters)?;
             state.next_frame = Utc::now();
