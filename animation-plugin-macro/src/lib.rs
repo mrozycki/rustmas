@@ -87,7 +87,7 @@ pub fn plugin(_attr: TokenStream, item: TokenStream) -> TokenStream {
                         },
                         JsonRpcMethod::SetParameters { params } => {
                             if let Some(mut animation) = animation.as_mut() {
-                                match serde_json::from_value(params) {
+                                match serde_json::from_value(serde_json::json!(params)) {
                                     Ok(params) => {
                                         animation.set_parameters(params);
                                         respond(message.id, ());

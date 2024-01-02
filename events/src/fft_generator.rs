@@ -1,6 +1,6 @@
 use animation_api::{
     event::Event,
-    schema::{ConfigurationSchema, EnumOption, ParameterSchema, ValueSchema},
+    schema::{ConfigurationSchema, EnumOption, ParameterSchema, ParameterValue, ValueSchema},
 };
 use anyhow::anyhow;
 use cpal::{
@@ -15,7 +15,7 @@ use serde_json::json;
 use tokio::sync::mpsc;
 
 use std::{
-    collections::VecDeque,
+    collections::{HashMap, VecDeque},
     error::Error,
     sync::{
         atomic::{AtomicBool, Ordering},
@@ -252,12 +252,15 @@ impl EventGenerator for FftEventGenerator {
         }
     }
 
-    fn get_parameters(&self) -> serde_json::Value {
-        json!(self.parameters)
+    fn get_parameters(&self) -> HashMap<String, ParameterValue> {
+        serde_json::from_value(json!(self.parameters)).unwrap()
     }
 
-    fn set_parameters(&mut self, parameters: serde_json::Value) -> Result<(), serde_json::Error> {
-        self.parameters = serde_json::from_value(parameters)?;
+    fn set_parameters(
+        &mut self,
+        parameters: &HashMap<String, ParameterValue>,
+    ) -> Result<(), serde_json::Error> {
+        self.parameters = serde_json::from_value(json!(parameters))?;
         self.restart();
         Ok(())
     }

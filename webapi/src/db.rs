@@ -1,7 +1,8 @@
-use std::{error::Error, str::FromStr, sync::Arc};
+use std::{collections::HashMap, error::Error, str::FromStr, sync::Arc};
 
 use sqlx::{sqlite::SqliteConnectOptions, ConnectOptions, Executor, Row, SqliteConnection};
 use tokio::sync::Mutex;
+use webapi_model::ParameterValue;
 
 pub struct Db {
     conn: Arc<Mutex<SqliteConnection>>,
@@ -22,12 +23,12 @@ impl Db {
     pub async fn set_parameters(
         &self,
         animation_id: &str,
-        parameters: &serde_json::Value,
+        parameters: &HashMap<String, ParameterValue>,
     ) -> Result<(), Box<dyn Error>> {
         let query =
             sqlx::query("INSERT INTO animation_parameters(animation, parameters) VALUES (?, ?) ON CONFLICT(animation) DO UPDATE SET parameters=excluded.parameters;")
                 .bind(animation_id)
-                .bind(parameters.to_string());
+                .bind(serde_json::to_string(parameters).unwrap());
         self.conn.lock().await.execute(query).await?;
         Ok(())
     }
@@ -35,7 +36,7 @@ impl Db {
     pub async fn get_parameters(
         &self,
         animation_id: &str,
-    ) -> Result<Option<serde_json::Value>, Box<dyn Error>> {
+    ) -> Result<Option<HashMap<String, ParameterValue>>, Box<dyn Error>> {
         let query = sqlx::query("SELECT parameters FROM animation_parameters WHERE animation = ?;")
             .bind(animation_id);
 
@@ -47,7 +48,7 @@ impl Db {
             .await?
             .map(|row| row.try_get::<String, &str>("parameters"))
             .transpose()?
-            .map(|s| serde_json::from_str::<serde_json::Value>(&s))
+            .map(|s| serde_json::from_str::<HashMap<String, ParameterValue>>(&s))
             .transpose()?;
 
         Ok(result)

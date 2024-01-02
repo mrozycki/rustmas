@@ -1,3 +1,6 @@
+use std::collections::HashMap;
+
+use lightfx::Color;
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, PartialEq, Clone, Debug)]
@@ -45,4 +48,49 @@ impl GetSchema for () {
 
 pub trait GetEnumOptions {
     fn enum_options() -> Vec<EnumOption>;
+}
+
+#[derive(Serialize, Deserialize, PartialEq, Clone, Debug)]
+#[serde(untagged)]
+pub enum ParameterValue {
+    Number(f64),
+    Color(Color),
+    EnumOption(String),
+}
+
+#[cfg(feature = "yew")]
+impl yew::html::ImplicitClone for ParameterValue {}
+
+impl ParameterValue {
+    pub fn number(&self) -> Option<f64> {
+        if let Self::Number(n) = self {
+            Some(*n)
+        } else {
+            None
+        }
+    }
+
+    pub fn color(&self) -> Option<&Color> {
+        if let Self::Color(c) = self {
+            Some(c)
+        } else {
+            None
+        }
+    }
+
+    pub fn enum_option(&self) -> Option<&str> {
+        if let Self::EnumOption(s) = self {
+            Some(s)
+        } else {
+            None
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize, PartialEq, Clone, Debug)]
+pub struct Configuration {
+    pub id: String,
+    pub name: String,
+    pub schema: ConfigurationSchema,
+    pub values: HashMap<String, ParameterValue>,
 }

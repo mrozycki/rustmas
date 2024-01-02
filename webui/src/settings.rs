@@ -3,8 +3,7 @@ use std::collections::HashMap;
 use animation_api::schema::{ParameterSchema, ValueSchema};
 use itertools::Itertools;
 use log::error;
-use rustmas_webapi_client::{ParamsSchemaEntry, RustmasApiClient};
-use serde_json::json;
+use rustmas_webapi_client::{Configuration, ParameterValue, RustmasApiClient};
 use wasm_bindgen::JsCast;
 use web_sys::{
     DomRect, Event, FormData, HtmlDialogElement, HtmlFormElement, InputEvent, MouseEvent,
@@ -19,7 +18,7 @@ use crate::utils;
 
 #[derive(Default)]
 pub struct SettingsModal {
-    schema: Vec<ParamsSchemaEntry>,
+    schema: Vec<Configuration>,
     open_dummy: usize,
     modal_ref: NodeRef,
 }
@@ -37,7 +36,7 @@ pub enum Msg {
         form: Option<HtmlFormElement>,
         force: bool,
     },
-    SchemaLoaded(Vec<ParamsSchemaEntry>),
+    SchemaLoaded(Vec<Configuration>),
 }
 
 fn get_api(ctx: &Context<SettingsModal>) -> RustmasApiClient {
@@ -124,7 +123,7 @@ impl Component for SettingsModal {
                                 .map(|schema| {
                                     (
                                         schema.id.clone(),
-                                        serde_json::from_str::<serde_json::Value>(
+                                        serde_json::from_str::<ParameterValue>(
                                             &form_data
                                                 .get(&format!("{}.{}", evg.id, schema.id))
                                                 .as_string()
@@ -136,14 +135,7 @@ impl Component for SettingsModal {
                                 .collect::<HashMap<_, _>>(),
                         )
                     })
-                    .map(|(id, values)| {
-                        json!({
-                            "id": id,
-                            "values": values
-                        })
-                    })
-                    .collect_vec();
-                let params = serde_json::to_value(params).unwrap();
+                    .collect();
 
                 let api = get_api(ctx);
                 wasm_bindgen_futures::spawn_local(async move {
@@ -193,12 +185,13 @@ impl Component for SettingsModal {
                                         <h3>{ &evg.name }</h3>
                                         {
                                             evg.schema.parameters.iter().cloned().map(|schema| {
-                                                let value = evg.values.get(&schema.id).unwrap_or(&json!(())).clone();
+                                                let Some(value) = evg.values.get(&schema.id) else {
+                                                    return html!{};
+                                                };
                                                 let schema = ParameterSchema {
                                                     id: format!("{}.{}", evg.id, schema.id),
                                                     ..schema
                                                 };
-                                                error!("evg: {}, param: {}, value: {}", evg.name, &schema.id, value);
                                                 let dummy_update = 0;
                                                 match schema.value {
                                                     ValueSchema::Enum {..} => html!{<SelectParameterControl {schema} {value} {dummy_update} />},

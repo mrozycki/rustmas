@@ -459,6 +459,7 @@ dependencies = [
  "midi-msg",
  "serde",
  "serde_json",
+ "yew",
 ]
 
 [[package]]
@@ -4886,17 +4887,17 @@ dependencies = [
  "serde_json",
  "sqlx",
  "tokio",
+ "webapi-model",
 ]
 
 [[package]]
 name = "rustmas-webapi-client"
 version = "0.1.0"
 dependencies = [
- "animation-api 0.1.0",
  "reqwest",
  "serde",
- "serde_json",
  "url",
+ "webapi-model",
 ]
 
 [[package]]
@@ -6160,6 +6161,15 @@ checksum = "50c24a44ec86bb68fbecd1b3efed7e85ea5621b39b35ef2766b66cd984f8010f"
 dependencies = [
  "js-sys",
  "wasm-bindgen",
+]
+
+[[package]]
+name = "webapi-model"
+version = "0.1.0"
+dependencies = [
+ "animation-api 0.1.0",
+ "lightfx 0.1.0",
+ "serde",
 ]
 
 [[package]]

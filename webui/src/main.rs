@@ -11,7 +11,7 @@ mod dummy;
 use std::error::Error;
 
 use log::error;
-use rustmas_webapi_client::{AnimationEntry, ParamsSchemaEntry, RustmasApiClient};
+use rustmas_webapi_client::{Animation, Configuration, RustmasApiClient};
 use url::Url;
 use yew::prelude::*;
 
@@ -23,9 +23,9 @@ use crate::settings::SettingsModal;
 use crate::visualizer::Visualizer;
 
 enum Msg {
-    LoadedAnimations(Vec<AnimationEntry>),
+    LoadedAnimations(Vec<Animation>),
     SwitchAnimation(String),
-    LoadedParameters(Option<ParamsSchemaEntry>),
+    LoadedParameters(Option<Configuration>),
     ParametersDirty(bool),
     TurnOff,
     Discover,
@@ -36,8 +36,8 @@ enum Msg {
 #[derive(Default)]
 struct AnimationSelector {
     api: RustmasApiClient,
-    animations: Vec<AnimationEntry>,
-    parameters: Option<ParamsSchemaEntry>,
+    animations: Vec<Animation>,
+    parameters: Option<Configuration>,
     dirty: bool,
     modal_open_dummy: usize,
 }
@@ -104,7 +104,7 @@ impl Component for AnimationSelector {
                 let api = self.api.clone();
                 wasm_bindgen_futures::spawn_local(async move {
                     match api.switch_animation(animation_id).await {
-                        Ok(resp) => link.send_message(Msg::LoadedParameters(resp)),
+                        Ok(animation) => link.send_message(Msg::LoadedParameters(Some(animation))),
                         Err(e) => error!("Failed to switch animations, reason: {}", e),
                     }
                 });

@@ -6,9 +6,9 @@ pub(crate) mod speed_control;
 
 use std::{collections::HashMap, time::Duration};
 
-use animation_api::schema::{ConfigurationSchema, ParameterSchema, ValueSchema};
+use animation_api::schema::{Configuration, ConfigurationSchema, ParameterSchema, ValueSchema};
 use log::error;
-use rustmas_webapi_client::{ParamsSchemaEntry, RustmasApiClient};
+use rustmas_webapi_client::{ParameterValue, RustmasApiClient};
 use wasm_bindgen::JsCast;
 use web_sys::{
     Event, EventTarget, FocusEvent, FormData, HtmlFormElement, HtmlInputElement, HtmlSelectElement,
@@ -36,7 +36,7 @@ fn get_form(target: Option<EventTarget>) -> Option<HtmlFormElement> {
 #[derive(Properties, PartialEq, Clone)]
 pub struct ParameterControlProps {
     pub schema: ParameterSchema,
-    pub value: Option<serde_json::Value>,
+    pub value: Option<ParameterValue>,
     pub dummy_update: usize,
 }
 
@@ -49,8 +49,8 @@ pub struct ParameterControlList {
 pub struct ParameterControlListProps {
     pub name: String,
     pub schema: ConfigurationSchema,
-    pub values: HashMap<String, serde_json::Value>,
-    pub update_values: Callback<Option<ParamsSchemaEntry>>,
+    pub values: HashMap<String, ParameterValue>,
+    pub update_values: Callback<Option<Configuration>>,
     pub parameters_dirty: Callback<bool>,
 }
 
@@ -108,14 +108,13 @@ impl Component for ParameterControlList {
                     .map(|p| {
                         (
                             p.id.clone(),
-                            serde_json::from_str::<serde_json::Value>(
+                            serde_json::from_str::<ParameterValue>(
                                 &form_data.get(&p.id).as_string().unwrap(),
                             )
                             .unwrap(),
                         )
                     })
                     .collect::<HashMap<_, _>>();
-                let params = serde_json::to_value(params).unwrap();
 
                 ctx.props().parameters_dirty.emit(true);
                 wasm_bindgen_futures::spawn_local(async move {
@@ -129,7 +128,7 @@ impl Component for ParameterControlList {
                 let update_values = ctx.props().update_values.clone();
                 wasm_bindgen_futures::spawn_local(async move {
                     match api.reset_params().await {
-                        Ok(params) => update_values.emit(params),
+                        Ok(params) => update_values.emit(Some(params)),
                         Err(e) => error!("Failed to reset parameters, reason: {}", e),
                     }
                 });
@@ -142,7 +141,7 @@ impl Component for ParameterControlList {
                 let update_values = ctx.props().update_values.clone();
                 wasm_bindgen_futures::spawn_local(async move {
                     match api.reload_animation().await {
-                        Ok(params) => update_values.emit(params),
+                        Ok(params) => update_values.emit(Some(params)),
                         Err(e) => error!("Failed to reload animation, reason: {}", e),
                     }
                 });

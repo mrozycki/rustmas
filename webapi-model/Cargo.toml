@@ -1,18 +1,15 @@
 [package]
-name = "animation-api"
+name = "webapi-model"
 version = "0.1.0"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+animation-api = { path = "../animation-api" }
 lightfx = { path = "../lightfx" }
-
-midi-msg = "0.4.0"
-serde = { version = "1.0.152", features = ["derive"] }
-serde_json = "1.0.93"
-yew = { version = "0.19.0", optional = true }
+serde = { version = "1.0.193", features = ["derive"] }
 
 [features]
 default = []
-yew = ["dep:yew"]
+yew = ["animation-api/yew"]

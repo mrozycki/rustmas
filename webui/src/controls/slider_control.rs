@@ -62,7 +62,7 @@ impl Component for SliderParameterControl {
             .props()
             .value
             .as_ref()
-            .and_then(|v| v.as_f64())
+            .and_then(|v| v.number())
             .unwrap_or((max + min) / 2.0);
 
         html! {

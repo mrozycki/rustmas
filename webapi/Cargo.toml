@@ -6,6 +6,7 @@ edition = "2021"
 [dependencies]
 rustmas-animator = { path = "../animator", default-features = false }
 lightfx = { path = "../lightfx" }
+webapi-model = { path = "../webapi-model" }
 
 actix-web-actors = "4.2.0"
 actix = "0.13.0"

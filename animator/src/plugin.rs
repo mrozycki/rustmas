@@ -1,10 +1,14 @@
 use std::{
+    collections::HashMap,
     error::Error,
     path::PathBuf,
     process::{Command, Stdio},
 };
 
-use animation_api::{schema::ConfigurationSchema, AnimationError};
+use animation_api::{
+    schema::{Configuration, ConfigurationSchema, ParameterValue},
+    AnimationError,
+};
 use log::info;
 use serde::Deserialize;
 
@@ -102,13 +106,17 @@ pub enum AnimationPluginError {
 }
 
 pub trait Plugin {
-    fn config(&self) -> &PluginConfig;
+    fn plugin_config(&self) -> &PluginConfig;
+    fn configuration(&self) -> Result<Configuration, AnimationPluginError>;
     fn update(&mut self, time_delta: f64) -> Result<(), AnimationPluginError>;
     fn render(&self) -> Result<lightfx::Frame, AnimationPluginError>;
     fn animation_name(&self) -> Result<String, AnimationPluginError>;
     fn get_schema(&self) -> Result<ConfigurationSchema, AnimationPluginError>;
-    fn set_parameters(&mut self, params: serde_json::Value) -> Result<(), AnimationPluginError>;
-    fn get_parameters(&self) -> Result<serde_json::Value, AnimationPluginError>;
+    fn set_parameters(
+        &mut self,
+        params: &HashMap<String, ParameterValue>,
+    ) -> Result<(), AnimationPluginError>;
+    fn get_parameters(&self) -> Result<HashMap<String, ParameterValue>, AnimationPluginError>;
     fn get_fps(&self) -> Result<f64, AnimationPluginError>;
     fn send_event(&self, event: animation_api::event::Event) -> Result<(), AnimationPluginError>;
 }

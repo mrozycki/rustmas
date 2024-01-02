@@ -1,8 +1,8 @@
-use std::fmt;
+use std::{collections::HashMap, fmt};
 
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 
-use crate::schema::{ConfigurationSchema, GetSchema};
+use crate::schema::{ConfigurationSchema, GetSchema, ParameterValue};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct AnimationError {
@@ -52,13 +52,21 @@ pub trait Animation {
 #[derive(Serialize, Deserialize)]
 #[serde(tag = "method", content = "params")]
 pub enum JsonRpcMethod {
-    Initialize { points: Vec<(f64, f64, f64)> },
+    Initialize {
+        points: Vec<(f64, f64, f64)>,
+    },
     AnimationName,
     ParameterSchema,
-    SetParameters { params: serde_json::Value },
+    SetParameters {
+        params: HashMap<String, ParameterValue>,
+    },
     GetParameters,
     GetFps,
-    Update { time_delta: f64 },
-    OnEvent { event: crate::event::Event },
+    Update {
+        time_delta: f64,
+    },
+    OnEvent {
+        event: crate::event::Event,
+    },
     Render,
 }

@@ -1,4 +1,5 @@
 use std::{
+    collections::HashMap,
     ffi::OsStr,
     io::{BufRead, BufReader, BufWriter, Write},
     process::{Child, Command, Stdio},
@@ -7,8 +8,8 @@ use std::{
 };
 
 use animation_api::{
-    schema::ConfigurationSchema, AnimationError, JsonRpcMessage, JsonRpcMethod, JsonRpcResponse,
-    JsonRpcResult,
+    schema::{Configuration, ConfigurationSchema, ParameterValue},
+    AnimationError, JsonRpcMessage, JsonRpcMethod, JsonRpcResponse, JsonRpcResult,
 };
 use log::error;
 use serde::de::DeserializeOwned;
@@ -111,7 +112,7 @@ impl JsonRpcEndpoint {
 }
 
 pub struct JsonRpcPlugin {
-    config: PluginConfig,
+    plugin_config: PluginConfig,
     endpoint: JsonRpcEndpoint,
 }
 
@@ -125,7 +126,10 @@ impl JsonRpcPlugin {
             .map_err(|e| AnimationPluginError::CommunicationError(Box::new(e)))?;
 
         match endpoint.send_message::<()>(JsonRpcMethod::Initialize { points }) {
-            Ok(JsonRpcResult::Result(_)) => Ok(Self { endpoint, config }),
+            Ok(JsonRpcResult::Result(_)) => Ok(Self {
+                endpoint,
+                plugin_config: config,
+            }),
             Ok(JsonRpcResult::Error(e)) => Err(AnimationPluginError::AnimationError(e.data)),
             Err(e) => Err(AnimationPluginError::CommunicationError(Box::new(e))),
         }
@@ -133,8 +137,17 @@ impl JsonRpcPlugin {
 }
 
 impl Plugin for JsonRpcPlugin {
-    fn config(&self) -> &PluginConfig {
-        &self.config
+    fn plugin_config(&self) -> &PluginConfig {
+        &self.plugin_config
+    }
+
+    fn configuration(&self) -> Result<Configuration, AnimationPluginError> {
+        Ok(Configuration {
+            id: self.plugin_config().animation_id().to_owned(),
+            name: self.plugin_config().animation_name().to_owned(),
+            schema: self.get_schema()?,
+            values: self.get_parameters()?,
+        })
     }
 
     fn update(&mut self, time_delta: f64) -> Result<(), AnimationPluginError> {
@@ -172,18 +185,20 @@ impl Plugin for JsonRpcPlugin {
         }
     }
 
-    fn set_parameters(&mut self, params: serde_json::Value) -> Result<(), AnimationPluginError> {
-        match self
-            .endpoint
-            .send_message(JsonRpcMethod::SetParameters { params })
-        {
+    fn set_parameters(
+        &mut self,
+        params: &HashMap<String, ParameterValue>,
+    ) -> Result<(), AnimationPluginError> {
+        match self.endpoint.send_message(JsonRpcMethod::SetParameters {
+            params: params.clone(),
+        }) {
             Ok(JsonRpcResult::Result(())) => Ok(()),
             Ok(JsonRpcResult::Error(e)) => Err(AnimationPluginError::AnimationError(e.data)),
             Err(e) => Err(AnimationPluginError::CommunicationError(Box::new(e))),
         }
     }
 
-    fn get_parameters(&self) -> Result<serde_json::Value, AnimationPluginError> {
+    fn get_parameters(&self) -> Result<HashMap<String, ParameterValue>, AnimationPluginError> {
         match self.endpoint.send_message(JsonRpcMethod::GetParameters) {
             Ok(JsonRpcResult::Result(parameters)) => Ok(parameters),
             Ok(JsonRpcResult::Error(e)) => Err(AnimationPluginError::AnimationError(e.data)),

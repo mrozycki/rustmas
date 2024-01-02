@@ -4,6 +4,7 @@ use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
 
 use animation_api::event::Event;
+use animation_api::schema::{Configuration, ParameterValue};
 use chrono::{DateTime, Duration, Utc};
 use client::combined::{CombinedLightClient, CombinedLightClientBuilder};
 use events::beat_generator::BeatEventGenerator;
@@ -13,7 +14,6 @@ use events::midi_generator::MidiEventGenerator;
 use log::{info, warn};
 use rustmas_light_client as client;
 use rustmas_light_client::LightClientError;
-use serde_json::json;
 use thiserror::Error;
 use tokio::sync::mpsc;
 use tokio::task::JoinHandle;
@@ -32,6 +32,9 @@ pub enum ControllerError {
 
     #[error("animation factory error: {0}")]
     AnimationFactoryError(#[from] AnimationFactoryError),
+
+    #[error("no animation selected")]
+    NoAnimationSelected,
 }
 
 struct ControllerState {
@@ -40,6 +43,21 @@ struct ControllerState {
     next_frame: DateTime<Utc>,
     fps: f64,
     event_generators: HashMap<String, Box<dyn EventGenerator>>,
+}
+
+impl ControllerState {
+    fn set_animation(&mut self, animation: Option<JsonRpcPlugin>) -> Result<(), ControllerError> {
+        let now = Utc::now();
+        self.fps = animation
+            .as_ref()
+            .map(|a| a.get_fps())
+            .transpose()?
+            .unwrap_or_default();
+        self.last_frame = now;
+        self.next_frame = now;
+        self.animation = animation;
+        Ok(())
+    }
 }
 
 pub struct Controller {
@@ -85,7 +103,7 @@ impl Controller {
             .unwrap()
             .animation
             .as_ref()
-            .map(|animation| animation.config().clone())
+            .map(|animation| animation.plugin_config().clone())
     }
 
     fn start_generators(
@@ -188,53 +206,32 @@ impl Controller {
             .for_each(|(_, evg)| evg.restart());
     }
 
-    pub fn get_event_generator_parameters(&self) -> serde_json::Value {
+    pub fn get_event_generator_parameters(&self) -> Vec<Configuration> {
         self.state
             .lock()
             .unwrap()
             .event_generators
             .iter()
-            .map(|(id, evg)| {
-                json!({
-                    "id": id.clone(),
-                    "name": evg.get_name(),
-                    "schema": evg.get_schema(),
-                    "values": evg.get_parameters(),
-                })
+            .map(|(id, evg)| Configuration {
+                id: id.clone(),
+                name: evg.get_name().to_owned(),
+                schema: evg.get_schema(),
+                values: evg.get_parameters(),
             })
             .collect()
     }
 
     pub fn set_event_generator_parameters(
         &self,
-        values: serde_json::Value,
+        values: &HashMap<String, HashMap<String, ParameterValue>>,
     ) -> Result<(), ControllerError> {
         let mut state = self.state.lock().unwrap();
 
-        for parameters in values.as_array().unwrap_or(&Vec::new()) {
-            let Some(id) = parameters
-                .as_object()
-                .and_then(|p| p.get("id"))
-                .and_then(|p| p.as_str())
-            else {
-                warn!("No event generator id provided");
-                continue;
-            };
+        for (id, parameters) in values {
             let Some(evg) = state.event_generators.get_mut(id) else {
                 warn!("No such event generator: {}", id);
                 continue;
             };
-
-            let Some(parameters) = parameters.as_object().and_then(|o| o.get("values")) else {
-                warn!("No parameters provided for event generator: {}", id);
-                continue;
-            };
-
-            let parameters = serde_json::from_value(parameters.clone()).map_err(|e| {
-                ControllerError::InternalError {
-                    reason: e.to_string(),
-                }
-            })?;
 
             evg.set_parameters(parameters)
                 .map_err(|e| ControllerError::InternalError {
@@ -245,68 +242,59 @@ impl Controller {
         Ok(())
     }
 
-    pub fn reload_animation(&self) -> Result<(), ControllerError> {
+    pub fn reload_animation(&self) -> Result<Configuration, ControllerError> {
         let mut state = self.state.lock().unwrap();
-        let Some(id) = state.animation.as_ref().map(|a| a.config().animation_id()) else {
-            return Ok(());
+        let Some(id) = state
+            .animation
+            .as_ref()
+            .map(|a| a.plugin_config().animation_id())
+        else {
+            return Err(ControllerError::NoAnimationSelected);
         };
         info!("Reloading animation \"{}\"", id);
-        let new_animation = self.animation_factory.make(id)?;
-
-        let now = Utc::now();
-        state.fps = new_animation.get_fps()?;
-        state.last_frame = now;
-        state.next_frame = now;
-        state.animation = Some(new_animation);
-        Ok(())
+        let animation = self.animation_factory.make(id)?;
+        let configuration = animation.configuration()?;
+        state.set_animation(Some(animation))?;
+        Ok(configuration)
     }
 
-    pub fn switch_animation(&self, name: &str) -> Result<(), ControllerError> {
-        info!("Trying to switch animation to \"{}\"", name);
+    pub fn switch_animation(&self, animation_id: &str) -> Result<Configuration, ControllerError> {
+        info!("Trying to switch animation to \"{}\"", animation_id);
         let mut state = self.state.lock().unwrap();
-        let new_animation = self.animation_factory.make(name)?;
-
-        let now = Utc::now();
-        state.fps = new_animation.get_fps()?;
-        state.last_frame = now;
-        state.next_frame = now;
-        state.animation = Some(new_animation);
-        Ok(())
+        let animation = self.animation_factory.make(animation_id)?;
+        let configuration = animation.configuration()?;
+        state.set_animation(Some(animation))?;
+        Ok(configuration)
     }
 
     pub fn turn_off(&self) {
         info!("Turning off the animation");
-        let mut state = self.state.lock().unwrap();
-
-        let now = Utc::now();
-        state.fps = 0.0;
-        state.last_frame = now;
-        state.next_frame = now;
-        state.animation = None;
+        let _ = self.state.lock().unwrap().set_animation(None);
     }
 
-    pub fn get_parameters(&self) -> Result<serde_json::Value, ControllerError> {
-        if let Some(animation) = &self.state.lock().unwrap().animation {
-            Ok(json!({
-                "id": animation.config().animation_id(),
-                "name": animation.config().animation_name(),
-                "schema": animation.get_schema()?,
-                "values": animation.get_parameters()?,
-            }))
-        } else {
-            Ok(json!(()))
-        }
+    pub fn get_parameters(&self) -> Result<Option<Configuration>, ControllerError> {
+        Ok(self
+            .state
+            .lock()
+            .unwrap()
+            .animation
+            .as_ref()
+            .map(Plugin::configuration)
+            .transpose()?)
     }
 
-    pub fn get_parameter_values(&self) -> Result<serde_json::Value, ControllerError> {
+    pub fn get_parameter_values(&self) -> Result<HashMap<String, ParameterValue>, ControllerError> {
         if let Some(animation) = &self.state.lock().unwrap().animation {
             Ok(animation.get_parameters()?)
         } else {
-            Ok(json!(()))
+            Ok(HashMap::new())
         }
     }
 
-    pub fn set_parameters(&mut self, parameters: serde_json::Value) -> Result<(), ControllerError> {
+    pub fn set_parameters(
+        &mut self,
+        parameters: &HashMap<String, ParameterValue>,
+    ) -> Result<(), ControllerError> {
         let mut state = self.state.lock().unwrap();
         if let Some(ref mut animation) = state.animation {
             animation.set_parameters(parameters)?;
