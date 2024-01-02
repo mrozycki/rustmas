@@ -11,6 +11,7 @@ members = [
     "lightfx",
     "webapi",
     "webapi-client",
+    "webapi-model",
     "webui",
     "visualizer",
     "events",

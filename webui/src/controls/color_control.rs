@@ -54,9 +54,9 @@ impl Component for ColorParameterControl {
             let value = ctx
                 .props()
                 .value
-                .clone()
-                .and_then(|v| serde_json::from_value::<lightfx::Color>(v).ok())
-                .map(|v| lightfx::Color::to_hex_string(&v))
+                .as_ref()
+                .and_then(|v| v.color())
+                .map(lightfx::Color::to_hex_string)
                 .unwrap_or("#000000".to_owned());
             let value_hex = serde_json::to_string(&ctx.props().value).unwrap();
 

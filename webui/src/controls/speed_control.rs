@@ -74,7 +74,7 @@ impl Component for SpeedParameterControl {
                 .props()
                 .value
                 .as_ref()
-                .and_then(|v| v.as_f64())
+                .and_then(|v| v.number())
                 .unwrap_or(1.0);
 
             let raw = speed_to_raw(speed);

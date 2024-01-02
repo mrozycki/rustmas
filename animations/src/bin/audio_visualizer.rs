@@ -4,7 +4,7 @@ use animation_api::event::Event;
 use animation_api::Animation;
 use animation_utils::{
     decorators::{BrightnessControlled, SpeedControlled},
-    to_polar, Schema, EnumSchema,
+    to_polar, EnumSchema, Schema,
 };
 use lightfx::Color;
 use serde::{Deserialize, Serialize};

@@ -4,11 +4,10 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-animation-api = { path = "../animation-api" }
+webapi-model = { path = "../webapi-model", features = ["yew"] }
 
 reqwest = { version = "0.11.12", features = ["json"] }
-serde = { version = "1.0.193", features = ["derive"] }
-serde_json = "1.0.108"
+serde = "1.0.193"
 url = "2.5.0"
 
 [features]

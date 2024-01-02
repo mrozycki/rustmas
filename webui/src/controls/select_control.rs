@@ -28,7 +28,7 @@ impl Component for SelectParameterControl {
                 .props()
                 .value
                 .as_ref()
-                .and_then(|v| v.as_str())
+                .and_then(|v| v.enum_option())
                 .and_then(|v| values.iter().position(|opt| opt.value == v))
                 .unwrap_or(0);
 
