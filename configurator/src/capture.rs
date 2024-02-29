@@ -441,7 +441,7 @@ impl Capturer {
             .take(2)
             .map(|(key, group)| (key, group.collect_vec()))
             .collect_vec();
-        if !first_two_groups.get(0).unwrap().0 {
+        if !first_two_groups.first().unwrap().0 {
             // first group is not confident
             let extrapolation_vector = first_two_groups
                 .get(1)
