@@ -1,4 +1,5 @@
 /target
+/result
 **/captures
 
 *.csv
@@ -12,3 +13,5 @@ webui/dist
 
 .DS_Store
 .idea
+.vscode
+.direnv
