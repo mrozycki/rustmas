@@ -6,28 +6,22 @@ pub mod tcp;
 pub mod tty;
 pub mod udp;
 
-use std::{
-    fmt,
-    sync::{Mutex, MutexGuard},
-};
+use std::sync::{Mutex, MutexGuard};
 
 use async_trait::async_trait;
 use lightfx::{Color, Frame};
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, thiserror::Error)]
 pub enum LightClientError {
+    #[error("unlikely")]
     Unlikely, // inspired by https://github.com/bluez/bluez/blob/58e6ef54e672798e2621cae87356c66de14d011f/attrib/att.h#L61
+
+    #[error("connection to the light client lost: {reason}")]
     ConnectionLost { reason: String },
+
+    #[error("light client process exited")]
     ProcessExited,
 }
-
-impl fmt::Display for LightClientError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{:?}", self)
-    }
-}
-
-impl std::error::Error for LightClientError {}
 
 #[async_trait]
 pub trait LightClient {

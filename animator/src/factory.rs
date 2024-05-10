@@ -4,14 +4,13 @@ use std::{
 };
 
 use log::warn;
-use thiserror::Error;
 
 use crate::{
     jsonrpc::JsonRpcPlugin,
     plugin::{AnimationPluginError, PluginConfig, PluginConfigError},
 };
 
-#[derive(Debug, Error)]
+#[derive(Debug, thiserror::Error)]
 pub enum AnimationFactoryError {
     #[error("internal error: {reason}")]
     InternalError { reason: String },

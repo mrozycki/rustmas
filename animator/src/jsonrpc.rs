@@ -13,11 +13,10 @@ use animation_api::{
 };
 use log::error;
 use serde::de::DeserializeOwned;
-use thiserror::Error;
 
 use crate::plugin::{AnimationPluginError, Plugin, PluginConfig};
 
-#[derive(Debug, Error)]
+#[derive(Debug, thiserror::Error)]
 pub enum JsonRpcEndpointError {
     #[error("endpoint process exited")]
     ProcessExited,
