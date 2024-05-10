@@ -1,5 +1,4 @@
 use std::collections::HashMap;
-use std::fmt;
 
 use serde::{de::DeserializeOwned, Serialize};
 use url::Url;
@@ -13,20 +12,17 @@ use webapi_model::{
     SwitchAnimationResponse,
 };
 
-#[derive(Debug)]
+#[derive(Debug, thiserror::Error)]
 pub enum GatewayError {
-    RequestError { reason: String },
+    #[error("invalid request: {reason}")]
+    InvalidRequest { reason: String },
+
+    #[error("API returned an invalid response: {reason}")]
     InvalidResponse { reason: String },
+
+    #[error("API returned an error: {reason}")]
     ApiError { reason: String },
 }
-
-impl fmt::Display for GatewayError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{:?}", self)
-    }
-}
-
-impl std::error::Error for GatewayError {}
 
 type Result<T> = std::result::Result<T, GatewayError>;
 
@@ -52,7 +48,7 @@ impl RustmasApiClient {
         request
             .send()
             .await
-            .map_err(|e| GatewayError::RequestError {
+            .map_err(|e| GatewayError::InvalidRequest {
                 reason: e.to_string(),
             })?
             .json::<ApiResponse<T>>()

@@ -14,7 +14,6 @@ use events::midi_generator::MidiEventGenerator;
 use log::{info, warn};
 use rustmas_light_client as client;
 use rustmas_light_client::LightClientError;
-use thiserror::Error;
 use tokio::sync::mpsc;
 use tokio::task::JoinHandle;
 
@@ -22,7 +21,7 @@ use crate::factory::{AnimationFactory, AnimationFactoryError};
 use crate::jsonrpc::JsonRpcPlugin;
 use crate::plugin::{AnimationPluginError, Plugin, PluginConfig};
 
-#[derive(Debug, Error)]
+#[derive(Debug, thiserror::Error)]
 pub enum ControllerError {
     #[error("animation controller error: {reason}")]
     InternalError { reason: String },

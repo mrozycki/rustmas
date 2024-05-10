@@ -8,6 +8,7 @@ webapi-model = { path = "../webapi-model", features = ["yew"] }
 
 reqwest = { version = "0.11.12", features = ["json"] }
 serde = "1.0.193"
+thiserror = "1.0.60"
 url = "2.5.0"
 
 [features]

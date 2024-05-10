@@ -1,21 +1,14 @@
-use std::{collections::HashMap, fmt};
+use std::collections::HashMap;
 
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 
 use crate::schema::{ConfigurationSchema, GetSchema, ParameterValue};
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, thiserror::Error)]
+#[error("animation error: {message}")]
 pub struct AnimationError {
     pub message: String,
 }
-
-impl fmt::Display for AnimationError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "AnimationError: {}", self.message)
-    }
-}
-
-impl std::error::Error for AnimationError {}
 
 pub trait Animation {
     type Parameters: GetSchema + DeserializeOwned + Serialize + Default + Clone;
