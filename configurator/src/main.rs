@@ -1,7 +1,7 @@
 mod capture;
 mod cv;
 
-use std::error::Error;
+use std::{error::Error, path::PathBuf};
 
 use capture::{Capturer, WithConfidence};
 use clap::{arg, Parser, Subcommand};
@@ -10,6 +10,12 @@ use itertools::Itertools;
 use log::{debug, info};
 use nalgebra::Vector3;
 use rustmas_light_client as light_client;
+
+#[derive(Debug, thiserror::Error)]
+#[error("Configurator error: {message}")]
+pub struct ConfiguratorError {
+    pub message: String,
+}
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
@@ -20,6 +26,14 @@ struct Cli {
 
 #[derive(Subcommand, Debug)]
 enum Commands {
+    /// Get the difference of two pictures (mostly for demo purposes)
+    Difference {
+        #[arg(short, long, num_args = 2, value_name = "JPG_PATH")]
+        pictures: Vec<PathBuf>,
+        #[arg(short, long, default_value = std::env::current_dir().unwrap_or(".".into()).into_os_string())]
+        output_dir: PathBuf,
+    },
+
     /// Capture 3D coordinates of lights by measuring from 4 sides
     Capture {
         #[arg(short, long, default_value = "lights.csv")]
@@ -163,6 +177,31 @@ async fn main() -> Result<(), Box<dyn Error>> {
     let cli = Cli::parse();
 
     match cli.command {
+        Commands::Difference {
+            pictures,
+            output_dir,
+        } => {
+            // since num_args is set to 2, clap will make sure there are two paths provided
+            let before = cv::Picture::from_file(&pictures[0])?;
+            let after = cv::Picture::from_file(&pictures[1])?;
+
+            if !output_dir.exists() {
+                std::fs::create_dir_all(&output_dir)?;
+            }
+            if !output_dir.is_dir() {
+                Err(ConfiguratorError {
+                    message: "Wrong output dir!".to_owned(),
+                })?;
+            }
+
+            let coords = cv::find_light_from_diff_with_output(&before, &after, Some(output_dir))?;
+            println!(
+                "Found coords: x:{},y:{}, confidence: {}",
+                coords.inner.0, coords.inner.1, coords.confidence
+            );
+
+            Ok(())
+        }
         Commands::Capture {
             output,
             number_of_lights,
