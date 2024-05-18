@@ -2,7 +2,7 @@ use std::{
     error::Error,
     fmt::Write,
     io::{self, Read, Write as IoWrite},
-    path::Path,
+    path::{Path, PathBuf},
     thread,
     time::Duration,
 };
@@ -167,11 +167,17 @@ impl Capturer {
     ) -> Result<Vec<WithConfidence<Point2>>, Box<dyn Error>> {
         let mut coords = Vec::new();
         let timestamp = chrono::offset::Local::now().format("%FT%X");
-        let dir = format!("captures/{}", timestamp);
-        std::fs::create_dir_all(dir.as_str().to_owned() + "/img")?;
-        std::fs::create_dir_all(dir.as_str().to_owned() + "/img/on")?;
-        std::fs::create_dir_all(dir.as_str().to_owned() + "/img/off")?;
-        std::fs::create_dir_all(dir.as_str().to_owned() + "/img/marked")?;
+        let base_dir = PathBuf::from(format!("captures/{}", timestamp));
+        let on_dir = base_dir.join("img/on");
+        let off_dir = base_dir.join("img/off");
+        let marked_dir = base_dir.join("img/marked");
+
+        std::fs::create_dir_all(&base_dir)?;
+        if save_pictures {
+            std::fs::create_dir_all(&on_dir)?;
+            std::fs::create_dir_all(&off_dir)?;
+            std::fs::create_dir_all(&marked_dir)?;
+        }
 
         let pb = ProgressBar::new(self.number_of_lights as u64)
             .with_style(
@@ -194,7 +200,7 @@ impl Capturer {
             thread::sleep(Duration::from_millis(100));
             let base_picture = self.camera.capture()?;
             if save_pictures {
-                base_picture.save_to_file((format!("{}/img/off/{:03}.jpg", dir, i)).as_str())?;
+                base_picture.save_to_file(off_dir.with_file_name(format!("{:03}.jpg", i)))?;
             }
 
             let frame = self.single_light_on(i);
@@ -208,13 +214,9 @@ impl Capturer {
 
             let found_coords = cv::find_light_from_diff(&base_picture, &led_picture)?;
             if save_pictures {
-                led_picture.save_to_file((format!("{}/img/on/{:03}.jpg", dir, i)).as_str())?;
-                led_picture.mark(
-                    found_coords.inner.0,
-                    found_coords.inner.1,
-                    found_coords.confident(),
-                )?;
-                led_picture.save_to_file((format!("{}/img/marked/{:03}.jpg", dir, i)).as_str())?;
+                led_picture.save_to_file(on_dir.with_file_name(format!("{:03}.jpg", i)))?;
+                led_picture.mark(&found_coords)?;
+                led_picture.save_to_file(marked_dir.with_file_name(format!("{:03}.jpg", i)))?;
             }
             coords.push(found_coords);
         }
@@ -225,10 +227,13 @@ impl Capturer {
         thread::sleep(Duration::from_millis(100));
         let mut all_lights_picture = self.capture_with_retry();
         for point in &coords {
-            all_lights_picture.mark(point.inner.0, point.inner.1, point.confident())?;
+            all_lights_picture.mark(point)?;
         }
-        all_lights_picture.save_to_file(format!("{}/reference.jpg", dir).as_str())?;
-        Self::save_2d_coordinates(format!("{dir}/{perspective_name}.csv").as_str(), &coords)?;
+        all_lights_picture.save_to_file(base_dir.with_file_name("reference.jpg"))?;
+        Self::save_2d_coordinates(
+            base_dir.with_file_name(format!("{perspective_name}.csv")),
+            &coords,
+        )?;
 
         Ok(Self::normalize(Self::mark_outliers_by_distance(
             coords,
