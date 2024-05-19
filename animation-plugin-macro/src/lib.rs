@@ -75,11 +75,6 @@ pub fn plugin(_attr: TokenStream, item: TokenStream) -> TokenStream {
                             animation = Some(<#name>::create(points));
                             respond(message.id, ());
                         }
-                        JsonRpcMethod::AnimationName => {
-                            if let Some(animation) = animation.as_ref() {
-                                respond(message.id, animation.animation_name());
-                            }
-                        },
                         JsonRpcMethod::ParameterSchema => {
                             if let Some(animation) = animation.as_ref() {
                                 respond(message.id, animation.get_schema());

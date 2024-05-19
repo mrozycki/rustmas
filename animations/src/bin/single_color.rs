@@ -42,10 +42,6 @@ impl Animation for SingleColor {
         lightfx::Frame::new(self.points_count, self.parameters.color)
     }
 
-    fn animation_name(&self) -> &str {
-        "Single Color"
-    }
-
     fn get_fps(&self) -> f64 {
         30.0
     }

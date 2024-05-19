@@ -48,10 +48,6 @@ where
         self.animation.render()
     }
 
-    fn animation_name(&self) -> &str {
-        self.animation.animation_name()
-    }
-
     fn get_schema(&self) -> ConfigurationSchema {
         Self::Parameters::schema()
     }

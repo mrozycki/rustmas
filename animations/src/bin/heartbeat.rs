@@ -98,10 +98,6 @@ impl Animation for HeartBoom {
             .into()
     }
 
-    fn animation_name(&self) -> &str {
-        "Heartbeat"
-    }
-
     fn set_parameters(&mut self, parameters: Self::Parameters) {
         if parameters.state == Switch::Off {
             self.off_after = Some(self.time.ceil());

@@ -169,10 +169,6 @@ impl Animation for Lightspeed {
             .into()
     }
 
-    fn animation_name(&self) -> &str {
-        "Lightspeed"
-    }
-
     fn get_fps(&self) -> f64 {
         30.0
     }

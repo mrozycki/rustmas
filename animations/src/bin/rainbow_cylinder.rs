@@ -57,10 +57,6 @@ impl Animation for RainbowCylinder {
             .into()
     }
 
-    fn animation_name(&self) -> &str {
-        "Rainbow Cylinder"
-    }
-
     fn get_parameters(&self) -> Self::Parameters {
         self.parameters.clone()
     }

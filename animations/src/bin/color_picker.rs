@@ -34,10 +34,6 @@ impl Animation for ColorPicker {
         lightfx::Frame::new(self.points_count, self.parameters.color)
     }
 
-    fn animation_name(&self) -> &str {
-        "Testing: Color picker"
-    }
-
     fn get_fps(&self) -> f64 {
         0.0
     }

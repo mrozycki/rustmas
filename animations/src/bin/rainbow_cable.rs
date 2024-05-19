@@ -52,10 +52,6 @@ impl Animation for RainbowCable {
             .into()
     }
 
-    fn animation_name(&self) -> &str {
-        "Rainbow Cable"
-    }
-
     fn get_parameters(&self) -> Self::Parameters {
         self.parameters.clone()
     }

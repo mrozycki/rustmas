@@ -97,10 +97,6 @@ impl Animation for Stars {
             .into()
     }
 
-    fn animation_name(&self) -> &str {
-        "Stars"
-    }
-
     fn set_parameters(&mut self, parameters: Self::Parameters) {
         self.parameters = parameters;
         self.stars

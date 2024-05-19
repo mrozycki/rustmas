@@ -51,10 +51,6 @@ where
             .into()
     }
 
-    fn animation_name(&self) -> &str {
-        self.animation.animation_name()
-    }
-
     fn set_parameters(&mut self, parameters: Self::Parameters) {
         self.animation.set_parameters(parameters.inner.clone());
         self.parameters = parameters;

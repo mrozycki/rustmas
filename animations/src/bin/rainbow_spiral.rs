@@ -55,10 +55,6 @@ impl Animation for RainbowSpiral {
             .into()
     }
 
-    fn animation_name(&self) -> &str {
-        "Rainbow Spiral"
-    }
-
     fn get_parameters(&self) -> Self::Parameters {
         self.parameters.clone()
     }

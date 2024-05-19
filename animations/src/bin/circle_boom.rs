@@ -83,10 +83,6 @@ impl Animation for CircleBoom {
             .into()
     }
 
-    fn animation_name(&self) -> &str {
-        "Circle boom"
-    }
-
     fn set_parameters(&mut self, parameters: Self::Parameters) {
         self.parameters = parameters;
     }

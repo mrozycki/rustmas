@@ -51,10 +51,6 @@ impl Animation for EventTest {
             .into()
     }
 
-    fn animation_name(&self) -> &str {
-        "Event test"
-    }
-
     fn set_parameters(&mut self, parameters: Self::Parameters) {
         self.parameters = parameters;
     }
