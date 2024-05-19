@@ -16,16 +16,11 @@ jobs:
       - uses: actions/checkout@v3
       - name: Install Rust toolchain
         id: toolchain
-        uses: actions-rs/toolchain@v1
+        uses: dtolnay/rust-toolchain@1.74.1
         with:
-          toolchain: 1.74.1
-          profile: minimal
-          components: rustfmt
+          components: clippy, rustfmt
       - name: Check formatting
-        uses: actions-rs/cargo@v1
-        with:
-          command: fmt
-          args: --check
+        run: cargo fmt --check
       - name: Install dependencies
         run: sudo apt update && sudo apt install libopencv-dev libxinerama-dev libxcursor-dev xorg-dev libgl1 libgl1-mesa-dev libudev-dev clang libclang-dev libasound2-dev
       - name: Cache cargo dependencies
@@ -37,18 +32,10 @@ jobs:
             ~/.cargo/registry/cache/
             ~/.cargo/git/db/
             target/
-          key: ${{ runner.os }}-${{ hashFiles('**/Cargo.lock') }}-rust-${{ steps.toolchain.outputs.rustc_hash }}
+          key: ${{ runner.os }}-${{ hashFiles('**/Cargo.lock') }}-rust-${{ steps.toolchain.outputs.cachekey }}
       - name: Clippy
-        uses: actions-rs/cargo@v1
-        with:
-          command: clippy
+        run: cargo clippy
       - name: Clippy WebUI with visualizer enabled
-        uses: actions-rs/cargo@v1
-        with:
-          command: clippy
-          args: -p rustmas-webui --features visualizer
+        run: cargo clippy -p rustmas-webui --features visualizer
       - name: Test
-        uses: actions-rs/cargo@v1
-        with:
-          command: test
-          args: -p lightfx
+        run: cargo test -p lightfx
