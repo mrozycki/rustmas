@@ -85,10 +85,6 @@ impl Animation for BarberPole {
             .into()
     }
 
-    fn animation_name(&self) -> &str {
-        "Barber Pole"
-    }
-
     fn set_parameters(&mut self, parameters: Self::Parameters) {
         self.parameters = parameters;
     }

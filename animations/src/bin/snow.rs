@@ -91,10 +91,6 @@ impl Animation for Snow {
             .into()
     }
 
-    fn animation_name(&self) -> &str {
-        "Snow"
-    }
-
     fn set_parameters(&mut self, parameters: Self::Parameters) {
         self.parameters = parameters;
         self.centers

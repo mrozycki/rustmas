@@ -162,10 +162,6 @@ impl Animation for DoomFireAnimation {
             .into()
     }
 
-    fn animation_name(&self) -> &str {
-        "Doom fire"
-    }
-
     fn get_fps(&self) -> f64 {
         30.0
     }

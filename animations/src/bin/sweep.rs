@@ -99,10 +99,6 @@ impl Animation for Sweep {
             .into()
     }
 
-    fn animation_name(&self) -> &str {
-        "Sweep"
-    }
-
     fn set_parameters(&mut self, parameters: Self::Parameters) {
         self.parameters = parameters;
     }

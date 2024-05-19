@@ -217,10 +217,6 @@ impl Animation for Pillars {
             .into()
     }
 
-    fn animation_name(&self) -> &str {
-        "Random pillar"
-    }
-
     fn get_fps(&self) -> f64 {
         30.0
     }

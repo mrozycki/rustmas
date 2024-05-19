@@ -89,10 +89,6 @@ impl Animation for SpinningHalves {
             .into()
     }
 
-    fn animation_name(&self) -> &str {
-        "Spinning Halves"
-    }
-
     fn set_parameters(&mut self, parameters: Self::Parameters) {
         self.parameters = parameters;
     }

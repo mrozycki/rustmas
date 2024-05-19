@@ -119,10 +119,6 @@ impl Animation for AudioVisualizer {
             .into()
     }
 
-    fn animation_name(&self) -> &str {
-        "Audio Boom"
-    }
-
     fn set_parameters(&mut self, parameters: Self::Parameters) {
         self.parameters = parameters;
     }

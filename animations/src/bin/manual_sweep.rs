@@ -128,10 +128,6 @@ impl Animation for ManualSweep {
             .into()
     }
 
-    fn animation_name(&self) -> &str {
-        "Testing: Manual sweep"
-    }
-
     fn get_fps(&self) -> f64 {
         0.0
     }

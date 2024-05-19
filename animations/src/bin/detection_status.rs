@@ -39,10 +39,6 @@ impl Animation for DetectionStatus {
             .into()
     }
 
-    fn animation_name(&self) -> &str {
-        "Testing: Detection Status"
-    }
-
     fn get_fps(&self) -> f64 {
         0.0
     }

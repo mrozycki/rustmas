@@ -125,10 +125,6 @@ impl Animation for CircleGrid {
             .into()
     }
 
-    fn animation_name(&self) -> &str {
-        "Circle grid"
-    }
-
     fn set_parameters(&mut self, parameters: Self::Parameters) {
         self.parameters = parameters;
     }

@@ -61,10 +61,6 @@ impl Animation for Indexing {
             .into()
     }
 
-    fn animation_name(&self) -> &str {
-        "Testing: Indexing"
-    }
-
     fn get_fps(&self) -> f64 {
         0.0
     }

@@ -108,10 +108,6 @@ impl Animation for MidiWaveAnimation {
             .into()
     }
 
-    fn animation_name(&self) -> &str {
-        "MIDI Wave"
-    }
-
     fn get_fps(&self) -> f64 {
         30.0
     }

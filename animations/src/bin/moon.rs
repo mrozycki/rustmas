@@ -105,10 +105,6 @@ impl Animation for Moon {
             .into()
     }
 
-    fn animation_name(&self) -> &str {
-        "Moon"
-    }
-
     fn set_parameters(&mut self, parameters: Self::Parameters) {
         self.noise.set_frequency(parameters.noise_frequency as f32);
         self.parameters = parameters;

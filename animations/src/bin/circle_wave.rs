@@ -99,10 +99,6 @@ impl Animation for CircleWave {
             .into()
     }
 
-    fn animation_name(&self) -> &str {
-        "Circle Wave"
-    }
-
     fn set_parameters(&mut self, parameters: Self::Parameters) {
         if parameters.state == Switch::Off {
             self.off_after = Some(self.time.ceil() - 0.25);

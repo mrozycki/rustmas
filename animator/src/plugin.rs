@@ -110,7 +110,6 @@ pub trait Plugin {
     fn configuration(&self) -> Result<Configuration, AnimationPluginError>;
     fn update(&mut self, time_delta: f64) -> Result<(), AnimationPluginError>;
     fn render(&self) -> Result<lightfx::Frame, AnimationPluginError>;
-    fn animation_name(&self) -> Result<String, AnimationPluginError>;
     fn get_schema(&self) -> Result<ConfigurationSchema, AnimationPluginError>;
     fn set_parameters(
         &mut self,

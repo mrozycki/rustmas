@@ -30,10 +30,6 @@ impl Animation for Check {
         lightfx::Frame::new_black(self.points_count).with_pixel(index, lightfx::Color::white())
     }
 
-    fn animation_name(&self) -> &str {
-        "Testing: Check Lights"
-    }
-
     fn get_fps(&self) -> f64 {
         8.0
     }

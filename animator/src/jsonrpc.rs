@@ -168,14 +168,6 @@ impl Plugin for JsonRpcPlugin {
         }
     }
 
-    fn animation_name(&self) -> Result<String, AnimationPluginError> {
-        match self.endpoint.send_message(JsonRpcMethod::AnimationName) {
-            Ok(JsonRpcResult::Result(name)) => Ok(name),
-            Ok(JsonRpcResult::Error(e)) => Err(AnimationPluginError::AnimationError(e.data)),
-            Err(e) => Err(AnimationPluginError::CommunicationError(Box::new(e))),
-        }
-    }
-
     fn get_schema(&self) -> Result<ConfigurationSchema, AnimationPluginError> {
         match self.endpoint.send_message(JsonRpcMethod::ParameterSchema) {
             Ok(JsonRpcResult::Result(schema)) => Ok(schema),

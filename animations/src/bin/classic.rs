@@ -103,10 +103,6 @@ impl Animation for Classic {
             .into()
     }
 
-    fn animation_name(&self) -> &str {
-        "Classic"
-    }
-
     fn get_fps(&self) -> f64 {
         30.0
     }

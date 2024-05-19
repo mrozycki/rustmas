@@ -69,10 +69,6 @@ impl Animation for RainbowSphere {
             .into()
     }
 
-    fn animation_name(&self) -> &str {
-        "Rainbow Sphere"
-    }
-
     fn set_parameters(&mut self, parameters: Parameters) {
         self.parameters = parameters;
         self.reset();

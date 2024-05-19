@@ -70,10 +70,6 @@ impl Animation for RainbowWaterfall {
             .into()
     }
 
-    fn animation_name(&self) -> &str {
-        "Waterfall"
-    }
-
     fn set_parameters(&mut self, parameters: Self::Parameters) {
         self.parameters = parameters;
     }

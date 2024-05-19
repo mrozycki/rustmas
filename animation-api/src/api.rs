@@ -13,8 +13,6 @@ pub struct AnimationError {
 pub trait Animation {
     type Parameters: GetSchema + DeserializeOwned + Serialize + Default + Clone;
 
-    fn animation_name(&self) -> &str;
-
     fn get_schema(&self) -> ConfigurationSchema
     where
         Self::Parameters: GetSchema,
@@ -48,7 +46,6 @@ pub enum JsonRpcMethod {
     Initialize {
         points: Vec<(f64, f64, f64)>,
     },
-    AnimationName,
     ParameterSchema,
     SetParameters {
         params: HashMap<String, ParameterValue>,
