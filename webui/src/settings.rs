@@ -168,7 +168,7 @@ pub fn settings_modal(props: &Props) -> Html {
                                                     id: format!("{}.{}", evg.id, schema.id),
                                                     ..schema
                                                 };
-                                                html!{ <ParameterControl {schema} {value} dummy_update=0 /> }
+                                                html!{ <ParameterControl {schema} value={value.clone()} dummy_update=0 /> }
                                             }).collect::<Html>()
                                         }
                                     </>

@@ -1,5 +1,5 @@
 use animation_api::schema::ValueSchema;
-use yew::html;
+use yew::{html, Html};
 
 use crate::controls::{
     color_control::ColorParameterControl, select_control::SelectParameterControl,

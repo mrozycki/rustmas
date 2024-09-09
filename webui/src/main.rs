@@ -223,7 +223,6 @@ pub fn animation_selector() -> Html {
                     </ul>
                 </nav>
                 {
-                    #[expect(clippy::let_unit_value)]
                     if window_width() > 640 {
                         html!(<Visualizer />)
                     } else {
@@ -258,7 +257,7 @@ pub fn animation_selector() -> Html {
 
 fn main() -> Result<(), Box<dyn Error>> {
     wasm_logger::init(wasm_logger::Config::new(log::Level::Error));
-    yew::start_app::<AnimationSelector>();
+    yew::Renderer::<AnimationSelector>::new().render();
 
     Ok(())
 }
