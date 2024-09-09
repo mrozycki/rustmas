@@ -4,7 +4,7 @@ use animation_api::schema::ConfigurationSchema;
 use log::error;
 use rustmas_webapi_client::{Configuration, ParameterValue, RustmasApiClient};
 use web_sys::{FormData, HtmlFormElement};
-use yew::{html, Callback, Event, FocusEvent, Html, InputEvent, Properties};
+use yew::{html, Callback, Event, Html, InputEvent, Properties, SubmitEvent};
 
 use crate::{
     controls::{debouncer::Debouncer, parameter_control::ParameterControl},
@@ -46,7 +46,7 @@ pub fn parameter_control_list(props: &ParameterControlListProps) -> Html {
     let save_changes = Callback::from({
         let api = api.clone();
         let parameters_dirty = props.parameters_dirty.clone();
-        move |event: FocusEvent| {
+        move |event: SubmitEvent| {
             event.prevent_default();
 
             let api = api.clone();
