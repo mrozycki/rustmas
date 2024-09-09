@@ -63,11 +63,11 @@ impl RustmasApiClient {
     }
 
     async fn post<T: DeserializeOwned>(&self, path: &str, req: &impl Serialize) -> Result<T> {
-        Self::send_request::<T>(self.client.post(&self.url(path)).json(req)).await
+        Self::send_request::<T>(self.client.post(self.url(path)).json(req)).await
     }
 
     async fn get<T: DeserializeOwned>(&self, path: &str) -> Result<T> {
-        Self::send_request::<T>(self.client.get(&self.url(path))).await
+        Self::send_request::<T>(self.client.get(self.url(path))).await
     }
 
     #[cfg(feature = "visualizer")]

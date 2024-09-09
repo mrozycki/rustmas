@@ -32,10 +32,7 @@ pub enum Msg {
     Open,
     Close,
     Click(MouseEvent),
-    ValuesChanged {
-        form: Option<HtmlFormElement>,
-        force: bool,
-    },
+    ValuesChanged { form: Option<HtmlFormElement> },
     SchemaLoaded(Vec<Configuration>),
 }
 
@@ -109,7 +106,7 @@ impl Component for SettingsModal {
 
                 false
             }
-            Msg::ValuesChanged { form, .. } => {
+            Msg::ValuesChanged { form } => {
                 let form_data = FormData::new_with_form(&form.unwrap()).unwrap();
                 let params = self
                     .schema
@@ -170,10 +167,10 @@ impl Component for SettingsModal {
                 </header>
                 <form
                     oninput={ctx.link().callback(|e: InputEvent| {
-                        Msg::ValuesChanged { form: utils::get_form(e.target()), force: false }
+                        Msg::ValuesChanged { form: utils::get_form(e.target()) }
                     })}
                     onchange={ctx.link().callback(|e: Event| {
-                        Msg::ValuesChanged { form: utils::get_form(e.target()), force: true }
+                        Msg::ValuesChanged { form: utils::get_form(e.target()) }
                     })}>
                     {
                         self.schema.iter().map(|evg| {

@@ -46,8 +46,8 @@ impl Color {
         } else {
             hue.fract()
         };
-        let s = saturation.max(0.0).min(1.0);
-        let v = value.max(0.0).min(1.0);
+        let s = saturation.clamp(0.0, 1.0);
+        let v = value.clamp(0.0, 1.0);
 
         let c = v * s;
         let x = c * (1.0 - ((h * 6.0) % 2.0 - 1.0).abs());
@@ -97,9 +97,9 @@ impl Color {
         };
 
         Self {
-            r: r.min(255.0).max(0.0) as u8,
-            g: g.min(255.0).max(0.0) as u8,
-            b: b.min(255.0).max(0.0) as u8,
+            r: r.clamp(0.0, 255.0) as u8,
+            g: g.clamp(0.0, 255.0) as u8,
+            b: b.clamp(0.0, 255.0) as u8,
         }
     }
 
@@ -108,7 +108,7 @@ impl Color {
     ///
     /// In case of an invalid hex code, the function will return `None`.
     pub fn from_hex_str(code: &str) -> Option<Self> {
-        let code = code.trim_start_matches(|c| c == '#');
+        let code = code.trim_start_matches('#');
         let (r, g, b) = match code.len() {
             6 => match u32::from_str_radix(code, 16) {
                 Ok(x) => ((x & 0xFF0000) >> 16, (x & 0x00FF00) >> 8, x & 0x0000FF),
@@ -148,7 +148,7 @@ impl Color {
     /// to be in the range [0.0, 1.0]. Values outside of this range will be
     /// truncated.
     pub fn dim(self, factor: f64) -> Self {
-        let factor = factor.max(0.0).min(1.0);
+        let factor = factor.clamp(0.0, 1.0);
         let dim_component = |c| ((c as f64) * factor) as u8;
         Self {
             r: dim_component(self.r),
