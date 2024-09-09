@@ -30,7 +30,7 @@ pub fn pan_orbit_camera(
     // windows: Res<Windows>,
     mut ev_motion: EventReader<MouseMotion>,
     mut ev_scroll: EventReader<MouseWheel>,
-    input_mouse: Res<Input<MouseButton>>,
+    input_mouse: Res<ButtonInput<MouseButton>>,
     mut query: Query<(
         &mut PanOrbitCamera,
         &mut FogSettings,
