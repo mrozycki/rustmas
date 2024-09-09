@@ -30,7 +30,7 @@ fn add_lights(
                 PbrBundle {
                     mesh: mesh.clone(),
                     material: materials.add(StandardMaterial {
-                        base_color: Color::rgb(0.7, 0.7, 0.7),
+                        base_color: Color::srgb(0.7, 0.7, 0.7),
                         ..default()
                     }),
                     transform: Transform::from_xyz(*x, *y, -z),
@@ -47,7 +47,7 @@ fn add_lights(
 pub fn run(frames_endpoint: Url, points: Vec<(f32, f32, f32)>) {
     App::new()
         .insert_resource(Msaa::Off)
-        .insert_resource(ClearColor(Color::rgb(0.0, 0.0, 0.0)))
+        .insert_resource(ClearColor(Color::srgb(0.0, 0.0, 0.0)))
         .insert_resource(Points(points))
         .add_plugins(DefaultPlugins.set(WindowPlugin {
             primary_window: Some(Window {

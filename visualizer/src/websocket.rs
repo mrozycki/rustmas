@@ -54,8 +54,11 @@ fn listen_for_frame(
     if let Some(frame) = last_frame {
         let colors: Vec<_> = frame.into_iter().tuples::<(u8, u8, u8)>().collect();
         for (material, led) in query.iter() {
-            if let Some(color) = colors.get(led.0).map(|(r, g, b)| Color::rgb_u8(*r, *g, *b)) {
-                materials.get_mut(material).unwrap().emissive = color;
+            if let Some(color) = colors
+                .get(led.0)
+                .map(|(r, g, b)| Color::srgb_u8(*r, *g, *b))
+            {
+                materials.get_mut(material).unwrap().emissive = color.into();
             };
         }
     }

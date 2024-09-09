@@ -14,7 +14,7 @@ serde_json = "1.0.108"
 url = "2.5.0"
 
 [dependencies.bevy]
-version = "0.13.0"
+version = "0.14.0"
 default-features = false
 features = [
     "bevy_asset",
