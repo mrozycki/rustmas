@@ -162,7 +162,7 @@ impl Component for AnimationSelector {
         }
     }
 
-    #[allow(clippy::let_unit_value)]
+    #[expect(clippy::let_unit_value)]
     fn view(&self, ctx: &Context<Self>) -> Html {
         let link = ctx.link();
         let animations = self.animations.clone();
