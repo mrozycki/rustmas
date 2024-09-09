@@ -8,8 +8,7 @@ use pan_orbit_camera::{pan_orbit_camera, spawn_camera};
 use url::Url;
 
 /// this component indicates what entities are LEDs
-#[derive(Component, bevy::reflect::TypeUuid)]
-#[uuid = "1F6B746C-C703-47AC-A70D-F531096220E8"]
+#[derive(Component, bevy::reflect::TypePath)]
 struct Led(usize);
 
 struct Points(Vec<(f32, f32, f32)>);
@@ -21,10 +20,7 @@ fn add_lights(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
-    let mesh: Handle<Mesh> = meshes.add(Mesh::from(shape::UVSphere {
-        radius: 0.025,
-        ..Default::default()
-    }));
+    let mesh: Handle<Mesh> = meshes.add(Sphere::new(0.025));
     let leds = points
         .0
         .iter()
@@ -58,7 +54,6 @@ pub fn run(frames_endpoint: Url, points: Vec<(f32, f32, f32)>) {
                 title: "Rustmas Visualizer".to_string(),
                 present_mode: PresentMode::AutoNoVsync,
                 canvas: Some("#visualizer".into()),
-                fit_canvas_to_parent: true,
                 ..default()
             }),
             ..default()
