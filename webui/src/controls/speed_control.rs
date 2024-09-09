@@ -1,21 +1,10 @@
 use animation_api::schema::{ParameterSchema, ValueSchema};
 use web_sys::HtmlInputElement;
-use yew::{html, Component, Context, Html, NodeRef};
+use yew::{html, Callback};
 
 use super::ParameterControlProps;
 
 const MAX_SPEED: f64 = 5.0;
-
-#[derive(Default)]
-pub struct SpeedParameterControl {
-    slider_ref: NodeRef,
-    value_display_ref: NodeRef,
-    hidden_ref: NodeRef,
-}
-
-pub enum Msg {
-    InputChange,
-}
 
 fn raw_to_speed(raw: f64) -> f64 {
     if raw.abs() > 1.0 {
@@ -33,65 +22,66 @@ fn speed_to_raw(speed: f64) -> f64 {
     }
 }
 
-impl Component for SpeedParameterControl {
-    type Message = Msg;
-    type Properties = ParameterControlProps;
+#[yew::function_component(SpeedParameterControl)]
+pub fn speed_parameter_control(props: &ParameterControlProps) -> Html {
+    let slider_ref = yew::use_node_ref();
+    let value_display_ref = yew::use_node_ref();
+    let hidden_ref = yew::use_node_ref();
 
-    fn create(_ctx: &Context<Self>) -> Self {
-        Default::default()
-    }
-
-    fn update(&mut self, _ctx: &Context<Self>, msg: Self::Message) -> bool {
-        match msg {
-            Msg::InputChange => {
-                let input = self.slider_ref.cast::<HtmlInputElement>().unwrap();
-                let raw = input.value().parse::<f64>().unwrap_or(1.0);
-
-                let speed = raw_to_speed(raw);
-
-                self.value_display_ref
-                    .cast::<HtmlInputElement>()
-                    .unwrap()
-                    .set_value(&format!("{:.2}x", speed));
-                self.hidden_ref
-                    .cast::<HtmlInputElement>()
-                    .unwrap()
-                    .set_value(&speed.to_string());
-                false
-            }
-        }
-    }
-
-    fn view(&self, ctx: &Context<Self>) -> Html {
-        if let ParameterSchema {
-            id,
-            value: ValueSchema::Speed,
-            ..
-        } = ctx.props().schema.clone()
-        {
-            let link = ctx.link();
-            let speed = ctx
-                .props()
-                .value
-                .as_ref()
-                .and_then(|v| v.number())
+    let oninput: Callback<_> = Callback::from({
+        let slider_ref = slider_ref.clone();
+        let value_display_ref = value_display_ref.clone();
+        let hidden_ref = hidden_ref.clone();
+        move |_| {
+            let speed = slider_ref
+                .cast::<HtmlInputElement>()
+                .unwrap()
+                .value()
+                .parse::<f64>()
+                .map(raw_to_speed)
                 .unwrap_or(1.0);
 
-            let raw = speed_to_raw(speed);
-
-            html! {
-                <div class="slider-control">
-                    <input
-                        type="range" min="-2.0" max="2.0" step="0.05"
-                        ref={self.slider_ref.clone()}
-                        oninput={link.callback(|_| Msg::InputChange)}
-                        value={raw.to_string()} />
-                    <input type="text" ref={self.value_display_ref.clone()} value={format!("{:.2}x", speed)} disabled=true class="value-display" />
-                    <input name={id} type="hidden" ref={self.hidden_ref.clone()} value={speed.to_string()} />
-                </div>
-            }
-        } else {
-            html!()
+            value_display_ref
+                .cast::<HtmlInputElement>()
+                .unwrap()
+                .set_value(&format!("{:.2}x", speed));
+            hidden_ref
+                .cast::<HtmlInputElement>()
+                .unwrap()
+                .set_value(&speed.to_string());
         }
+    });
+
+    if let ParameterSchema {
+        id,
+        value: ValueSchema::Speed,
+        ..
+    } = &props.schema
+    {
+        let speed = props.value.as_ref().and_then(|v| v.number()).unwrap_or(1.0);
+        let raw = speed_to_raw(speed);
+
+        html! {
+            <div class="slider-control">
+                <input
+                    ref={slider_ref}
+                    type="range" min="-2.0" max="2.0" step="0.05"
+                    value={raw.to_string()}
+                    {oninput} />
+                <input
+                    ref={value_display_ref}
+                    type="text"
+                    value={format!("{:.2}x", speed)}
+                    disabled=true
+                    class="value-display" />
+                <input
+                    ref={hidden_ref}
+                    name={id.clone()}
+                    type="hidden"
+                    value={speed.to_string()} />
+            </div>
+        }
+    } else {
+        html!()
     }
 }

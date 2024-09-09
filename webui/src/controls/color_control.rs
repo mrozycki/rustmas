@@ -1,73 +1,51 @@
 use animation_api::schema::{ParameterSchema, ValueSchema};
 use web_sys::HtmlInputElement;
-use yew::{html, Component, Context, Html, NodeRef};
+use yew::{html, Callback};
 
 use super::ParameterControlProps;
 
-#[derive(Default)]
-pub struct ColorInput {}
+#[yew::function_component(ColorParameterControl)]
+pub fn color_parameter_control(props: &ParameterControlProps) -> Html {
+    let input_ref = yew::use_node_ref();
+    let hidden_ref = yew::use_node_ref();
 
-#[derive(Default)]
-pub struct ColorParameterControl {
-    node_ref: NodeRef,
-    hidden_ref: NodeRef,
-}
-
-pub enum Msg {
-    ValueChanged,
-}
-
-impl Component for ColorParameterControl {
-    type Message = Msg;
-    type Properties = ParameterControlProps;
-
-    fn create(_ctx: &Context<Self>) -> Self {
-        Default::default()
-    }
-
-    fn update(&mut self, _ctx: &Context<Self>, msg: Self::Message) -> bool {
-        match msg {
-            Msg::ValueChanged => {
-                if let (Some(node), Some(hidden)) = (
-                    self.node_ref.cast::<HtmlInputElement>(),
-                    self.hidden_ref.cast::<HtmlInputElement>(),
-                ) {
-                    hidden.set_value(
-                        &serde_json::to_string(
-                            &lightfx::Color::from_hex_str(&node.value()).unwrap(),
-                        )
+    let onchange = Callback::from({
+        let input_ref = input_ref.clone();
+        let hidden_ref = hidden_ref.clone();
+        move |_| {
+            if let (Some(node), Some(hidden)) = (
+                input_ref.cast::<HtmlInputElement>(),
+                hidden_ref.cast::<HtmlInputElement>(),
+            ) {
+                hidden.set_value(
+                    &serde_json::to_string(&lightfx::Color::from_hex_str(&node.value()).unwrap())
                         .unwrap(),
-                    );
-                };
-                false
-            }
+                );
+            };
         }
-    }
+    });
 
-    fn view(&self, ctx: &Context<Self>) -> Html {
-        if let ParameterSchema {
-            id,
-            value: ValueSchema::Color,
-            ..
-        } = ctx.props().schema.clone()
-        {
-            let value = ctx
-                .props()
-                .value
-                .as_ref()
-                .and_then(|v| v.color())
-                .map(lightfx::Color::to_hex_string)
-                .unwrap_or("#000000".to_owned());
-            let value_hex = serde_json::to_string(&ctx.props().value).unwrap();
+    if let ParameterSchema {
+        id,
+        value: ValueSchema::Color,
+        ..
+    } = &props.schema
+    {
+        let value = props
+            .value
+            .as_ref()
+            .and_then(|v| v.color())
+            .map(lightfx::Color::to_hex_string)
+            .unwrap_or("#000000".to_owned());
+        let value_hex = serde_json::to_string(&props.value).unwrap();
 
-            html! {
-                <>
-                    <input type="color" ref={self.node_ref.clone()} onchange={ctx.link().callback(|_| Msg::ValueChanged)} {value} list="warmWhites" />
-                    <input name={id} type="hidden" ref={self.hidden_ref.clone()} value={value_hex}/>
-                </>
-            }
-        } else {
-            html!()
+        html! {
+            <>
+                <input type="color" ref={input_ref} {onchange} {value} list="warmWhites" />
+                <input name={id.clone()} type="hidden" ref={hidden_ref} value={value_hex}/>
+            </>
         }
+    } else {
+        html!()
     }
 }

@@ -40,12 +40,6 @@ Once everything is set up, you can start the WebAPI by simply running:
 cargo run --release -p rustmas-webapi
 ```
 
-If you want to use the visualizer, you can start it once the WebAPI is running.
-
-```
-cargo run --release -p rustmas-visualizer
-```
-
 ### Running WebUI
 
 Once the WebAPI is running, you can start WebUI using [trunk](https://trunkrs.dev/).
