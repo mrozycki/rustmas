@@ -28,7 +28,7 @@ web-sys = { version = "0.3.60", features = [
     "HtmlDialogElement",
     "Screen",
 ] }
-yew = { version = "0.20", features = ["csr"] }
+yew = { version = "0.21", features = ["csr"] }
 url = "2.5.0"
 itertools = "0.12.0"
 
