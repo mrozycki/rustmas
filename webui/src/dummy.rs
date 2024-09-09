@@ -1,21 +1,6 @@
-use yew::{html, prelude::Html, Component, Context};
+use yew::html;
 
-#[derive(Default)]
-pub struct Dummy {}
-
-impl Component for Dummy {
-    type Message = ();
-    type Properties = ();
-
-    fn create(_ctx: &Context<Self>) -> Self {
-        Default::default()
-    }
-
-    fn update(&mut self, _ctx: &Context<Self>, _msg: Self::Message) -> bool {
-        false
-    }
-
-    fn view(&self, _ctx: &Context<Self>) -> Html {
-        html!()
-    }
+#[yew::function_component(Dummy)]
+pub fn dummy() -> Html {
+    html!()
 }

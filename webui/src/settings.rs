@@ -1,179 +1,158 @@
 use std::collections::HashMap;
 
-use animation_api::schema::{ParameterSchema, ValueSchema};
-use itertools::Itertools;
+use animation_api::schema::ParameterSchema;
 use log::error;
 use rustmas_webapi_client::{Configuration, ParameterValue, RustmasApiClient};
 use wasm_bindgen::JsCast;
-use web_sys::{
-    DomRect, Event, FormData, HtmlDialogElement, HtmlFormElement, InputEvent, MouseEvent,
-};
-use yew::{html, prelude::Html, Callback, Component, Context, NodeRef, Properties};
+use web_sys::{DomRect, Event, FormData, HtmlDialogElement, InputEvent, MouseEvent};
+use yew::{html, prelude::Html, Callback, Properties};
 
-use crate::controls::color_control::ColorParameterControl;
-use crate::controls::select_control::SelectParameterControl;
-use crate::controls::slider_control::SliderParameterControl;
-use crate::controls::speed_control::SpeedParameterControl;
+use crate::controls::ParameterControl;
 use crate::utils;
-
-#[derive(Default)]
-pub struct SettingsModal {
-    schema: Vec<Configuration>,
-    open_dummy: usize,
-    modal_ref: NodeRef,
-}
 
 #[derive(Clone, PartialEq, Properties)]
 pub struct Props {
     pub open_dummy: usize,
 }
 
-pub enum Msg {
-    Open,
-    Close,
-    Click(MouseEvent),
-    ValuesChanged { form: Option<HtmlFormElement> },
-    SchemaLoaded(Vec<Configuration>),
-}
+#[yew::function_component(SettingsModal)]
+pub fn settings_modal(props: &Props) -> Html {
+    let api = yew::use_context::<RustmasApiClient>().expect("gateway to be open");
+    let schema = yew::use_state::<Option<Vec<Configuration>>, _>(|| None);
+    let open_dummy = yew::use_mut_ref(|| 0);
+    let modal_ref = yew::use_node_ref();
 
-fn get_api(ctx: &Context<SettingsModal>) -> RustmasApiClient {
-    ctx.link()
-        .context::<RustmasApiClient>(Callback::noop())
-        .expect("gateway to be created")
-        .0
-}
+    let open_modal = {
+        let api = api.clone();
+        let modal_ref = modal_ref.clone();
+        let schema = schema.clone();
+        let props_open_dummy = props.open_dummy;
+        let open_dummy = open_dummy.clone();
 
-fn outside(click: &MouseEvent, rect: &DomRect) -> bool {
-    ((click.x() as f64) < rect.x()
-        || (click.x() as f64) > rect.x() + rect.width()
-        || (click.y() as f64) < rect.y()
-        || (click.y() as f64) > rect.y() + rect.height())
-        && click
-            .target()
-            .and_then(|t| t.dyn_into::<HtmlDialogElement>().ok())
-            .is_some()
-}
-
-impl Component for SettingsModal {
-    type Message = Msg;
-    type Properties = Props;
-
-    fn create(ctx: &Context<Self>) -> Self {
-        let api = get_api(ctx);
-        let link = ctx.link().clone();
-        wasm_bindgen_futures::spawn_local(async move {
-            match api.events_schema().await {
-                Ok(schema) => link.send_message(Msg::SchemaLoaded(schema)),
-                Err(e) => error!("Could not load event generator parameter schema: {}", e),
-            }
-        });
-
-        Default::default()
-    }
-
-    fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
-        match msg {
-            Msg::Open => {
-                let api = get_api(ctx);
-                let link = ctx.link().clone();
-
-                wasm_bindgen_futures::spawn_local(async move {
-                    match api.events_schema().await {
-                        Ok(schema) => link.send_message(Msg::SchemaLoaded(schema)),
-                        Err(e) => error!("Could not load event generator parameter schema: {}", e),
+        move || {
+            let api = api.clone();
+            let schema = schema.clone();
+            wasm_bindgen_futures::spawn_local(async move {
+                match api.events_schema().await {
+                    Ok(new_schema) => {
+                        schema.set(Some(new_schema));
                     }
-                });
-
-                let modal = self.modal_ref.cast::<HtmlDialogElement>().unwrap();
-                let _ = modal.show_modal();
-                self.open_dummy = ctx.props().open_dummy;
-
-                false
-            }
-            Msg::Close => {
-                let modal = self.modal_ref.cast::<HtmlDialogElement>().unwrap();
-                modal.close();
-
-                false
-            }
-            Msg::Click(event) => {
-                let modal = self.modal_ref.cast::<HtmlDialogElement>().unwrap();
-                let bounding_box = modal.get_bounding_client_rect();
-
-                if outside(&event, &bounding_box) {
-                    modal.close();
+                    Err(e) => error!("Could not load event generator parameter schema: {}", e),
                 }
+            });
 
-                false
-            }
-            Msg::ValuesChanged { form } => {
-                let form_data = FormData::new_with_form(&form.unwrap()).unwrap();
-                let params = self
-                    .schema
-                    .iter()
-                    .map(|evg| {
-                        (
-                            evg.id.clone(),
-                            evg.schema
-                                .parameters
-                                .iter()
-                                .map(|schema| {
-                                    (
-                                        schema.id.clone(),
-                                        serde_json::from_str::<ParameterValue>(
-                                            &form_data
-                                                .get(&format!("{}.{}", evg.id, schema.id))
-                                                .as_string()
-                                                .unwrap(),
-                                        )
-                                        .unwrap(),
+            let modal = modal_ref.cast::<HtmlDialogElement>().unwrap();
+            let _ = modal.show_modal();
+            *open_dummy.borrow_mut() = props_open_dummy;
+        }
+    };
+
+    let close_modal = {
+        let modal_ref = modal_ref.clone();
+        move || {
+            modal_ref.cast::<HtmlDialogElement>().unwrap().close();
+        }
+    };
+
+    let values_changed = {
+        let api = api.clone();
+        let schema = schema.clone();
+        move |form| {
+            let Some(ref schema) = *schema else {
+                error!("Values changed without schema loaded");
+                return;
+            };
+
+            let Some(form) = form else {
+                error!("Could not access settings form");
+                return;
+            };
+
+            let form_data = FormData::new_with_form(&form).unwrap();
+            let params = schema
+                .iter()
+                .map(|evg| {
+                    (
+                        evg.id.clone(),
+                        evg.schema
+                            .parameters
+                            .iter()
+                            .map(|schema| {
+                                (
+                                    schema.id.clone(),
+                                    serde_json::from_str::<ParameterValue>(
+                                        &form_data
+                                            .get(&format!("{}.{}", evg.id, schema.id))
+                                            .as_string()
+                                            .unwrap(),
                                     )
-                                })
-                                .collect::<HashMap<_, _>>(),
-                        )
-                    })
-                    .collect();
+                                    .unwrap(),
+                                )
+                            })
+                            .collect::<HashMap<_, _>>(),
+                    )
+                })
+                .collect::<HashMap<_, _>>();
 
-                let api = get_api(ctx);
-                wasm_bindgen_futures::spawn_local(async move {
-                    if let Err(e) = api.set_events_params(&params).await {
-                        error!("Failed to set event generator parameters: {}", e);
-                    }
-                });
+            let api = api.clone();
+            wasm_bindgen_futures::spawn_local(async move {
+                if let Err(e) = api.set_events_params(&params).await {
+                    error!("Failed to set event generator parameters: {}", e);
+                }
+            });
+        }
+    };
 
-                false
-            }
-            Msg::SchemaLoaded(schema) => {
-                self.schema = schema
-                    .into_iter()
-                    .sorted_by(|evg1, evg2| evg1.name.cmp(&evg2.name))
-                    .collect();
-                true
+    let onshow = Callback::from({
+        let open_modal = open_modal.clone();
+        move |_| {
+            open_modal();
+        }
+    });
+
+    let onclick = Callback::from({
+        let modal_ref = modal_ref.clone();
+        move |event| {
+            let modal = modal_ref.cast::<HtmlDialogElement>().unwrap();
+            let bounding_box = modal.get_bounding_client_rect();
+
+            if outside(&event, &bounding_box) {
+                modal.close();
             }
         }
+    });
+
+    let oninput = Callback::from({
+        let values_changed = values_changed.clone();
+        move |event: InputEvent| {
+            values_changed(utils::get_form(event.target()));
+        }
+    });
+
+    let onchange = Callback::from({
+        move |event: Event| {
+            values_changed(utils::get_form(event.target()));
+        }
+    });
+
+    if props.open_dummy > *open_dummy.borrow() {
+        open_modal();
     }
 
-    fn view(&self, ctx: &Context<Self>) -> Html {
-        let link = ctx.link();
-        if ctx.props().open_dummy > self.open_dummy {
-            link.send_message(Msg::Open);
-        }
+    html! {
+        <dialog
+            ref={modal_ref}
+            {onclick} {onshow}
+            class="settings">
 
-        html! {
-            <dialog class="settings" ref={ self.modal_ref.clone() } onclick={link.callback(Msg::Click)} onshow={link.callback(|_| Msg::Open)}>
-                <header>
-                    <h2>{ "Settings" }</h2>
-                    <a href="#" class="button" onclick={link.callback(|_| Msg::Close)}>{ "X" }</a>
-                </header>
-                <form
-                    oninput={ctx.link().callback(|e: InputEvent| {
-                        Msg::ValuesChanged { form: utils::get_form(e.target()) }
-                    })}
-                    onchange={ctx.link().callback(|e: Event| {
-                        Msg::ValuesChanged { form: utils::get_form(e.target()) }
-                    })}>
-                    {
-                        self.schema.iter().map(|evg| {
+            <header>
+                <h2>{ "Settings" }</h2>
+                <a href="#" class="button" onclick={Callback::from(move |_| close_modal())}>{ "X" }</a>
+            </header>
+            <form {oninput} {onchange}>
+                {
+                    if let Some(ref schema) = *schema {
+                        schema.iter().map(|evg| {
                             if evg.schema.parameters.is_empty() {
                                 html! { }
                             } else {
@@ -189,24 +168,29 @@ impl Component for SettingsModal {
                                                     id: format!("{}.{}", evg.id, schema.id),
                                                     ..schema
                                                 };
-                                                let dummy_update = 0;
-                                                match schema.value {
-                                                    ValueSchema::Enum {..} => html!{<SelectParameterControl {schema} {value} {dummy_update} />},
-                                                    ValueSchema::Color => html!{<ColorParameterControl {schema} {value} {dummy_update} />},
-                                                    ValueSchema::Number {..} | ValueSchema::Percentage => {
-                                                        html!{<SliderParameterControl {schema} {value} {dummy_update} />}
-                                                    },
-                                                    ValueSchema::Speed => html!{<SpeedParameterControl {schema} {value} {dummy_update} />}
-                                                }
+                                                html!{ <ParameterControl {schema} {value} dummy_update=0 /> }
                                             }).collect::<Html>()
                                         }
                                     </>
                                 }
                             }
                         }).collect::<Html>()
+                    } else {
+                        html! { <p> { "Loading schema... " } </p> }
                     }
-                </form>
-            </dialog>
-        }
+                }
+            </form>
+        </dialog>
     }
+}
+
+fn outside(click: &MouseEvent, rect: &DomRect) -> bool {
+    ((click.x() as f64) < rect.x()
+        || (click.x() as f64) > rect.x() + rect.width()
+        || (click.y() as f64) < rect.y()
+        || (click.y() as f64) > rect.y() + rect.height())
+        && click
+            .target()
+            .and_then(|t| t.dyn_into::<HtmlDialogElement>().ok())
+            .is_some()
 }
