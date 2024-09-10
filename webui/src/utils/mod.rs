@@ -1,3 +1,8 @@
+mod dummy;
+
+#[allow(unused)]
+pub use dummy::Dummy;
+
 use wasm_bindgen::JsCast;
 use web_sys::{EventTarget, HtmlFormElement, HtmlInputElement, HtmlSelectElement};
 
