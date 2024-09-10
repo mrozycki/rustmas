@@ -211,6 +211,9 @@ fn get_animations(controller: &Controller) -> ListAnimationsResponse {
                 name: plugin.animation_name().to_owned(),
             })
             .collect::<Vec<_>>(),
+        current_animation_id: controller
+            .current_animation()
+            .map(|a| a.animation_id().to_owned()),
     }
 }
 

@@ -65,6 +65,7 @@ pub struct Animation {
 #[derive(Serialize, Deserialize)]
 pub struct ListAnimationsResponse {
     pub animations: Vec<Animation>,
+    pub current_animation_id: Option<String>,
 }
 
 #[derive(Serialize, Deserialize)]
