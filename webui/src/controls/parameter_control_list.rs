@@ -13,10 +13,7 @@ use crate::{
 
 #[derive(Clone, PartialEq, Properties)]
 pub struct ParameterControlListProps {
-    pub name: String,
-    pub schema: ConfigurationSchema,
-    pub values: HashMap<String, ParameterValue>,
-    pub update_values: Callback<Option<Configuration>>,
+    pub animation_id: Option<String>,
     pub parameters_dirty: Callback<bool>,
 }
 
@@ -41,6 +38,7 @@ fn build_parameter_update(
 #[yew::function_component(ParameterControlList)]
 pub fn parameter_control_list(props: &ParameterControlListProps) -> Html {
     let api = yew::use_context::<RustmasApiClient>().expect("gateway to be created");
+    let animation = yew::use_state::<Option<Configuration>, _>(|| None);
     let dummy_update = yew::use_mut_ref(|| 0);
 
     let save_changes = Callback::from({
@@ -62,13 +60,18 @@ pub fn parameter_control_list(props: &ParameterControlListProps) -> Html {
 
     let values_changed = {
         let api = api.clone();
-        let schema = props.schema.clone();
+        let animation = animation.clone();
         let change_debouncer = yew::use_mut_ref(|| Debouncer::new(Duration::from_millis(100)));
         let parameters_dirty = props.parameters_dirty.clone();
         move |form: Option<HtmlFormElement>, force: bool| {
             if !force && change_debouncer.borrow_mut().poll() {
                 return;
             }
+
+            let Some(ref animation) = *animation else {
+                error!("Cannot update parameters, since no animation is loaded");
+                return;
+            };
 
             let Some(form) = form else {
                 error!("Cannot access html form");
@@ -78,7 +81,7 @@ pub fn parameter_control_list(props: &ParameterControlListProps) -> Html {
             parameters_dirty.emit(true);
 
             let api = api.clone();
-            let params = build_parameter_update(&schema, &form);
+            let params = build_parameter_update(&animation.schema, &form);
             wasm_bindgen_futures::spawn_local(async move {
                 if let Err(e) = api.set_params(&params).await {
                     error!("Failed to update parameters, reason: {}", e);
@@ -102,14 +105,19 @@ pub fn parameter_control_list(props: &ParameterControlListProps) -> Html {
 
     let restore_params = Callback::from({
         let api = api.clone();
-        let update_values = props.update_values.clone();
+        let animation = animation.clone();
+        let parameters_dirty = props.parameters_dirty.clone();
         let dummy_update = dummy_update.clone();
         move |_| {
             let api = api.clone();
-            let update_values = update_values.clone();
+            let animation = animation.clone();
+            let parameters_dirty = parameters_dirty.clone();
             wasm_bindgen_futures::spawn_local(async move {
                 match api.reset_params().await {
-                    Ok(params) => update_values.emit(Some(params)),
+                    Ok(params) => {
+                        parameters_dirty.emit(false);
+                        animation.set(Some(params));
+                    }
                     Err(e) => error!("Failed to reset parameters, reason: {}", e),
                 }
             });
@@ -120,14 +128,19 @@ pub fn parameter_control_list(props: &ParameterControlListProps) -> Html {
 
     let reload_animation = Callback::from({
         let api = api.clone();
-        let update_values = props.update_values.clone();
+        let animation = animation.clone();
+        let parameters_dirty = props.parameters_dirty.clone();
         let dummy_update = dummy_update.clone();
         move |_| {
             let api = api.clone();
-            let update_values = update_values.clone();
+            let animation = animation.clone();
+            let parameters_dirty = parameters_dirty.clone();
             wasm_bindgen_futures::spawn_local(async move {
                 match api.reload_animation().await {
-                    Ok(params) => update_values.emit(Some(params)),
+                    Ok(params) => {
+                        parameters_dirty.emit(false);
+                        animation.set(Some(params));
+                    }
                     Err(e) => error!("Failed to reload animation, reason: {}", e),
                 }
             });
@@ -136,6 +149,17 @@ pub fn parameter_control_list(props: &ParameterControlListProps) -> Html {
         }
     });
 
+    if animation.as_ref().map(|a| &a.id) != props.animation_id.as_ref() {
+        let api = api.clone();
+        let animation = animation.clone();
+        wasm_bindgen_futures::spawn_local(async move {
+            match api.get_params().await {
+                Ok(new_animation) => animation.set(new_animation),
+                Err(e) => error!("Failed to load animations, reason: {}", e),
+            }
+        });
+    }
+
     html! {
         <section class="parameter-control-list">
             <datalist id="warmWhites">
@@ -143,30 +167,49 @@ pub fn parameter_control_list(props: &ParameterControlListProps) -> Html {
                     <option value={c.to_hex_string()}></option>
                 }).collect::<Html>()}
             </datalist>
-            <h2>{&props.name}</h2>
             {
-                if !props.schema.parameters.is_empty() {
+                if props.animation_id.is_none() {
                     html! {
-                        <form onsubmit={save_changes} {oninput} {onchange}>
+                        <>
+                            <h2>{ "Off" }</h2>
+                            <p>{ "Select an animation from the list" }</p>
+                        </>
+                    }
+                } else if let Some(ref animation) = *animation {
+                    html! {
+                        <>
+                            <h2>{&animation.name}</h2>
                             {
-                                props.schema.parameters.iter()
-                                    .map(|schema| html! {
-                                        <ParameterControl
-                                            schema={schema.clone()}
-                                            value={props.values.get(&schema.id).cloned()}
-                                            dummy_update={*dummy_update.borrow()} />
-                                    }).collect::<Html>()
+                                if !animation.schema.parameters.is_empty() {
+                                    html! {
+                                        <form onsubmit={save_changes} {oninput} {onchange}>
+                                            {
+                                                animation.schema.parameters.iter()
+                                                    .map(|schema| html! {
+                                                        <ParameterControl
+                                                            schema={schema.clone()}
+                                                            value={animation.values.get(&schema.id).cloned()}
+                                                            dummy_update={*dummy_update.borrow()} />
+                                                    }).collect::<Html>()
+                                            }
+                                            <div class="parameter-control buttons">
+                                                <input type="button" value="Reload" onclick={reload_animation} />
+                                                <input type="button" value="Reset" onclick={restore_params} />
+                                                <input type="submit" value="Save" />
+                                            </div>
+                                        </form>
+                                    }
+                                } else {
+                                    html! {
+                                        <p>{"This animation does not have any parameters"}</p>
+                                    }
+                                }
                             }
-                            <div class="parameter-control buttons">
-                                <input type="button" value="Reload" onclick={reload_animation} />
-                                <input type="button" value="Reset" onclick={restore_params} />
-                                <input type="submit" value="Save" />
-                            </div>
-                        </form>
+                        </>
                     }
                 } else {
                     html! {
-                        <p>{"This animation does not have any parameters"}</p>
+                        <p>{ "Loading..." }</p>
                     }
                 }
             }

@@ -103,6 +103,18 @@ pub fn settings_modal(props: &Props) -> Html {
         }
     };
 
+    let restart_events = Callback::from({
+        let api = api.clone();
+        move |_| {
+            let api = api.clone();
+            wasm_bindgen_futures::spawn_local(async move {
+                if let Err(e) = api.restart_events().await {
+                    error!("Failed to restart events: {}", e);
+                }
+            });
+        }
+    });
+
     let onshow = Callback::from({
         let open_modal = open_modal.clone();
         move |_| {
@@ -149,6 +161,7 @@ pub fn settings_modal(props: &Props) -> Html {
                 <h2>{ "Settings" }</h2>
                 <a href="#" class="button" onclick={Callback::from(move |_| close_modal())}>{ "X" }</a>
             </header>
+            <button onclick={restart_events}>{"⟳ Restart events"}</button>
             <form {oninput} {onchange}>
                 {
                     if let Some(ref schema) = *schema {

@@ -106,8 +106,8 @@ impl RustmasApiClient {
         .await
     }
 
-    pub async fn list_animations(&self) -> Result<Vec<Animation>> {
-        Ok(self.get::<ListAnimationsResponse>("list").await?.animations)
+    pub async fn list_animations(&self) -> Result<ListAnimationsResponse> {
+        self.get::<ListAnimationsResponse>("list").await
     }
 
     pub async fn discover_animations(&self) -> Result<Vec<Animation>> {
