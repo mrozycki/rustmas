@@ -3,12 +3,6 @@ mod controls;
 mod settings;
 mod utils;
 
-#[cfg(feature = "visualizer")]
-mod visualizer;
-
-#[cfg(not(feature = "visualizer"))]
-mod dummy;
-
 use std::error::Error;
 
 use animations::AnimationList;
@@ -16,12 +10,9 @@ use rustmas_webapi_client::RustmasApiClient;
 use url::Url;
 use yew::prelude::*;
 
+use crate::animations::Visualizer;
 use crate::controls::ParameterControlList;
-#[cfg(not(feature = "visualizer"))]
-use crate::dummy::Dummy as Visualizer;
 use crate::settings::SettingsModal;
-#[cfg(feature = "visualizer")]
-use crate::visualizer::Visualizer;
 
 fn create_api() -> RustmasApiClient {
     let api_url = if cfg!(feature = "local") {
