@@ -64,6 +64,7 @@ pub struct Controller {
     event_generator_join_handle: JoinHandle<()>,
     state: Arc<Mutex<ControllerState>>,
     animation_factory: AnimationFactory,
+    event_sender: mpsc::Sender<Event>,
 }
 
 impl Controller {
@@ -80,7 +81,7 @@ impl Controller {
             next_frame: now,
             fps: 0.0,
             animation: None,
-            event_generators: Self::start_generators(event_sender),
+            event_generators: Self::start_generators(event_sender.clone()),
         }));
 
         let animation_join_handle = tokio::spawn(Self::run(state.clone(), client, points.len()));
@@ -93,6 +94,7 @@ impl Controller {
             animation_join_handle,
             event_generator_join_handle,
             animation_factory,
+            event_sender,
         }
     }
 
@@ -239,6 +241,15 @@ impl Controller {
         }
 
         Ok(())
+    }
+
+    pub async fn send_event(&self, event: Event) -> Result<(), ControllerError> {
+        self.event_sender
+            .send(event)
+            .await
+            .map_err(|e| ControllerError::InternalError {
+                reason: e.to_string(),
+            })
     }
 
     pub fn reload_animation(&self) -> Result<Configuration, ControllerError> {

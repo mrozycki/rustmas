@@ -17,6 +17,9 @@ pub enum Event {
         )]
         MidiMsg,
     ),
+    ManualEvent {
+        id: usize,
+    },
 }
 
 fn serialize_midi_msg<S>(midi_msg: &MidiMsg, serializer: S) -> Result<S::Ok, S::Error>
