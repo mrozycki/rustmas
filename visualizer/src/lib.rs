@@ -1,10 +1,12 @@
 mod pan_orbit_camera;
+mod send_mouse;
 mod websocket;
 
 use bevy::prelude::*;
 use bevy::window::PresentMode;
 use itertools::Itertools;
 use pan_orbit_camera::{pan_orbit_camera, spawn_camera};
+use send_mouse::send_mouse;
 use url::Url;
 
 /// this component indicates what entities are LEDs
@@ -61,5 +63,6 @@ pub fn run(frames_endpoint: Url, points: Vec<(f32, f32, f32)>) {
         .add_plugins(websocket::WebsocketPlugin::new(frames_endpoint))
         .add_systems(Startup, (spawn_camera, add_lights))
         .add_systems(Update, pan_orbit_camera)
+        .add_systems(Update, send_mouse)
         .run();
 }
