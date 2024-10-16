@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 
+pub use animation_api::event::Event;
 pub use animation_api::schema::{Configuration, ParameterSchema, ParameterValue};
 use serde::{Deserialize, Serialize};
 
@@ -44,6 +45,11 @@ pub struct GetEventGeneratorSchemaResponse {
 #[derive(Serialize, Deserialize)]
 pub struct SetEventGeneratorParametersRequest {
     pub event_generators: HashMap<String, HashMap<String, ParameterValue>>,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct SendEventRequest {
+    pub event: Event,
 }
 
 #[derive(Serialize, Deserialize)]

@@ -12,7 +12,7 @@ use std::{env, error::Error};
 use tokio::sync::{mpsc, Mutex};
 use webapi_model::{
     Animation, Configuration, GetEventGeneratorSchemaResponse, GetParametersResponse,
-    GetPointsResponse, ListAnimationsResponse, SetAnimationParametersRequest,
+    GetPointsResponse, ListAnimationsResponse, SendEventRequest, SetAnimationParametersRequest,
     SetEventGeneratorParametersRequest, SwitchAnimationRequest, SwitchAnimationResponse,
 };
 
@@ -43,6 +43,23 @@ async fn set_event_parameters(
         .lock()
         .await
         .set_event_generator_parameters(&params.event_generators)
+    {
+        Ok(_) => HttpResponse::Ok().json(()),
+        Err(e) => HttpResponse::InternalServerError().json(json!({ "error": e.to_string() })),
+    }
+}
+
+#[post("/events/send")]
+async fn send_event(
+    params: web::Json<SendEventRequest>,
+    controller: web::Data<AnimationController>,
+) -> HttpResponse {
+    match controller
+        .0
+        .lock()
+        .await
+        .send_event(params.into_inner().event)
+        .await
     {
         Ok(_) => HttpResponse::Ok().json(()),
         Err(e) => HttpResponse::InternalServerError().json(json!({ "error": e.to_string() })),
@@ -314,6 +331,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
             .wrap(cors)
             .service(restart_events)
             .service(events_schema)
+            .service(send_event)
             .service(set_event_parameters)
             .service(reload)
             .service(switch)

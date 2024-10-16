@@ -8,8 +8,8 @@ pub use webapi_model::{
     GetPointsResponse, ListAnimationsResponse, ParameterValue, SwitchAnimationRequest,
 };
 use webapi_model::{
-    ApiResponse, SetAnimationParametersRequest, SetEventGeneratorParametersRequest,
-    SwitchAnimationResponse,
+    ApiResponse, Event, SendEventRequest, SetAnimationParametersRequest,
+    SetEventGeneratorParametersRequest, SwitchAnimationResponse,
 };
 
 #[derive(Debug, thiserror::Error)]
@@ -104,6 +104,10 @@ impl RustmasApiClient {
             },
         )
         .await
+    }
+
+    pub async fn send_event(&self, event: Event) -> Result<()> {
+        self.post("events/send", &SendEventRequest { event }).await
     }
 
     pub async fn list_animations(&self) -> Result<ListAnimationsResponse> {

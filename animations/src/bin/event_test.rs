@@ -1,30 +1,13 @@
 use animation_api::Animation;
 use animation_utils::decorators::BrightnessControlled;
-use animation_utils::Schema;
 use lightfx::Color;
-use serde::{Deserialize, Serialize};
 use serde_json::json;
-
-#[derive(Clone, Serialize, Deserialize, Schema)]
-pub struct Parameters {
-    #[schema_field(name = "Color", color)]
-    color: Color,
-}
-
-impl Default for Parameters {
-    fn default() -> Self {
-        Self {
-            color: Color::gray(255),
-        }
-    }
-}
 
 #[animation_utils::plugin]
 pub struct EventTest {
     points_count: usize,
     energy: f64,
-    decay: f64,
-    parameters: Parameters,
+    color: Color,
 }
 
 impl EventTest {
@@ -32,37 +15,33 @@ impl EventTest {
         BrightnessControlled::new(Self {
             points_count: points.len(),
             energy: 0.0,
-            decay: 1.0,
-            parameters: Default::default(),
+            color: Color::black(),
         })
     }
 }
 
 impl Animation for EventTest {
-    type Parameters = Parameters;
+    type Parameters = ();
 
     fn update(&mut self, delta: f64) {
-        self.energy -= delta * self.decay;
+        self.energy -= delta;
     }
 
     fn render(&self) -> lightfx::Frame {
         (0..self.points_count)
-            .map(|_| self.parameters.color.dim(self.energy))
+            .map(|_| self.color.dim(self.energy))
             .into()
     }
 
-    fn set_parameters(&mut self, parameters: Self::Parameters) {
-        self.parameters = parameters;
-    }
-
-    fn get_parameters(&self) -> Self::Parameters {
-        self.parameters.clone()
-    }
-
     fn on_event(&mut self, event: animation_api::event::Event) {
-        if let animation_api::event::Event::BeatEvent { bpm } = event {
+        if let animation_api::event::Event::ManualEvent { id } = event {
             self.energy = 1.0;
-            self.decay = bpm / 60.0;
+            self.color = match id {
+                0 => Color::rgb(255, 0, 0),
+                1 => Color::rgb(0, 255, 0),
+                2 => Color::rgb(0, 0, 255),
+                _ => Color::black(),
+            }
         }
     }
 }
