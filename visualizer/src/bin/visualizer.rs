@@ -14,12 +14,12 @@ struct Args {
 fn main() {
     let endpoint = Args::parse().endpoint;
     let api = RustmasApiClient::new(endpoint);
-    let frames_endpoint = api.frames();
     let points = {
         let rt = tokio::runtime::Runtime::new().unwrap();
+        let api = api.clone();
         rt.handle().block_on(async move { api.get_points().await })
     }
     .unwrap();
 
-    rustmas_visualizer::run(frames_endpoint, points);
+    rustmas_visualizer::run(api, points);
 }

@@ -5536,6 +5536,7 @@ dependencies = [
  "serde_json",
  "tokio",
  "url",
+ "webapi-model",
 ]
 
 [[package]]

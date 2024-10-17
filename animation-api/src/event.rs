@@ -2,6 +2,13 @@ use midi_msg::MidiMsg;
 use serde::{de, Deserialize, Deserializer, Serialize, Serializer};
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
+pub enum MouseEventType {
+    MouseDown,
+    MouseMove,
+    MouseUp,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
 #[non_exhaustive]
 pub enum Event {
     BeatEvent {
@@ -19,6 +26,11 @@ pub enum Event {
     ),
     ManualEvent {
         id: usize,
+    },
+    MouseEvent {
+        ray_origin: (f32, f32, f32),
+        ray_direction: (f32, f32, f32),
+        mouse_event_type: MouseEventType,
     },
 }
 

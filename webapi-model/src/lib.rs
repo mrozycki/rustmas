@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-pub use animation_api::event::Event;
+pub use animation_api::event::{Event, MouseEventType};
 pub use animation_api::schema::{Configuration, ParameterSchema, ParameterValue};
 use serde::{Deserialize, Serialize};
 
