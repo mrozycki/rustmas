@@ -5,6 +5,7 @@ edition = "2021"
 
 [dependencies]
 rustmas-webapi-client = { path = "../webapi-client", features = ["visualizer"] }
+webapi-model = { path = "../webapi-model", features = ["yew"] }
 
 clap = { version = "4.4.11", features = ["derive"] }
 ewebsock = "0.4.0"
