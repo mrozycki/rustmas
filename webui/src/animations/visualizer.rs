@@ -12,9 +12,9 @@ pub fn visualizer() -> Html {
         let api = api.clone();
         let loaded = loaded.clone();
         move |points| {
-            let frames_url = api.frames();
+            let api = api.clone();
             wasm_bindgen_futures::spawn_local(async move {
-                rustmas_visualizer::run(frames_url, points);
+                rustmas_visualizer::run(api, points);
             });
             *loaded.borrow_mut() = true;
         }

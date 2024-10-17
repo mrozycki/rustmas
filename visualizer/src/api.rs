@@ -63,3 +63,6 @@ fn listen_for_frame(
         }
     }
 }
+
+pub struct RustmasApiClient(pub rustmas_webapi_client::RustmasApiClient);
+impl Resource for RustmasApiClient {}

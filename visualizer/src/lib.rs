@@ -1,13 +1,13 @@
+mod api;
 mod pan_orbit_camera;
 mod send_mouse;
-mod websocket;
 
+use api::RustmasApiClient;
 use bevy::prelude::*;
 use bevy::window::PresentMode;
 use itertools::Itertools;
 use pan_orbit_camera::{pan_orbit_camera, spawn_camera};
 use send_mouse::send_mouse;
-use url::Url;
 
 /// this component indicates what entities are LEDs
 #[derive(Component, bevy::reflect::TypePath)]
@@ -46,11 +46,13 @@ fn add_lights(
     commands.spawn_batch(leds);
 }
 
-pub fn run(frames_endpoint: Url, points: Vec<(f32, f32, f32)>) {
+pub fn run(api_client: rustmas_webapi_client::RustmasApiClient, points: Vec<(f32, f32, f32)>) {
+    let frames_endpoint = api_client.frames();
     App::new()
         .insert_resource(Msaa::Off)
         .insert_resource(ClearColor(Color::srgb(0.0, 0.0, 0.0)))
         .insert_resource(Points(points))
+        .insert_resource(RustmasApiClient(api_client))
         .add_plugins(DefaultPlugins.set(WindowPlugin {
             primary_window: Some(Window {
                 title: "Rustmas Visualizer".to_string(),
@@ -60,7 +62,7 @@ pub fn run(frames_endpoint: Url, points: Vec<(f32, f32, f32)>) {
             }),
             ..default()
         }))
-        .add_plugins(websocket::WebsocketPlugin::new(frames_endpoint))
+        .add_plugins(api::WebsocketPlugin::new(frames_endpoint))
         .add_systems(Startup, (spawn_camera, add_lights))
         .add_systems(Update, pan_orbit_camera)
         .add_systems(Update, send_mouse)
