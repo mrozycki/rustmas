@@ -7,9 +7,12 @@ use animation_api::event::Event;
 use animation_api::schema::{Configuration, ParameterValue};
 use chrono::{DateTime, Duration, Utc};
 use client::combined::{CombinedLightClient, CombinedLightClientBuilder};
+#[cfg(feature = "audio")]
 use events::beat_generator::BeatEventGenerator;
 use events::event_generator::EventGenerator;
+#[cfg(feature = "audio")]
 use events::fft_generator::FftEventGenerator;
+#[cfg(feature = "midi")]
 use events::midi_generator::MidiEventGenerator;
 use log::{info, warn};
 use rustmas_light_client as client;
@@ -107,19 +110,23 @@ impl Controller {
             .map(|animation| animation.plugin_config().clone())
     }
 
+    #[allow(unused_variables)]
     fn start_generators(
         event_sender: mpsc::Sender<Event>,
     ) -> HashMap<String, Box<dyn EventGenerator>> {
         HashMap::from_iter([
+            #[cfg(feature = "audio")]
             (
                 "beat".into(),
                 Box::new(BeatEventGenerator::new(60.0, event_sender.clone()))
                     as Box<dyn EventGenerator>,
             ),
+            #[cfg(feature = "audio")]
             (
                 "fft".into(),
                 Box::new(FftEventGenerator::new(30.0, event_sender.clone())),
             ),
+            #[cfg(feature = "midi")]
             (
                 "midi".into(),
                 Box::new(MidiEventGenerator::new(event_sender)),
