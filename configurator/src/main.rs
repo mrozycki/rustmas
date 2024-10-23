@@ -33,15 +33,17 @@ enum Commands {
         #[arg(short, long, default_value = std::env::current_dir().unwrap_or(".".into()).into_os_string())]
         output_dir: PathBuf,
     },
-
+    /// Lists available camera devices and their indexes
+    ListCameras {},
     /// Capture 3D coordinates of lights by measuring from 4 sides
     Capture {
         #[arg(short, long, default_value = "lights.csv")]
         output: String,
         #[arg(short, long)]
         lights_endpoint: Option<String>,
+        /// Camera index
         #[arg(short, long)]
-        camera: Option<String>,
+        camera: Option<usize>,
         #[arg(short, long, default_value_t = 500)]
         number_of_lights: usize,
         #[arg(short, long, default_value_t = false)]
@@ -62,7 +64,7 @@ enum Commands {
         #[arg(short, long)]
         lights_endpoint: Option<String>,
         #[arg(short, long)]
-        camera: Option<String>,
+        camera: Option<usize>,
         #[arg(short, long, default_value_t = 500)]
         number_of_lights: usize,
         #[arg(short, long, default_value_t = false)]
@@ -98,16 +100,20 @@ enum Commands {
     },
 }
 
+fn print_cameras() {
+    println!("Allowed camera indexes:");
+    for (i, device) in Camera::list_devices().iter().enumerate() {
+        println!("{i}:\t\t{device}");
+    }
+}
+
 fn capturer_from_options(
     lights_endpoint: Option<String>,
-    camera: Option<String>,
+    camera: Option<usize>,
     number_of_lights: usize,
 ) -> Result<Capturer, Box<dyn Error>> {
-    let camera = if let Some(Ok(index)) = camera.as_ref().map(|s| s.parse::<i32>()) {
+    let camera = if let Some(index) = camera {
         Camera::new_local(index)?
-    } else if let Some(path) = camera {
-        info!("Using camera from file: {}", path);
-        Camera::new_from_file(&path)?
     } else {
         info!("Using default camera");
         Camera::new_default()?
@@ -200,6 +206,10 @@ async fn main() -> Result<(), Box<dyn Error>> {
                 coords.inner.0, coords.inner.1, coords.confidence
             );
 
+            Ok(())
+        }
+        Commands::ListCameras {} => {
+            print_cameras();
             Ok(())
         }
         Commands::Capture {

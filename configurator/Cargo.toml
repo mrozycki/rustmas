@@ -11,13 +11,17 @@ chrono = "0.4.30"
 clap = { version = "4.0.8", features = ["derive", "string"] }
 csv = "1.1.6"
 indicatif = "0.17.1"
-itertools = "0.10.5"
-opencv = { version = "0.91", features = ["clang-runtime"] }
+itertools = "0.13.0"
 serde = { version = "1.0", features = ["derive"] }
-nalgebra = "0.31.4"
+nalgebra = "0.33.1"
 statistical = "1.0.0"
 tokio = { version = "1", features = ["full"] }
 
 log = "0.4.17"
-env_logger = "0.10.0"
+env_logger = "0.11.5"
 thiserror = "1.0.60"
+kamera = { git = "https://github.com/mrozycki/kamera", branch = "wip4" }
+imageproc = { version = "0.25.0", features = [] }
+image = "0.25.4"
+winit = "0.30.5"
+softbuffer = "0.4.6"

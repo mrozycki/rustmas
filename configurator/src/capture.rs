@@ -3,6 +3,7 @@ use std::{
     fmt::Write,
     io::{self, Read, Write as IoWrite},
     path::{Path, PathBuf},
+    sync::{atomic::AtomicBool, Arc},
     thread,
     time::Duration,
 };
@@ -80,25 +81,21 @@ impl Capturer {
     }
 
     fn preview(&mut self) -> Result<(), Box<dyn Error>> {
-        let display = Display::new("Preview")?;
+        let loop_stopper = Arc::new(AtomicBool::new(false));
+
         print!("Press return to continue...");
         io::stdout().flush().expect("Can't flush to stdout");
-        let handler = thread::spawn(|| {
-            let mut stdin = io::stdin();
-            stdin.read_exact(&mut [0u8]).expect("Can't read from stdin");
+        let _handler = thread::spawn({
+            let loop_stopper = loop_stopper.clone();
+            move || {
+                let mut stdin = io::stdin();
+                stdin.read_exact(&mut [0u8]).expect("Can't read from stdin");
+                loop_stopper.store(true, std::sync::atomic::Ordering::Relaxed);
+            }
         });
 
-        loop {
-            if handler.is_finished() {
-                break;
-            }
-            display.show(&self.camera.capture()?)?;
-            let key = display.wait_for(Duration::from_millis(10))?;
-            if key > 0 && key != 255 {
-                break;
-            }
-        }
-        thread::sleep(Duration::from_millis(100));
+        Display::preview(self.camera.clone(), loop_stopper)?;
+
         Ok(())
     }
 
@@ -122,7 +119,7 @@ impl Capturer {
 
         loop {
             if attempts >= MAX_ATTEMPTS {
-                warn!("Please check the lights connection.");
+                println!("Please check the lights connection.");
                 pause();
                 attempts = 0;
             }
