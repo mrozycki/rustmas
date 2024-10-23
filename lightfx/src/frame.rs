@@ -13,6 +13,10 @@ impl Frame {
             pixels: vec![color; number_of_lights],
         }
     }
+    pub fn from_vec(pixels: Vec<Color>) -> Self {
+        Self { pixels }
+    }
+
     pub fn new_black(number_of_lights: usize) -> Self {
         Self::new(number_of_lights, Color::black())
     }
