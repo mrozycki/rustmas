@@ -6,12 +6,6 @@ After=network.target
 User=pi
 Group=pi
 WorkingDirectory=/home/pi/rustmas
-Environment="RUSTMAS_POINTS_PATH=lights.csv"
-Environment="RUSTMAS_LIGHTS_URL=http://127.0.0.1/pixels"
-# or if you want to use USB-connected lights, comment the above line and uncomment below:
-# Environment="RUSTMAS_USE_TTY=1"
-Environment="RUSTMAS_DB_PATH=webapi/db.sqlite"
-Environment="RUSTMAS_PLUGIN_DIR=plugins"
 ExecStart=/home/pi/rustmas/target/release/rustmas-webapi
 IPAccounting=true
 

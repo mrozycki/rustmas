@@ -1,0 +1,29 @@
+# path to an sqlite database, for parameter storage
+database_path = "webapi/db.sqlite"
+
+[controller]
+# path to CSV file with light positions
+points_path = "lights.csv"
+# path to the [animation plugins directory](../plugins/README.md)
+plugin_path = "plugins/"
+
+# you can specify multiple light endpoints
+[[controller.lights]]
+# URL of the pico-w-neopixel-server endpoint over HTTP
+remote = "http://192.168.0.2"
+
+[[controller.lights]]
+# URL of the pico-w-neopixel-server endpoint over TCP
+remote = "tcp://192.168.0.3"
+
+[[controller.lights]]
+# URL of the pico-w-neopixel-server endpoint over UDP
+remote = "udp://192.168.0.4"
+
+[[controller.lights]]
+# to autodetect lights connected via USB
+tty = "detect"
+
+[[controller.lights]]
+# to specify lights connected via USB
+tty = "/dev/usb.tty0"

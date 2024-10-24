@@ -5,6 +5,7 @@
 *.log
 
 .env
+Rustmas.toml
 
 webui/dist
 

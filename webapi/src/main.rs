@@ -1,14 +1,16 @@
+mod config;
 mod db;
 mod frame_broadcaster;
 
+use ::config::Config;
 use actix::{Actor, Addr};
 use actix_cors::Cors;
 use actix_web_actors::ws;
-use dotenvy::dotenv;
-use log::{error, info, warn};
+use config::RustmasConfig;
+use log::{info, warn};
 use rustmas_animator::Controller;
 use serde_json::json;
-use std::{env, error::Error};
+use std::error::Error;
 use tokio::sync::{mpsc, Mutex};
 use webapi_model::{
     Animation, Configuration, GetEventGeneratorSchemaResponse, GetParametersResponse,
@@ -281,47 +283,33 @@ struct Db(db::Db);
 
 #[actix_web::main]
 async fn main() -> Result<(), Box<dyn Error>> {
-    dotenv().ok();
-    env_logger::init();
+    env_logger::builder()
+        .filter_level(log::LevelFilter::Info)
+        .init();
+
+    let config = Config::builder()
+        .add_source(::config::File::with_name("Rustmas"))
+        .add_source(::config::Environment::with_prefix("RUSTMAS"))
+        .build()?
+        .try_deserialize::<RustmasConfig>()?;
 
     let (sender, receiver) = mpsc::channel::<lightfx::Frame>(1);
 
     info!("Starting controller");
     let controller = {
-        let mut builder = rustmas_animator::Controller::builder()
-            .points_from_file(&env::var("RUSTMAS_POINTS_PATH").unwrap_or("lights.csv".to_owned()))?
+        let mut controller = rustmas_animator::Controller::builder_from(config.controller)?
             .lights_feedback(sender)
-            .plugin_dir(env::var("RUSTMAS_PLUGIN_DIR").unwrap_or(".".to_owned()));
+            .build();
 
-        if let Ok(url) = env::var("RUSTMAS_LIGHTS_URL") {
-            if url.starts_with("http://") {
-                builder = builder.http_lights(&url)?;
-            } else if url.starts_with("tcp://") {
-                builder = builder.tcp_lights(&url)?;
-            } else if url.starts_with("udp://") {
-                builder = builder.udp_lights(&url)?;
-            } else {
-                error!("Unknown remote client protocol, ignoring");
-            }
-        }
-        if env::var("RUSTMAS_USE_TTY")
-            .map(|v| v == "true" || v == "1")
-            .unwrap_or(false)
-        {
-            builder = builder.local_lights()?;
-        }
-
-        let mut controller = builder.build();
         controller.discover_animations()?;
         info!("Discovered {} plugins", controller.list_animations().len());
         web::Data::new(AnimationController(Mutex::new(controller)))
     };
 
     info!("Establishing database connection");
-    let db = web::Data::new(Db(db::Db::new(
-        &env::var("RUSTMAS_DB_PATH").unwrap_or("db.sqlite".to_owned()),
-    )
-    .await?));
+    let db = web::Data::new(Db(
+        db::Db::new(&config.database_path.to_string_lossy()).await?
+    ));
 
     let frame_broadcaster = web::Data::new(FrameBroadcaster::new(receiver).start());
 
