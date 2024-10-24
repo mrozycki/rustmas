@@ -2,9 +2,9 @@ use std::{error::Error, io::Write, time::Duration};
 
 use async_trait::async_trait;
 use lightfx::Frame;
-use log::info;
 use serialport::{SerialPort, SerialPortType};
 use tokio::sync::Mutex;
+use tracing::info;
 
 use crate::{LightClient, LightClientError};
 

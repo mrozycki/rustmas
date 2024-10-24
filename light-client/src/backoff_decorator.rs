@@ -2,8 +2,8 @@ use std::time::Duration as StdDuration;
 
 use async_trait::async_trait;
 use chrono::{DateTime, Duration, Utc};
-use log::{info, warn};
 use tokio::sync::Mutex;
+use tracing::{info, warn};
 
 use crate::{LightClient, LightClientError};
 

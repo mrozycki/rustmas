@@ -7,11 +7,14 @@ use actix::{Actor, Addr};
 use actix_cors::Cors;
 use actix_web_actors::ws;
 use config::RustmasConfig;
-use log::{info, warn};
+use env_logger::Env;
 use rustmas_animator::Controller;
 use serde_json::json;
 use std::error::Error;
 use tokio::sync::{mpsc, Mutex};
+use tracing::{info, warn};
+use tracing_bunyan_formatter::{BunyanFormattingLayer, JsonStorageLayer};
+use tracing_subscriber::{layer::SubscriberExt, EnvFilter, Registry};
 use webapi_model::{
     Animation, Configuration, GetEventGeneratorSchemaResponse, GetParametersResponse,
     GetPointsResponse, ListAnimationsResponse, SendEventRequest, SetAnimationParametersRequest,
@@ -283,9 +286,13 @@ struct Db(db::Db);
 
 #[actix_web::main]
 async fn main() -> Result<(), Box<dyn Error>> {
-    env_logger::builder()
-        .filter_level(log::LevelFilter::Info)
-        .init();
+    let env_filter = EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new("info"));
+    let formatting_layer = BunyanFormattingLayer::new("rustmas-webapi".into(), std::io::stdout);
+    let subscriber = Registry::default()
+        .with(env_filter)
+        .with(JsonStorageLayer)
+        .with(formatting_layer);
+    tracing::subscriber::set_global_default(subscriber).expect("Failed to set subscriber");
 
     let config = Config::builder()
         .add_source(::config::File::with_name("Rustmas"))

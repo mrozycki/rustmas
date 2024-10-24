@@ -9,8 +9,8 @@ use animation_api::{
     schema::{Configuration, ConfigurationSchema, ParameterValue},
     AnimationError,
 };
-use log::info;
 use serde::Deserialize;
+use tracing::info;
 
 use crate::jsonrpc::JsonRpcEndpoint;
 

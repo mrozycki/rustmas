@@ -4,7 +4,7 @@ use async_trait::async_trait;
 use chrono::Duration;
 use futures_util::future::join_all;
 use itertools::Itertools;
-use log::{error, info};
+use tracing::{error, info};
 use url::Url;
 
 use crate::{
@@ -25,27 +25,23 @@ impl CombinedLightClient {
 #[async_trait]
 impl LightClient for CombinedLightClient {
     async fn display_frame(&self, frame: &lightfx::Frame) -> Result<(), LightClientError> {
-        let futures: Vec<_> = self
+        let futures = self
             .clients
             .iter()
             .map(|client| client.display_frame(frame))
-            .collect();
-        let errors: Vec<_> = join_all(futures)
+            .collect_vec();
+        let errors = join_all(futures)
             .await
             .into_iter()
             .flat_map(|r| r.err())
-            .collect();
+            .collect_vec();
 
         if errors.len() == self.clients.len() {
             if errors.iter().all(|e| *e == LightClientError::ProcessExited) {
                 Err(LightClientError::ProcessExited)
             } else {
                 Err(LightClientError::ConnectionLost {
-                    reason: Itertools::intersperse(
-                        errors.iter().map(|e| e.to_string()),
-                        "; ".to_string(),
-                    )
-                    .collect(),
+                    reason: errors.iter().join("; "),
                 })
             }
         } else {

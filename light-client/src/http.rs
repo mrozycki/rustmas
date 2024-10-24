@@ -1,9 +1,9 @@
 use crate::{backoff_decorator::BackoffDecorator, LightClient, LightClientError};
 use async_trait::async_trait;
 use lightfx::Frame;
-use log::debug;
 use reqwest::header::CONNECTION;
 use std::time::Duration;
+use tracing::debug;
 
 #[derive(Clone)]
 pub struct HttpLightClient {

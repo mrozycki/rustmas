@@ -18,3 +18,8 @@ members = [
 ]
 
 resolver = "2"
+
+[workspace.dependencies]
+tracing = { version = "0.1.40", features = ["log"] }
+tracing-subscriber = { version = "0.3", features = ["registry", "env-filter"] }
+tracing-bunyan-formatter = "0.3"

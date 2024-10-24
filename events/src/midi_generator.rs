@@ -5,12 +5,12 @@ use animation_api::{
     schema::{ConfigurationSchema, EnumOption, ParameterSchema, ParameterValue, ValueSchema},
 };
 use anyhow::anyhow;
-use log::info;
 use midi_msg::{ChannelVoiceMsg, MidiMsg, ReceiverContext};
 use midir::{MidiInput, MidiInputConnection, PortInfoError};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 use tokio::sync::mpsc;
+use tracing::info;
 
 use crate::event_generator::EventGenerator;
 

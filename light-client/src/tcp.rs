@@ -3,9 +3,9 @@ use async_trait::async_trait;
 use bytes::Buf;
 use futures_util::TryFutureExt;
 use lightfx::Frame;
-use log::{debug, error, info};
 use std::{io::Cursor, sync::Arc, time::Duration};
 use tokio::{io::AsyncWriteExt, net::TcpStream, sync::Mutex};
+use tracing::{debug, error, info};
 
 #[derive(Clone)]
 pub struct TcpLightClient {

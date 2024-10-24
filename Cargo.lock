@@ -1149,7 +1149,7 @@ dependencies = [
  "bevy_app",
  "bevy_ecs",
  "bevy_utils",
- "tracing-log",
+ "tracing-log 0.2.0",
  "tracing-subscriber",
  "tracing-wasm",
 ]
@@ -2540,13 +2540,13 @@ dependencies = [
  "anyhow",
  "cpal",
  "itertools 0.11.0",
- "log",
  "midi-msg",
  "midir",
  "rustfft",
  "serde",
  "serde_json",
  "tokio",
+ "tracing",
 ]
 
 [[package]]
@@ -2786,6 +2786,16 @@ checksum = "85649ca51fd72272d7821adaf274ad91c288277713d9c18820d8499a7ff69e9a"
 dependencies = [
  "typenum",
  "version_check",
+]
+
+[[package]]
+name = "gethostname"
+version = "0.2.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c1ebd34e35c46e00bb73e81363248d627782724609fe1b6396f553f68fe3862e"
+dependencies = [
+ "libc",
+ "winapi",
 ]
 
 [[package]]
@@ -5634,12 +5644,12 @@ dependencies = [
  "events",
  "glob",
  "lightfx 0.1.0",
- "log",
  "rustmas-light-client",
  "serde",
  "serde_json",
  "thiserror",
  "tokio",
+ "tracing",
 ]
 
 [[package]]
@@ -5674,13 +5684,13 @@ dependencies = [
  "futures-util",
  "itertools 0.12.1",
  "lightfx 0.1.0",
- "log",
  "reqwest",
  "serde",
  "serde_json",
  "serialport",
  "thiserror",
  "tokio",
+ "tracing",
  "url",
 ]
 
@@ -5714,13 +5724,15 @@ dependencies = [
  "env_logger",
  "futures-core",
  "lightfx 0.1.0",
- "log",
  "rustmas-animator",
  "serde",
  "serde_json",
  "sqlx",
  "tokio",
  "toml",
+ "tracing",
+ "tracing-bunyan-formatter",
+ "tracing-subscriber",
  "webapi-model",
 ]
 
@@ -6642,6 +6654,24 @@ dependencies = [
 ]
 
 [[package]]
+name = "tracing-bunyan-formatter"
+version = "0.3.9"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b5c266b9ac83dedf0e0385ad78514949e6d89491269e7065bee51d2bb8ec7373"
+dependencies = [
+ "ahash",
+ "gethostname 0.2.3",
+ "log",
+ "serde",
+ "serde_json",
+ "time",
+ "tracing",
+ "tracing-core",
+ "tracing-log 0.1.4",
+ "tracing-subscriber",
+]
+
+[[package]]
 name = "tracing-core"
 version = "0.1.32"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -6649,6 +6679,17 @@ checksum = "c06d3da6113f116aaee68e4d601191614c9053067f9ab7f6edbcb161237daa54"
 dependencies = [
  "once_cell",
  "valuable",
+]
+
+[[package]]
+name = "tracing-log"
+version = "0.1.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f751112709b4e791d8ce53e32c4ed2d353565a795ce84da2285393f41557bdf2"
+dependencies = [
+ "log",
+ "once_cell",
+ "tracing-core",
 ]
 
 [[package]]
@@ -6677,7 +6718,7 @@ dependencies = [
  "thread_local",
  "tracing",
  "tracing-core",
- "tracing-log",
+ "tracing-log 0.2.0",
 ]
 
 [[package]]
@@ -7635,7 +7676,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5d91ffca73ee7f68ce055750bf9f6eca0780b8c85eff9bc046a3b0da41755e12"
 dependencies = [
  "as-raw-xcb-connection",
- "gethostname",
+ "gethostname 0.4.3",
  "libc",
  "libloading 0.8.5",
  "once_cell",

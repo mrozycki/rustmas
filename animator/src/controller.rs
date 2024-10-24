@@ -14,11 +14,11 @@ use events::event_generator::EventGenerator;
 use events::fft_generator::FftEventGenerator;
 #[cfg(feature = "midi")]
 use events::midi_generator::MidiEventGenerator;
-use log::{info, warn};
 use rustmas_light_client as client;
 use rustmas_light_client::LightClientError;
 use tokio::sync::mpsc;
 use tokio::task::JoinHandle;
+use tracing::{info, warn};
 
 use crate::factory::{AnimationFactory, AnimationFactoryError};
 use crate::jsonrpc::JsonRpcPlugin;
@@ -346,8 +346,13 @@ impl Controller {
         Ok(())
     }
 
+    #[tracing::instrument(name = "Controller::discover_animations", skip_all, err)]
     pub fn discover_animations(&mut self) -> Result<(), ControllerError> {
         self.animation_factory.discover()?;
+        info!(
+            "Discovered {} animations",
+            self.animation_factory.list().len()
+        );
         Ok(())
     }
 

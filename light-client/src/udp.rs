@@ -2,9 +2,9 @@ use crate::{LightClient, LightClientError};
 use async_trait::async_trait;
 use futures_util::TryFutureExt;
 use lightfx::Frame;
-use log::{debug, info};
 use std::sync::Arc;
 use tokio::{net::UdpSocket, sync::Mutex};
+use tracing::{debug, info};
 
 #[derive(Clone)]
 pub struct UdpLightClient {

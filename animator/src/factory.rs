@@ -3,7 +3,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
-use log::warn;
+use tracing::warn;
 
 use crate::{
     jsonrpc::JsonRpcPlugin,

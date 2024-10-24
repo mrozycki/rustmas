@@ -11,8 +11,8 @@ use animation_api::{
     schema::{Configuration, ConfigurationSchema, ParameterValue},
     AnimationError, JsonRpcMessage, JsonRpcMethod, JsonRpcResponse, JsonRpcResult,
 };
-use log::error;
 use serde::de::DeserializeOwned;
+use tracing::error;
 
 use crate::plugin::{AnimationPluginError, Plugin, PluginConfig};
 
@@ -149,6 +149,12 @@ impl Plugin for JsonRpcPlugin {
         })
     }
 
+    #[tracing::instrument(
+        name = "AnimationPlugin::update",
+        skip_all,
+        fields(animation_id = self.plugin_config.animation_id()),
+        err
+    )]
     fn update(&mut self, time_delta: f64) -> Result<(), AnimationPluginError> {
         if let Err(e) = self
             .endpoint
@@ -160,6 +166,12 @@ impl Plugin for JsonRpcPlugin {
         }
     }
 
+    #[tracing::instrument(
+        name = "AnimationPlugin::render",
+        skip_all,
+        fields(animation_id = self.plugin_config.animation_id()),
+        err
+    )]
     fn render(&self) -> Result<lightfx::Frame, AnimationPluginError> {
         match self.endpoint.send_message(JsonRpcMethod::Render) {
             Ok(JsonRpcResult::Result(frame)) => Ok(frame),
@@ -168,6 +180,12 @@ impl Plugin for JsonRpcPlugin {
         }
     }
 
+    #[tracing::instrument(
+        name = "AnimationPlugin::get_schema",
+        skip_all,
+        fields(animation_id = self.plugin_config.animation_id()),
+        err
+    )]
     fn get_schema(&self) -> Result<ConfigurationSchema, AnimationPluginError> {
         match self.endpoint.send_message(JsonRpcMethod::ParameterSchema) {
             Ok(JsonRpcResult::Result(schema)) => Ok(schema),
@@ -176,6 +194,12 @@ impl Plugin for JsonRpcPlugin {
         }
     }
 
+    #[tracing::instrument(
+        name = "AnimationPlugin::set_parameters",
+        skip_all,
+        fields(animation_id = self.plugin_config.animation_id()),
+        err
+    )]
     fn set_parameters(
         &mut self,
         params: &HashMap<String, ParameterValue>,
@@ -189,6 +213,12 @@ impl Plugin for JsonRpcPlugin {
         }
     }
 
+    #[tracing::instrument(
+        name = "AnimationPlugin::get_parameters",
+        skip_all,
+        fields(animation_id = self.plugin_config.animation_id()),
+        err
+    )]
     fn get_parameters(&self) -> Result<HashMap<String, ParameterValue>, AnimationPluginError> {
         match self.endpoint.send_message(JsonRpcMethod::GetParameters) {
             Ok(JsonRpcResult::Result(parameters)) => Ok(parameters),
@@ -197,6 +227,12 @@ impl Plugin for JsonRpcPlugin {
         }
     }
 
+    #[tracing::instrument(
+        name = "AnimationPlugin::get_fps",
+        skip_all,
+        fields(animation_id = self.plugin_config.animation_id()),
+        err
+    )]
     fn get_fps(&self) -> Result<f64, AnimationPluginError> {
         match self.endpoint.send_message(JsonRpcMethod::GetFps) {
             Ok(JsonRpcResult::Result(fps)) => Ok(fps),
@@ -205,6 +241,15 @@ impl Plugin for JsonRpcPlugin {
         }
     }
 
+    #[tracing::instrument(
+        name = "AnimationPlugin::send_event",
+        skip_all,
+        fields(
+            animation_id = self.plugin_config.animation_id(),
+            event_type = event.event_type(),
+        ),
+        err
+    )]
     fn send_event(&self, event: animation_api::event::Event) -> Result<(), AnimationPluginError> {
         match self.endpoint.send_message(JsonRpcMethod::OnEvent { event }) {
             Ok(JsonRpcResult::Result(())) => Ok(()),

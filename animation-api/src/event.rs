@@ -28,6 +28,20 @@ pub enum Event {
     MouseDown,
 }
 
+impl Event {
+    pub fn event_type(&self) -> &'static str {
+        match self {
+            Event::BeatEvent { .. } => "BeatEvent",
+            Event::FftEvent { .. } => "FftEvent",
+            Event::MidiEvent(..) => "MidiEvent",
+            Event::ManualEvent { .. } => "ManualEvent",
+            Event::MouseMove { .. } => "MouseMove",
+            Event::MouseUp => "MouseUp",
+            Event::MouseDown => "MouseDown",
+        }
+    }
+}
+
 fn serialize_midi_msg<S>(midi_msg: &MidiMsg, serializer: S) -> Result<S::Ok, S::Error>
 where
     S: Serializer,

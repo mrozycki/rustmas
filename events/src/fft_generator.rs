@@ -8,7 +8,7 @@ use cpal::{
     DeviceNameError, Sample, SampleFormat,
 };
 use itertools::Itertools;
-use log::{error, info};
+use tracing::{error, info};
 use rustfft::{num_complex::Complex32, FftPlanner};
 use serde::{Deserialize, Serialize};
 use serde_json::json;

@@ -51,7 +51,12 @@ to the plugins directory. Instructions can be found in the provided example [plu
 WebAPI service
 --------------
 
-Copy the [`service.example`](deployment/service.example) file to `/etc/systemd/system/rustmas.service`.
+Copy the [`service.example`](deployment/service.example) file to `/etc/systemd/system/rustmas.service`:
+
+```
+sudo cp webapi/deployment/service.example /etc/systemd/system/rustmas.service
+```
+
 Make sure all the settings in that file are correct. If you're running the application on
 a Raspberry PI, you will likely only need to modify the WorkingDirectory and ExecStart paths to
 point to the right place (the example file assumes the repository is located at `/home/pi/rustmas`)
@@ -69,8 +74,8 @@ cargo build --bin rustmas-webapi --release
 Enable the service with:
 
 ```
-sudo service rustmas start
-sudo service rustmas enable
+sudo systemctl start rustmas
+sudo systemctl enable rustmas
 ```
 
 This will start the service automatically every time you start the machine.
@@ -129,7 +134,13 @@ sudo apt install nginx
 ```
 
 In order to configure the proxy, copy the [`nginx.example`](deployment/nginx.example) file to
-`/etc/nginx/sites-available/rustmaspi.local`. You will need to modify the line starting with
+`/etc/nginx/sites-available/rustmaspi.local`:
+
+```
+sudo cp webapi/deployment/nginx.example /etc/nginx/sites-available/rustmaspi.local
+```
+
+You will need to modify the line starting with
 `ServerName` to include your server's local IP address and (optionally) its hostname.
 
 After that, you will need to enable the configuration with:
@@ -149,7 +160,7 @@ sudo cp webui/dist/* /var/www/rustmas
 After that is done, you need to restart nginx:
 
 ```
-sudo service nginx restart
+sudo systemctl restart nginx
 ```
 
 All done! You can now navigate to your machine's address (as specified in the nginx configuration)
