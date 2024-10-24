@@ -1,10 +1,13 @@
 pub mod backoff_decorator;
 pub mod combined;
+mod config;
 pub mod feedback;
 pub mod http;
 pub mod tcp;
 pub mod tty;
 pub mod udp;
+
+pub use config::{LightsConfig, TtyLightsConfig};
 
 use std::sync::{Mutex, MutexGuard};
 

@@ -23,6 +23,7 @@ use tokio::task::JoinHandle;
 use crate::factory::{AnimationFactory, AnimationFactoryError};
 use crate::jsonrpc::JsonRpcPlugin;
 use crate::plugin::{AnimationPluginError, Plugin, PluginConfig};
+use crate::ControllerConfig;
 
 #[derive(Debug, thiserror::Error)]
 pub enum ControllerError {
@@ -200,6 +201,15 @@ impl Controller {
         }
     }
 
+    pub fn builder_from(config: ControllerConfig) -> Result<ControllerBuilder, Box<dyn Error>> {
+        ControllerBuilder {
+            points: None,
+            plugin_dir_: Some(config.plugin_path),
+            client_builder: CombinedLightClient::builder().with_config(config.lights)?,
+        }
+        .points_from_file(config.points_path)
+    }
+
     pub fn points(&self) -> &[(f64, f64, f64)] {
         self.animation_factory.points()
     }
@@ -353,60 +363,42 @@ pub struct ControllerBuilder {
 }
 
 impl ControllerBuilder {
-    pub fn points_from_file(mut self, path: &str) -> Result<Self, Box<dyn Error>> {
-        let points: Vec<_> = csv::ReaderBuilder::new()
-            .has_headers(false)
-            .from_path(path)
-            .map_err(|e| ControllerError::InternalError {
-                reason: format!("Could not read CSV file: {}", e),
-            })?
-            .deserialize()
-            .filter_map(|record: Result<(f64, f64, f64), _>| record.ok())
-            .collect();
-        info!("Loaded {} points from {}", points.len(), path);
+    pub fn points_from_file<P: AsRef<Path>>(mut self, path: P) -> Result<Self, Box<dyn Error>> {
+        fn points_from_path(path: &Path) -> Result<Vec<(f64, f64, f64)>, ControllerError> {
+            let points: Vec<_> = csv::ReaderBuilder::new()
+                .has_headers(false)
+                .from_path(path)
+                .map_err(|e| ControllerError::InternalError {
+                    reason: format!("Could not read CSV file: {}", e),
+                })?
+                .deserialize()
+                .filter_map(|record: Result<(f64, f64, f64), _>| record.ok())
+                .collect();
+            info!(
+                "Loaded {} points from {}",
+                points.len(),
+                path.to_string_lossy()
+            );
+            Ok(points)
+        }
 
-        self.points = Some(points);
+        let path = path.as_ref();
+        self.points = Some(points_from_path(path)?);
         Ok(self)
     }
 
-    pub fn http_lights(mut self, path: &str) -> Result<Self, Box<dyn Error>> {
-        info!("Using http light client with endpoint {}", path);
-        self.client_builder = self.client_builder.with(Box::new(
-            client::http::HttpLightClient::new(path).with_backoff(),
-        ));
-        Ok(self)
-    }
-
-    pub fn tcp_lights(mut self, path: &str) -> Result<Self, Box<dyn Error>> {
-        info!("Using tcp light client with endpoint {}", path);
-        self.client_builder = self.client_builder.with(Box::new(
-            client::tcp::TcpLightClient::new(path)
-                .with_backoff()
-                .with_start_delay(Duration::milliseconds(125)),
-        ));
-        Ok(self)
-    }
-
-    pub fn udp_lights(mut self, path: &str) -> Result<Self, Box<dyn Error>> {
-        info!("Using udp light client with endpoint {}", path);
-        self.client_builder = self
-            .client_builder
-            .with(Box::new(client::udp::UdpLightClient::new(path)));
-        Ok(self)
-    }
-
-    pub fn local_lights(mut self) -> Result<Self, Box<dyn Error>> {
-        info!("Using tty lights client");
-        self.client_builder = self
-            .client_builder
-            .with(Box::new(client::tty::TtyLightClient::new()?));
+    pub fn lights(
+        mut self,
+        config: Vec<rustmas_light_client::LightsConfig>,
+    ) -> Result<Self, Box<dyn Error>> {
+        self.client_builder = self.client_builder.with_config(config)?;
         Ok(self)
     }
 
     pub fn lights_feedback(mut self, sender: mpsc::Sender<lightfx::Frame>) -> Self {
         self.client_builder = self
             .client_builder
-            .with(Box::new(client::feedback::FeedbackLightClient::new(sender)));
+            .with(client::feedback::FeedbackLightClient::new(sender));
         self
     }
 

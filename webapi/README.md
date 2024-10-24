@@ -21,16 +21,11 @@ migrant apply
 
 This will produce a `db.sqlite` file with appropriate tables set up.
 
-### Environment variables
+### Configuration file
 
-In order to run WebAPI locally, you need to set up some environment variables:
-* `RUSTMAS_POINTS_PATH` is the path to CSV file with light positions
-* `RUSTMAS_LIGHTS_URL` is the URL of the pico-w-neopixel-server endpoint
-    or `RUSTMAS_USE_TTY=1` to use lights connected via USB
-* `RUSTMAS_DB_PATH` is the path to the SQLite database (for parameter storage)
-* `RUSTMAS_PLUGIN_DIR` is the path to the [animation plugins directory](../plugins/README.md)
-
-You can set these up with a `.env` file. An example `.env` file is provided in [.env.example](../.env.example).
+In order to run WebAPI locally, you need to create a Rustmas.toml file.
+You can find an example with options explained in the [Rustmas.example.toml](../Rustmas.example.toml) 
+file. Simply make a copy of it and adjust it however you need.
 
 ### Running WebAPI
 
