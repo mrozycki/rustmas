@@ -167,9 +167,9 @@ pub fn derive_schema(input: TokenStream) -> TokenStream {
                 let step = number.step;
                 quote! {
                     animation_api::schema::ValueSchema::Number {
-                        min: #min,
-                        max: #max,
-                        step: #step,
+                        min: (#min),
+                        max: (#max),
+                        step: (#step),
                     }
                 }
             } else if attrs.color {
