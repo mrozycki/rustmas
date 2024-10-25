@@ -6,7 +6,7 @@ Prerequisites
 
 1. Lights connected through [pico-w-neopixel-server](http://github.com/krzmaz/pico-w-neopixel-server)
 2. Light positions captured and stored in a CSV file
-3. (recommended) Raspberry Pi to control the lights. You can use any computer to run Rustmas lights,
+3. (recommended) Raspberry Pi to control the lights. You can use any computer to run Rustmas,
    but the instructions below were written with a Raspberry Pi running Raspbian in mind.
 
 Getting and building the code
@@ -41,17 +41,33 @@ migrant setup
 migrant apply
 ```
 
+Alternatively, you can just use the `db.sqlite` file from your local development setup.
+Make sure to copy it into the project root directory.
+
 Animation plugin setup
 ----------------------
 
 Before starting the service you will need to build animations and add your animations
 to the plugins directory. Instructions can be found in the provided example [plugins directory](../plugins/README.md).
+In short, you can build the animations with:
+
+```
+cargo build --release -p animations
+```
+
+The plugin directory set up for all the built-in animations is provided 
+in the repository already.
 
 
 WebAPI service
 --------------
 
 Copy the [`service.example`](deployment/service.example) file to `/etc/systemd/system/rustmas.service`.
+
+```
+sudo cp webapi/deployment/service.example /etc/systemd/system/rustmas.service
+```
+
 Make sure all the settings in that file are correct. If you're running the application on
 a Raspberry PI, you will likely only need to modify the WorkingDirectory and ExecStart paths to
 point to the right place (the example file assumes the repository is located at `/home/pi/rustmas`)
@@ -59,6 +75,10 @@ and lights URL.
 
 Create a `Rustmas.toml` file in the working directory specified in the service configuration file.
 You can copy the [`Rustmas.example.toml`](../Rustmas.example.toml) file and adjust it as needed.
+
+```
+cp Rustmas.example.toml Rustmas.toml
+```
 
 Before running the service, you will need to build the WebAPI:
 
@@ -69,8 +89,8 @@ cargo build --bin rustmas-webapi --release
 Enable the service with:
 
 ```
-sudo service rustmas start
-sudo service rustmas enable
+sudo systemctl start rustmas
+sudo systemctl enable rustmas
 ```
 
 This will start the service automatically every time you start the machine.
@@ -149,7 +169,7 @@ sudo cp webui/dist/* /var/www/rustmas
 After that is done, you need to restart nginx:
 
 ```
-sudo service nginx restart
+sudo systemctl restart nginx
 ```
 
 All done! You can now navigate to your machine's address (as specified in the nginx configuration)
