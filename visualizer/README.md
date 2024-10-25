@@ -2,14 +2,15 @@
 
 ## Running
 
+Running the visualizer as a standalone native application is no longer supported.
+The recommended way to use the visualizer is to [run is as a part of WebUI](../webapi/README.md#running-webui).
+The following instructions are not guaranteed to work.
+
 You can run the visualizer as a native binary with:
 
 ```
 cargo run [--release] --bin rustmas-visualizer
 ```
-
-If you would like to run the visualizer in a web browser, the suggested way
-is to [run is as a part of WebUI](../webapi/README.md#running-webui).
 
 Visualizer needs to be started after WebAPI.
 

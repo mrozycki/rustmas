@@ -1,9 +1,9 @@
 use animation_api::{event::Event, Animation};
-use animation_utils::ParameterSchema;
+use animation_utils::Schema;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 
-#[derive(Clone, Serialize, Deserialize, ParameterSchema)]
+#[derive(Clone, Serialize, Deserialize, Schema)]
 pub struct Parameters {
     // TODO: Define your animation's parameters
     #[schema_field(name = "Tail length", number(min = 1.0, max = 10.0, step = 1.0))]
@@ -43,8 +43,17 @@ impl Animation for MyAnimation {
         self.time += time_delta;
     }
 
-    fn on_event(&mut self, _event: Event) {
+    fn on_event(&mut self, event: Event) {
         // TODO: React to selected types of events by matching on `event` parameters
+        // Other event types are available.
+        match event {
+            Event::MidiEvent(_midi_msg) => (),
+            Event::MouseMove {
+                ray_origin: _,
+                ray_direction: _,
+            } => (),
+            _ => (),
+        }
     }
 
     fn render(&self) -> lightfx::Frame {
@@ -60,11 +69,6 @@ impl Animation for MyAnimation {
                 }
             })
             .into()
-    }
-
-    fn animation_name(&self) -> &str {
-        // TODO: Return the name of your animation
-        "Animation Plugin Template"
     }
 
     fn get_fps(&self) -> f64 {

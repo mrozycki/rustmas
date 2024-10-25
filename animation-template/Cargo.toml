@@ -4,9 +4,9 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-animation-utils = { git = "https://github.com/mrozycki/rustmas", rev = "680e444" }
-animation-api = { git = "https://github.com/mrozycki/rustmas", rev = "680e444" }
-lightfx = { git = "https://github.com/mrozycki/rustmas", rev = "680e444" }
+animation-utils = { git = "https://github.com/mrozycki/rustmas", rev = "bbbd4f4" }
+animation-api = { git = "https://github.com/mrozycki/rustmas", rev = "bbbd4f4" }
+lightfx = { git = "https://github.com/mrozycki/rustmas", rev = "bbbd4f4" }
 
 serde = { version = "1.0.152", features = ["derive"] }
 serde_json = "1.0.93"

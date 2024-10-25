@@ -16,12 +16,9 @@ for testing purposes.
 Local development setup
 -----------------------
 
-### You will need
+### Running the project locally
 
-* Rust toolkit (see [rustup](http://rustup.rs))
-* dependencies installed (see [Workflow file](.github/workflows/rust.yml) for what to install on Ubuntu)
-* (optionally) programmable lights set up with [pico-w-neopixel-server](http://github.com/krzmaz/pico-w-neopixel-server),
-  or you can use our visualizer instead
+For instructions on how to build and run Rustmas, see [webapi/README.md](webapi/README.md).
 
 ### Setting up your lights
 
@@ -30,11 +27,6 @@ If you are using physical lights, you need to connect them to a Raspberry Pi Pic
 [pico-usb-neopixel-driver](https://github.com/krzmaz/pico-usb-neopixel-driver), and configure their
 positions using [our configurator](configurator/README.md). This will produce a CSV file with light
 positions. Alternatively you can use the visualizer for testing with the [example CSV file](lights.csv.example).
-
-### Running code locally
-
-The easiest way to test your animations is to run our [web application](webapi/README.md) locally.
-You can use either physical lights or our visualizer.
 
 ### Git hooks
 
