@@ -16,12 +16,10 @@ curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 source "$HOME/.cargo/env"
 ```
 
-Then you will need to install `migrant` for running database migrations,
-`trunk` to serve the frontend code and add a WASM target for Rust to compile
-the frontend. This can be done with:
+Then you will need to install `trunk` to serve the frontend code and add 
+a WASM target for Rust to compile the frontend. This can be done with:
 
 ```
-cargo install migrant --features sqlite
 cargo install trunk
 rustup target add wasm32-unknown-unknown
 ```
@@ -46,18 +44,15 @@ sudo apt install libopencv-dev
 
 ### Database
 
-Rustmas WebAPI uses an SQLite database to store animation parameter values. Migrations for that
-database are provided in the `migrations` directory. You can run them using
-the [migrant CLI](https://crates.io/crates/migrant) from the `webapi` directory:
+Rustmas WebAPI uses an SQLite database to store animation parameter values. 
+It runs appropriate migrations at startup, so for an initial run you only need
+to provide an empty SQLite database file. One has been provided in the repository
+as [`db.sqlite.example`](../db.sqlite.example) in the root of the project.
+You just need to make a copy named `db.sqlite`.
 
 ```
-cd webapi
-migrant setup
-migrant apply
-cd -
+cp db.sqlite.example db.sqlite
 ```
-
-This will produce a `db.sqlite` file with appropriate tables set up.
 
 ### Configuration file
 

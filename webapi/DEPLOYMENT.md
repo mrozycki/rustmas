@@ -32,13 +32,12 @@ Getting and building the code
 Database setup
 --------------
 
-Similarly to local development setup, you will need to set up the database using
-the [migrant CLI](https://crates.io/crates/migrant). Run the following from the `webapi` directory:
+Similarly to local development setup, you will need to provide an empty SQLite 
+database file. One has been provided in the repository as [`db.sqlite.example`](../db.sqlite.example) 
+in the root of the project. You just need to make a copy named `db.sqlite`.
 
 ```
-cargo install migrant --features sqlite
-migrant setup
-migrant apply
+cp db.sqlite.example db.sqlite
 ```
 
 Alternatively, you can just use the `db.sqlite` file from your local development setup.
