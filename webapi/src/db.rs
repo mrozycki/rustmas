@@ -10,10 +10,12 @@ pub struct Db {
 
 impl Db {
     pub async fn new(path: &str) -> Result<Self, Box<dyn Error>> {
-        let conn = SqliteConnectOptions::from_str(path)?
+        let mut conn = SqliteConnectOptions::from_str(path)?
             .disable_statement_logging()
             .connect()
             .await?;
+
+        sqlx::migrate!("../migrations").run(&mut conn).await?;
 
         Ok(Self {
             conn: Arc::new(Mutex::new(conn)),

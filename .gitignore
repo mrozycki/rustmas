@@ -10,6 +10,8 @@ Rustmas.toml
 webui/dist
 
 *.sqlite
+*-shm
+*-wal
 
 .DS_Store
 .idea

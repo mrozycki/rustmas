@@ -1,5 +1,5 @@
 # path to an sqlite database, for parameter storage
-database_path = "webapi/db.sqlite"
+database_path = "db.sqlite"
 
 [controller]
 # path to CSV file with light positions

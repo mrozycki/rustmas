@@ -295,6 +295,11 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
     let (sender, receiver) = mpsc::channel::<lightfx::Frame>(1);
 
+    info!("Setting up database");
+    let db = web::Data::new(Db(
+        db::Db::new(&config.database_path.to_string_lossy()).await?
+    ));
+
     info!("Starting controller");
     let controller = {
         let mut controller = rustmas_animator::Controller::builder_from(config.controller)?
@@ -305,11 +310,6 @@ async fn main() -> Result<(), Box<dyn Error>> {
         info!("Discovered {} plugins", controller.list_animations().len());
         web::Data::new(AnimationController(Mutex::new(controller)))
     };
-
-    info!("Establishing database connection");
-    let db = web::Data::new(Db(
-        db::Db::new(&config.database_path.to_string_lossy()).await?
-    ));
 
     let frame_broadcaster = web::Data::new(FrameBroadcaster::new(receiver).start());
 
