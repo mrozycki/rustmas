@@ -1,0 +1,14 @@
+version: "3"
+services:
+  frontend:
+    image: localhost:rustmas-frontend
+    ports:
+      - "8080:80"
+  backend:
+    image: localhost:rustmas-backend
+    ports:
+      - "8081:8081"
+    volumes:
+      - ../db.sqlite:/rustmas/db.sqlite:rw,z
+      - ../Rustmas.toml:/rustmas/Rustmas.toml:z
+      - ../lights.csv:/rustmas/lights.csv:z

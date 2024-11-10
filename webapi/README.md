@@ -4,8 +4,16 @@ Rustmas WebAPI
 Rustmas WebAPI is the backend of the webapp that controls the Rustmas lights. The frontend is
 provided by [Rustmas WebUI](../webui/README.md).
 
-Local development
------------------
+Local development with Docker (recommended)
+-------------------------------------------
+
+You can use our provided [Docker build scripts](../docker/README.md) to develop
+Rustmas or animations for it. Alternatively, you can follow the instructions
+below to set up a local development environment from scratch.
+
+
+Local development without Docker
+--------------------------------
 
 ### Installing necessary tools
 
