@@ -54,8 +54,11 @@ fn random_star() -> Star {
     }
 }
 
-impl Stars {
-    pub fn create(points: Vec<(f64, f64, f64)>) -> impl Animation {
+impl Animation for Stars {
+    type Parameters = Parameters;
+    type Wrapped = SpeedControlled<BrightnessControlled<Self>>;
+
+    fn new(points: Vec<(f64, f64, f64)>) -> Self {
         let mut result = Self {
             points: points
                 .into_iter()
@@ -65,12 +68,8 @@ impl Stars {
             parameters: Default::default(),
         };
         result.stars.resize_with(20, random_star);
-        SpeedControlled::new(BrightnessControlled::new(result))
+        result
     }
-}
-
-impl Animation for Stars {
-    type Parameters = Parameters;
 
     fn update(&mut self, delta: f64) {
         for star in self.stars.iter_mut() {

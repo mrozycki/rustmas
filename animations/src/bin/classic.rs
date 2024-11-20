@@ -58,18 +58,17 @@ pub struct Classic {
     parameters: Parameters,
 }
 
-impl Classic {
-    pub fn create(points: Vec<(f64, f64, f64)>) -> impl Animation {
-        SpeedControlled::new(BrightnessControlled::new(Self {
+impl Animation for Classic {
+    type Parameters = Parameters;
+    type Wrapped = SpeedControlled<BrightnessControlled<Self>>;
+
+    fn new(points: Vec<(f64, f64, f64)>) -> Self {
+        Self {
             points_count: points.len(),
             time: 0.0,
             parameters: Default::default(),
-        }))
+        }
     }
-}
-
-impl Animation for Classic {
-    type Parameters = Parameters;
 
     fn update(&mut self, delta: f64) {
         self.time += delta;

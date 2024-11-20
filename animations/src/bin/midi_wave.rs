@@ -42,9 +42,11 @@ pub struct MidiWaveAnimation {
     parameters: Parameters,
 }
 
-impl MidiWaveAnimation {
-    pub fn create(points: Vec<(f64, f64, f64)>) -> impl Animation {
-        env_logger::init();
+impl Animation for MidiWaveAnimation {
+    type Parameters = Parameters;
+    type Wrapped = SpeedControlled<Self>;
+
+    fn new(points: Vec<(f64, f64, f64)>) -> Self {
         let points = points
             .into_iter()
             .map(|(x, y, _)| (x.powi(2) + y.powi(2)).sqrt())
@@ -52,17 +54,12 @@ impl MidiWaveAnimation {
             .sorted_by(|(_, r0), (_, r1)| r0.total_cmp(r1))
             .collect();
 
-        let control_points = Vec::new();
-        SpeedControlled::new(Self {
+        Self {
             points,
-            control_points,
+            control_points: Vec::new(),
             parameters: Default::default(),
-        })
+        }
     }
-}
-
-impl Animation for MidiWaveAnimation {
-    type Parameters = Parameters;
 
     fn update(&mut self, time_delta: f64) {
         self.control_points.retain_mut(|p| {

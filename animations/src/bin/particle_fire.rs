@@ -150,13 +150,15 @@ pub struct DoomFireAnimation {
     gradient: Gradient,
 }
 
-impl DoomFireAnimation {
-    pub fn create(points: Vec<(f64, f64, f64)>) -> impl Animation {
-        let particles = Vec::new();
-        SpeedControlled::new(BrightnessControlled::new(Self {
+impl Animation for DoomFireAnimation {
+    type Parameters = Parameters;
+    type Wrapped = SpeedControlled<BrightnessControlled<Self>>;
+
+    fn new(points: Vec<(f64, f64, f64)>) -> Self {
+        Self {
             points,
             parameters: Default::default(),
-            particles,
+            particles: Vec::new(),
             to_generate: 0.0,
             gradient: Gradient::new(vec![
                 Color::rgb_unit(0.0, 0.0, 0.0), // black
@@ -165,12 +167,8 @@ impl DoomFireAnimation {
                 Color::rgb_unit(1.0, 0.6, 0.0), // yellow
                 Color::rgb_unit(1.0, 0.6, 0.0), // yellow
             ]),
-        }))
+        }
     }
-}
-
-impl Animation for DoomFireAnimation {
-    type Parameters = Parameters;
 
     fn update(&mut self, delta: f64) {
         let wind_direction = match self.parameters.dimension {

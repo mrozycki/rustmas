@@ -121,21 +121,19 @@ pub struct Lightspeed {
     parameters: Parameters,
 }
 
-impl Lightspeed {
-    pub fn create(points: Vec<(f64, f64, f64)>) -> impl Animation {
-        let particles = Vec::new();
-        SpeedControlled::new(BrightnessControlled::new(Self {
-            points,
-            time: 0.0,
-            particles,
-            to_generate: 0.0,
-            parameters: Default::default(),
-        }))
-    }
-}
-
 impl Animation for Lightspeed {
     type Parameters = Parameters;
+    type Wrapped = SpeedControlled<BrightnessControlled<Self>>;
+
+    fn new(points: Vec<(f64, f64, f64)>) -> Self {
+        Self {
+            points,
+            time: 0.0,
+            particles: Vec::new(),
+            to_generate: 0.0,
+            parameters: Default::default(),
+        }
+    }
 
     fn update(&mut self, delta: f64) {
         self.time += delta;

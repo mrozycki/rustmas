@@ -38,17 +38,16 @@ pub struct Indexing {
     parameters: Parameters,
 }
 
-impl Indexing {
-    pub fn create(points: Vec<(f64, f64, f64)>) -> impl Animation {
-        BrightnessControlled::new(Self {
-            points_count: points.len(),
-            parameters: Default::default(),
-        })
-    }
-}
-
 impl Animation for Indexing {
     type Parameters = Parameters;
+    type Wrapped = BrightnessControlled<Self>;
+
+    fn new(points: Vec<(f64, f64, f64)>) -> Self {
+        Self {
+            points_count: points.len(),
+            parameters: Default::default(),
+        }
+    }
 
     fn update(&mut self, _delta: f64) {}
 

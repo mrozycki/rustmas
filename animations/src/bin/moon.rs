@@ -55,21 +55,21 @@ pub struct Moon {
     parameters: Parameters,
 }
 
-impl Moon {
-    pub fn create(points: Vec<(f64, f64, f64)>) -> impl Animation {
+impl Animation for Moon {
+    type Parameters = Parameters;
+    type Wrapped = OffSwitch<BrightnessControlled<Self>>;
+
+    fn new(points: Vec<(f64, f64, f64)>) -> Self {
         let mut noise = FastNoise::new();
         noise.set_frequency(2.0);
-        OffSwitch::new(BrightnessControlled::new(Self {
+
+        Self {
             points,
             time: 0.25,
             noise,
             parameters: Default::default(),
-        }))
+        }
     }
-}
-
-impl Animation for Moon {
-    type Parameters = Parameters;
 
     fn update(&mut self, delta: f64) {
         self.time += delta / self.parameters.cycle_length;

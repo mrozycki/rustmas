@@ -8,17 +8,16 @@ pub struct Check {
     time: f64,
 }
 
-impl Check {
-    pub fn create(points: Vec<(f64, f64, f64)>) -> impl Animation {
-        SpeedControlled::new(BrightnessControlled::new(Self {
-            points_count: points.len(),
-            time: 0.0,
-        }))
-    }
-}
-
 impl Animation for Check {
     type Parameters = ();
+    type Wrapped = SpeedControlled<BrightnessControlled<Self>>;
+
+    fn new(points: Vec<(f64, f64, f64)>) -> Self {
+        Self {
+            points_count: points.len(),
+            time: 0.0,
+        }
+    }
 
     fn update(&mut self, delta: f64) {
         self.time += delta;

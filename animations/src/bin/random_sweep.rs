@@ -44,9 +44,14 @@ pub struct RandomSweep {
     parameters: Parameters,
 }
 
-impl RandomSweep {
-    pub fn create(points: Vec<(f64, f64, f64)>) -> impl Animation {
-        SpeedControlled::new(BrightnessControlled::new(Self {
+impl RandomSweep {}
+
+impl Animation for RandomSweep {
+    type Parameters = Parameters;
+    type Wrapped = SpeedControlled<BrightnessControlled<Self>>;
+
+    fn new(points: Vec<(f64, f64, f64)>) -> Self {
+        Self {
             points: points
                 .into_iter()
                 .map(|(x, y, z)| {
@@ -65,12 +70,8 @@ impl RandomSweep {
             current_height: 0.0,
             max_height: 0.0,
             parameters: Default::default(),
-        }))
+        }
     }
-}
-
-impl Animation for RandomSweep {
-    type Parameters = Parameters;
 
     fn update(&mut self, delta: f64) {
         if self.heights.is_empty() {

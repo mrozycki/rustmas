@@ -82,17 +82,16 @@ pub struct ManualSweep {
     parameters: Parameters,
 }
 
-impl ManualSweep {
-    pub fn create(points: Vec<(f64, f64, f64)>) -> impl Animation {
-        BrightnessControlled::new(Self {
-            points,
-            parameters: Default::default(),
-        })
-    }
-}
-
 impl Animation for ManualSweep {
     type Parameters = Parameters;
+    type Wrapped = BrightnessControlled<Self>;
+
+    fn new(points: Vec<(f64, f64, f64)>) -> Self {
+        Self {
+            points,
+            parameters: Default::default(),
+        }
+    }
 
     fn render(&self) -> lightfx::Frame {
         self.points
