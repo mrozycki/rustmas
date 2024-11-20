@@ -72,7 +72,7 @@ pub fn plugin(_attr: TokenStream, item: TokenStream) -> TokenStream {
                     Ok(Some(message)) => match message.payload {
                         JsonRpcMethod::Initialize { points } => {
                             animation = None;
-                            animation = Some(<#name>::create(points));
+                            animation = Some(<#name>::new_wrapped(points));
                             respond(message.id, ());
                         }
                         JsonRpcMethod::ParameterSchema => {

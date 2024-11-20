@@ -26,17 +26,16 @@ pub struct SingleColor {
     parameters: Parameters,
 }
 
-impl SingleColor {
-    pub fn create(points: Vec<(f64, f64, f64)>) -> impl Animation {
-        OffSwitch::new(BrightnessControlled::new(Self {
-            points_count: points.len(),
-            parameters: Default::default(),
-        }))
-    }
-}
-
 impl Animation for SingleColor {
     type Parameters = Parameters;
+    type Wrapped = OffSwitch<BrightnessControlled<Self>>;
+
+    fn new(points: Vec<(f64, f64, f64)>) -> Self {
+        Self {
+            points_count: points.len(),
+            parameters: Default::default(),
+        }
+    }
 
     fn render(&self) -> lightfx::Frame {
         lightfx::Frame::new(self.points_count, self.parameters.color)

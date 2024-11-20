@@ -45,9 +45,12 @@ pub struct AudioVisualizer {
     parameters: Parameters,
 }
 
-impl AudioVisualizer {
-    pub fn create(points: Vec<(f64, f64, f64)>) -> impl Animation {
-        SpeedControlled::new(BrightnessControlled::new(Self {
+impl Animation for AudioVisualizer {
+    type Parameters = Parameters;
+    type Wrapped = SpeedControlled<BrightnessControlled<Self>>;
+
+    fn new(points: Vec<(f64, f64, f64)>) -> Self {
+        Self {
             points: points
                 .into_iter()
                 .map(|p| {
@@ -60,12 +63,8 @@ impl AudioVisualizer {
             time: 0.0,
             control_points: Vec::new(),
             parameters: Default::default(),
-        }))
+        }
     }
-}
-
-impl Animation for AudioVisualizer {
-    type Parameters = Parameters;
 
     fn update(&mut self, delta: f64) {
         self.time += delta;

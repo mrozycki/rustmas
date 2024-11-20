@@ -162,19 +162,18 @@ pub struct Pillars {
     pillars: Vec<Pillar>,
 }
 
-impl Pillars {
-    pub fn create(points: Vec<(f64, f64, f64)>) -> impl Animation {
-        SpeedControlled::new(BrightnessControlled::new(Self {
+impl Animation for Pillars {
+    type Parameters = Parameters;
+    type Wrapped = SpeedControlled<BrightnessControlled<Self>>;
+
+    fn new(points: Vec<(f64, f64, f64)>) -> Self {
+        Self {
             points,
             parameters: Default::default(),
             fractional_gen: 0.0,
             pillars: Vec::new(),
-        }))
+        }
     }
-}
-
-impl Animation for Pillars {
-    type Parameters = Parameters;
 
     fn update(&mut self, delta: f64) {
         self.pillars.retain_mut(|p| p.update(delta));

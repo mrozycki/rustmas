@@ -18,17 +18,16 @@ pub struct ColorPicker {
     parameters: Parameters,
 }
 
-impl ColorPicker {
-    pub fn create(points: Vec<(f64, f64, f64)>) -> impl Animation {
-        SpeedControlled::new(BrightnessControlled::new(Self {
-            points_count: points.len(),
-            parameters: Default::default(),
-        }))
-    }
-}
-
 impl Animation for ColorPicker {
     type Parameters = ();
+    type Wrapped = SpeedControlled<BrightnessControlled<Self>>;
+
+    fn new(points: Vec<(f64, f64, f64)>) -> Self {
+        Self {
+            points_count: points.len(),
+            parameters: Default::default(),
+        }
+    }
 
     fn render(&self) -> lightfx::Frame {
         lightfx::Frame::new(self.points_count, self.parameters.color)

@@ -43,8 +43,13 @@ fn random_new_center(size: f64) -> Vector3<f64> {
     )
 }
 
-impl Snow {
-    pub fn create(points: Vec<(f64, f64, f64)>) -> impl Animation {
+impl Snow {}
+
+impl Animation for Snow {
+    type Parameters = Parameters;
+    type Wrapped = SpeedControlled<BrightnessControlled<Self>>;
+
+    fn new(points: Vec<(f64, f64, f64)>) -> Self {
         let mut result = Self {
             points: points
                 .into_iter()
@@ -57,12 +62,8 @@ impl Snow {
             .centers
             .resize_with(20, || random_new_center(result.parameters.size));
 
-        SpeedControlled::new(BrightnessControlled::new(result))
+        result
     }
-}
-
-impl Animation for Snow {
-    type Parameters = Parameters;
 
     fn update(&mut self, delta: f64) {
         for center in self.centers.iter_mut() {

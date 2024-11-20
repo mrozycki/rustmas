@@ -46,21 +46,20 @@ pub struct Present {
     parameters: Parameters,
 }
 
-impl Present {
-    pub fn create(points: Vec<(f64, f64, f64)>) -> impl Animation {
-        SpeedControlled::new(BrightnessControlled::new(Self {
+impl Animation for Present {
+    type Parameters = Parameters;
+    type Wrapped = SpeedControlled<BrightnessControlled<Self>>;
+
+    fn new(points: Vec<(f64, f64, f64)>) -> Self {
+        Self {
             points: points
                 .into_iter()
                 .map(|(x, y, z)| Vector3::new(x, y, z))
                 .collect(),
             time: 0.0,
             parameters: Default::default(),
-        }))
+        }
     }
-}
-
-impl Animation for Present {
-    type Parameters = Parameters;
 
     fn update(&mut self, delta: f64) {
         self.time += delta;

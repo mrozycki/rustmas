@@ -42,8 +42,13 @@ impl RainbowSphere {
             .map(|(x, y, z)| (x.powi(2) + (y - self.parameters.height).powi(2) + z.powi(2)).sqrt())
             .collect();
     }
+}
 
-    pub fn create(points: Vec<(f64, f64, f64)>) -> impl Animation {
+impl Animation for RainbowSphere {
+    type Parameters = Parameters;
+    type Wrapped = SpeedControlled<BrightnessControlled<Self>>;
+
+    fn new(points: Vec<(f64, f64, f64)>) -> Self {
         let mut result = Self {
             points,
             points_radius: vec![],
@@ -51,12 +56,8 @@ impl RainbowSphere {
             parameters: Default::default(),
         };
         result.reset();
-        SpeedControlled::new(BrightnessControlled::new(result))
+        result
     }
-}
-
-impl Animation for RainbowSphere {
-    type Parameters = Parameters;
 
     fn update(&mut self, delta: f64) {
         self.time += delta;

@@ -43,18 +43,17 @@ pub struct CircleBoom {
     parameters: Parameters,
 }
 
-impl CircleBoom {
-    pub fn create(points: Vec<(f64, f64, f64)>) -> impl Animation {
-        BrightnessControlled::new(Self {
+impl Animation for CircleBoom {
+    type Parameters = Parameters;
+    type Wrapped = BrightnessControlled<Self>;
+
+    fn new(points: Vec<(f64, f64, f64)>) -> Self {
+        Self {
             points,
             time: 0.0,
             parameters: Default::default(),
-        })
+        }
     }
-}
-
-impl Animation for CircleBoom {
-    type Parameters = Parameters;
 
     fn update(&mut self, delta: f64) {
         self.time += delta * self.parameters.bpm / 60.0;

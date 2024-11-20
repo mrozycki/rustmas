@@ -71,18 +71,17 @@ pub struct CircleGrid {
     parameters: Parameters,
 }
 
-impl CircleGrid {
-    pub fn create(points: Vec<(f64, f64, f64)>) -> impl Animation {
-        OffSwitch::new(BrightnessControlled::new(Self {
+impl Animation for CircleGrid {
+    type Parameters = Parameters;
+    type Wrapped = OffSwitch<BrightnessControlled<Self>>;
+
+    fn new(points: Vec<(f64, f64, f64)>) -> Self {
+        Self {
             points,
             time: 0.0,
             parameters: Default::default(),
-        }))
+        }
     }
-}
-
-impl Animation for CircleGrid {
-    type Parameters = Parameters;
 
     fn update(&mut self, delta: f64) {
         self.time += delta;

@@ -12,6 +12,13 @@ pub struct AnimationError {
 
 pub trait Animation {
     type Parameters: GetSchema + DeserializeOwned + Serialize + Default + Clone;
+    type Wrapped: Animation<Parameters: GetSchema>;
+
+    fn new(points: Vec<(f64, f64, f64)>) -> Self;
+
+    fn new_wrapped(points: Vec<(f64, f64, f64)>) -> Self::Wrapped {
+        Self::Wrapped::new(points)
+    }
 
     fn get_schema(&self) -> ConfigurationSchema
     where

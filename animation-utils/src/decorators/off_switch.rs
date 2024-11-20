@@ -52,18 +52,31 @@ impl<P: GetSchema> GetSchema for Parameters<P> {
     }
 }
 
-pub struct OffSwitch<P: GetSchema, A: Animation<Parameters = P>> {
+pub struct OffSwitch<A: Animation<Parameters: GetSchema>> {
     animation: A,
-    parameters: Parameters<P>,
+    parameters: Parameters<A::Parameters>,
     energy: f64,
 }
 
-impl<A, P> Animation for OffSwitch<P, A>
+impl<A> Animation for OffSwitch<A>
 where
-    A: Animation<Parameters = P>,
-    P: GetSchema + Default + Clone + Serialize + DeserializeOwned,
+    A: Animation,
+    A::Parameters: GetSchema + Default + Clone + Serialize + DeserializeOwned,
 {
-    type Parameters = Parameters<P>;
+    type Parameters = Parameters<A::Parameters>;
+    type Wrapped = Self;
+
+    fn new(points: Vec<(f64, f64, f64)>) -> Self {
+        Self {
+            animation: A::new(points),
+            parameters: Parameters {
+                off_switch_delay: 1.0,
+                off_switch_state: Switch::On,
+                inner: Default::default(),
+            },
+            energy: 0.0,
+        }
+    }
 
     fn update(&mut self, time_delta: f64) {
         let energy_delta = if self.parameters.off_switch_delay == 0.0 {
@@ -111,19 +124,5 @@ where
 
     fn get_fps(&self) -> f64 {
         self.animation.get_fps()
-    }
-}
-
-impl<P: GetSchema + Default, A: Animation<Parameters = P>> OffSwitch<P, A> {
-    pub fn new(animation: A) -> Self {
-        Self {
-            animation,
-            parameters: Parameters {
-                off_switch_delay: 1.0,
-                off_switch_state: Switch::On,
-                inner: Default::default(),
-            },
-            energy: 0.0,
-        }
     }
 }

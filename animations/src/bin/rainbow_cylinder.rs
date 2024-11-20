@@ -23,9 +23,14 @@ pub struct RainbowCylinder {
     parameters: Parameters,
 }
 
-impl RainbowCylinder {
-    pub fn create(points: Vec<(f64, f64, f64)>) -> impl Animation {
-        SpeedControlled::new(BrightnessControlled::new(Self {
+impl RainbowCylinder {}
+
+impl Animation for RainbowCylinder {
+    type Parameters = Parameters;
+    type Wrapped = SpeedControlled<BrightnessControlled<Self>>;
+
+    fn new(points: Vec<(f64, f64, f64)>) -> Self {
+        Self {
             points_alpha: points
                 .into_iter()
                 .map(animation_utils::to_polar)
@@ -33,12 +38,8 @@ impl RainbowCylinder {
                 .collect(),
             time: 0.0,
             parameters: Default::default(),
-        }))
+        }
     }
-}
-
-impl Animation for RainbowCylinder {
-    type Parameters = Parameters;
 
     fn update(&mut self, delta: f64) {
         self.time += delta;

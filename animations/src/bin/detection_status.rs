@@ -6,9 +6,12 @@ pub struct DetectionStatus {
     points: Vec<bool>,
 }
 
-impl DetectionStatus {
-    pub fn create(points: Vec<(f64, f64, f64)>) -> impl Animation {
-        BrightnessControlled::new(Self {
+impl Animation for DetectionStatus {
+    type Parameters = ();
+    type Wrapped = BrightnessControlled<Self>;
+
+    fn new(points: Vec<(f64, f64, f64)>) -> Self {
+        Self {
             points: points
                 .iter()
                 .map(|(a, b, c)| {
@@ -17,12 +20,8 @@ impl DetectionStatus {
                         || c.to_bits() == (-1.0_f64).to_bits()
                 })
                 .collect(),
-        })
+        }
     }
-}
-
-impl Animation for DetectionStatus {
-    type Parameters = ();
 
     fn update(&mut self, _delta: f64) {}
 

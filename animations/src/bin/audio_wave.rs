@@ -64,8 +64,11 @@ pub struct AudioVisualizer {
     _stream: Stream,
 }
 
-impl AudioVisualizer {
-    pub fn create(points: Vec<(f64, f64, f64)>) -> impl Animation {
+impl Animation for AudioVisualizer {
+    type Parameters = Parameters;
+    type Wrapped = SpeedControlled<BrightnessControlled<Self>>;
+
+    fn new(points: Vec<(f64, f64, f64)>) -> Self {
         let buffer: Arc<Mutex<VecDeque<f32>>> = Arc::new(Mutex::new(vec![0.0; BUFFER_SIZE].into()));
         let input_data_fn = {
             let buffer = buffer.clone();
@@ -91,17 +94,13 @@ impl AudioVisualizer {
             .unwrap();
         input_stream.play().unwrap();
 
-        SpeedControlled::new(BrightnessControlled::new(Self {
+        Self {
             points,
             parameters: Default::default(),
             buffer,
             _stream: input_stream,
-        }))
+        }
     }
-}
-
-impl Animation for AudioVisualizer {
-    type Parameters = Parameters;
 
     fn update(&mut self, _: f64) {}
 

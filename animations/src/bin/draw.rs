@@ -48,10 +48,13 @@ pub struct Draw {
     parameters: Parameters,
 }
 
-impl Draw {
-    pub fn create(points: Vec<(f64, f64, f64)>) -> impl Animation {
+impl Animation for Draw {
+    type Parameters = Parameters;
+    type Wrapped = BrightnessControlled<Self>;
+
+    fn new(points: Vec<(f64, f64, f64)>) -> Self {
         let len = points.len();
-        BrightnessControlled::new(Self {
+        Self {
             points: points
                 .into_iter()
                 .map(|(x, y, z)| nalgebra::Vector3::new(x as f32, y as f32, z as f32))
@@ -61,12 +64,8 @@ impl Draw {
             last_ray_origin: None,
             last_ray_direction: None,
             parameters: Default::default(),
-        })
+        }
     }
-}
-
-impl Animation for Draw {
-    type Parameters = Parameters;
 
     fn set_parameters(&mut self, parameters: Self::Parameters) {
         self.parameters = parameters;

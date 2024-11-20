@@ -35,18 +35,19 @@ pub struct RainbowWaterfall {
     parameters: Parameters,
 }
 
-impl RainbowWaterfall {
-    pub fn create(points: Vec<(f64, f64, f64)>) -> impl Animation {
-        SpeedControlled::new(BrightnessControlled::new(Self {
-            parameters: Default::default(),
-            time: 0.0,
-            points_height: points.into_iter().map(|(_, h, _)| h).collect(),
-        }))
-    }
-}
+impl RainbowWaterfall {}
 
 impl Animation for RainbowWaterfall {
     type Parameters = Parameters;
+    type Wrapped = SpeedControlled<BrightnessControlled<Self>>;
+
+    fn new(points: Vec<(f64, f64, f64)>) -> Self {
+        Self {
+            parameters: Default::default(),
+            time: 0.0,
+            points_height: points.into_iter().map(|(_, h, _)| h).collect(),
+        }
+    }
 
     fn update(&mut self, delta: f64) {
         self.time += delta;

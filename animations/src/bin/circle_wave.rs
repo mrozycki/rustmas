@@ -59,19 +59,18 @@ pub struct CircleWave {
     parameters: Parameters,
 }
 
-impl CircleWave {
-    pub fn create(points: Vec<(f64, f64, f64)>) -> impl Animation {
-        BrightnessControlled::new(Self {
+impl Animation for CircleWave {
+    type Parameters = Parameters;
+    type Wrapped = BrightnessControlled<Self>;
+
+    fn new(points: Vec<(f64, f64, f64)>) -> Self {
+        Self {
             points,
             time: -0.25,
             off_after: None,
             parameters: Default::default(),
-        })
+        }
     }
-}
-
-impl Animation for CircleWave {
-    type Parameters = Parameters;
 
     fn update(&mut self, delta: f64) {
         self.time += delta * self.parameters.bpm / 60.0;

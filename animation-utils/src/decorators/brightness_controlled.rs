@@ -23,17 +23,28 @@ impl<P: GetSchema> GetSchema for Parameters<P> {
     }
 }
 
-pub struct BrightnessControlled<P: GetSchema, A: Animation<Parameters = P>> {
+pub struct BrightnessControlled<A: Animation<Parameters: GetSchema>> {
     animation: A,
-    parameters: Parameters<P>,
+    parameters: Parameters<A::Parameters>,
 }
 
-impl<A, P> Animation for BrightnessControlled<P, A>
+impl<A> Animation for BrightnessControlled<A>
 where
-    A: Animation<Parameters = P>,
-    P: GetSchema + Default + Clone + Serialize + DeserializeOwned,
+    A: Animation,
+    A::Parameters: GetSchema + Default + Clone + Serialize + DeserializeOwned,
 {
-    type Parameters = Parameters<P>;
+    type Parameters = Parameters<A::Parameters>;
+    type Wrapped = Self;
+
+    fn new(points: Vec<(f64, f64, f64)>) -> Self {
+        Self {
+            animation: A::new(points),
+            parameters: Parameters {
+                brightness_factor: 1.0,
+                inner: Default::default(),
+            },
+        }
+    }
 
     fn update(&mut self, delta: f64) {
         self.animation.update(delta)
@@ -66,17 +77,5 @@ where
 
     fn get_fps(&self) -> f64 {
         self.animation.get_fps()
-    }
-}
-
-impl<P: GetSchema + Default, A: Animation<Parameters = P>> BrightnessControlled<P, A> {
-    pub fn new(animation: A) -> Self {
-        Self {
-            animation,
-            parameters: Parameters {
-                brightness_factor: 1.0,
-                inner: Default::default(),
-            },
-        }
     }
 }

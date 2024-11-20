@@ -55,18 +55,17 @@ pub struct AudioVisualizer {
     parameters: Parameters,
 }
 
-impl AudioVisualizer {
-    pub fn create(points: Vec<(f64, f64, f64)>) -> impl Animation {
-        SpeedControlled::new(BrightnessControlled::new(Self {
+impl Animation for AudioVisualizer {
+    type Parameters = Parameters;
+    type Wrapped = SpeedControlled<BrightnessControlled<Self>>;
+
+    fn new(points: Vec<(f64, f64, f64)>) -> Self {
+        Self {
             points,
             bands: vec![0.0],
             parameters: Default::default(),
-        }))
+        }
     }
-}
-
-impl Animation for AudioVisualizer {
-    type Parameters = Parameters;
 
     fn on_event(&mut self, event: Event) {
         if let Event::FftEvent { bands } = event {
