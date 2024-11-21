@@ -2,7 +2,7 @@ use animation_api::schema::{
     ConfigurationSchema, GetEnumOptions, GetSchema, ParameterSchema, ValueSchema,
 };
 use animation_api::Animation;
-use animation_plugin_macro::EnumSchema;
+use animation_macros::EnumSchema;
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 
