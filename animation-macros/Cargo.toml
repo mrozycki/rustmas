@@ -1,5 +1,5 @@
 [package]
-name = "animation-plugin-macro"
+name = "animation-macros"
 version = "0.1.0"
 edition = "2021"
 

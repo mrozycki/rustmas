@@ -1,7 +1,7 @@
 [workspace]
 members = [
     "animation-api",
-    "animation-plugin-macro",
+    "animation-macros",
     "animation-template",
     "animation-utils",
     "animations",

@@ -498,7 +498,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "animation-plugin-macro"
+name = "animation-macros"
 version = "0.1.0"
 dependencies = [
  "darling",
@@ -534,7 +534,7 @@ name = "animation-utils"
 version = "0.1.0"
 dependencies = [
  "animation-api 0.1.0",
- "animation-plugin-macro 0.1.0",
+ "animation-macros",
  "lightfx 0.1.0",
  "nalgebra",
  "rand 0.8.5",
@@ -548,7 +548,7 @@ version = "0.1.0"
 source = "git+https://github.com/mrozycki/rustmas?rev=bbbd4f4#bbbd4f44cfa71299e961710c7215f7d32e9fe342"
 dependencies = [
  "animation-api 0.1.0 (git+https://github.com/mrozycki/rustmas?rev=bbbd4f4)",
- "animation-plugin-macro 0.1.0 (git+https://github.com/mrozycki/rustmas?rev=bbbd4f4)",
+ "animation-plugin-macro",
  "lightfx 0.1.0 (git+https://github.com/mrozycki/rustmas?rev=bbbd4f4)",
  "nalgebra",
  "rand 0.8.5",

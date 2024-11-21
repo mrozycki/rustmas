@@ -2,8 +2,7 @@ pub mod decorators;
 
 use std::f64::consts::TAU;
 
-pub use animation_plugin_macro::plugin;
-pub use animation_plugin_macro::{EnumSchema, Schema};
+pub use animation_macros::{plugin, EnumSchema, Schema};
 use nalgebra::{Rotation3, Unit, Vector3};
 use rand::Rng;
 
