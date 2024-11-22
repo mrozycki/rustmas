@@ -24,14 +24,19 @@ use crate::frame_broadcaster::{FrameBroadcaster, FrameBroadcasterSession};
 
 #[post("/events/restart")]
 async fn restart_events(controller: web::Data<AnimationController>) -> HttpResponse {
-    controller.0.lock().await.restart_event_generators();
+    controller.0.lock().await.restart_event_generators().await;
     HttpResponse::Ok().json(())
 }
 
 #[get("/events/schema")]
 async fn events_schema(controller: web::Data<AnimationController>) -> HttpResponse {
     HttpResponse::Ok().json(GetEventGeneratorSchemaResponse {
-        event_generators: controller.0.lock().await.get_event_generator_parameters(),
+        event_generators: controller
+            .0
+            .lock()
+            .await
+            .get_event_generator_parameters()
+            .await,
     })
 }
 
@@ -45,6 +50,7 @@ async fn set_event_parameters(
         .lock()
         .await
         .set_event_generator_parameters(&params.event_generators)
+        .await
     {
         Ok(_) => HttpResponse::Ok().json(()),
         Err(e) => HttpResponse::InternalServerError().json(json!({ "error": e.to_string() })),
@@ -75,14 +81,14 @@ async fn restore_params(
 ) -> Result<Configuration, String> {
     match db.get_parameters(&configuration.id).await {
         Ok(Some(values)) => {
-            let _ = controller.set_parameters(&values);
+            let _ = controller.set_parameters(&values).await;
             Ok(Configuration {
                 values,
                 ..configuration
             })
         }
         Ok(None) => {
-            match controller.get_parameter_values() {
+            match controller.get_parameter_values().await {
                 Ok(params) => {
                     let _ = db.set_parameters(&configuration.id, &params).await;
                 }
@@ -99,7 +105,7 @@ async fn restore_params(
 #[post("/reload")]
 async fn reload(controller: web::Data<AnimationController>, db: web::Data<Db>) -> HttpResponse {
     let mut controller = controller.0.lock().await;
-    let configuration = match controller.reload_animation() {
+    let configuration = match controller.reload_animation().await {
         Ok(config) => config,
         Err(e) => {
             return HttpResponse::InternalServerError()
@@ -120,7 +126,7 @@ async fn switch(
     db: web::Data<Db>,
 ) -> HttpResponse {
     let mut controller = controller.0.lock().await;
-    let configuration = match controller.switch_animation(&form.animation) {
+    let configuration = match controller.switch_animation(&form.animation).await {
         Ok(config) => config,
         Err(e) => {
             return HttpResponse::InternalServerError()
@@ -129,7 +135,7 @@ async fn switch(
     };
 
     if let Some(values) = form.params.clone() {
-        let _ = controller.set_parameters(&values);
+        let _ = controller.set_parameters(&values).await;
         HttpResponse::Ok().json(SwitchAnimationResponse {
             animation: Configuration {
                 values,
@@ -146,13 +152,13 @@ async fn switch(
 
 #[post("/turn_off")]
 async fn turn_off(controller: web::Data<AnimationController>) -> HttpResponse {
-    controller.0.lock().await.turn_off();
+    controller.0.lock().await.turn_off().await;
     HttpResponse::Ok().json(())
 }
 
 #[get("/params")]
 async fn get_params(controller: web::Data<AnimationController>) -> HttpResponse {
-    match controller.0.lock().await.get_parameters() {
+    match controller.0.lock().await.get_parameters().await {
         Ok(animation) => HttpResponse::Ok().json(GetParametersResponse { animation }),
         Err(e) => HttpResponse::InternalServerError().json(json!({ "error": e.to_string() })),
     }
@@ -164,14 +170,14 @@ async fn save_params(
     db: web::Data<Db>,
 ) -> HttpResponse {
     let controller = controller.0.lock().await;
-    let parameter_values = match controller.get_parameter_values() {
+    let parameter_values = match controller.get_parameter_values().await {
         Ok(params) => params,
         Err(e) => {
             return HttpResponse::InternalServerError().json(json!({ "error": e.to_string() }))
         }
     };
 
-    let animation = controller.current_animation();
+    let animation = controller.current_animation().await;
     let Some(animation_id) = animation.as_ref().map(|a| a.animation_id()) else {
         return HttpResponse::PreconditionFailed().json(json!({ "error": "No animation set" }));
     };
@@ -188,15 +194,15 @@ async fn reset_params(
     db: web::Data<Db>,
 ) -> HttpResponse {
     let mut controller = controller.0.lock().await;
-    let animation = controller.current_animation();
+    let animation = controller.current_animation().await;
     let Some(animation_id) = animation.as_ref().map(|a| a.animation_id()) else {
         return HttpResponse::PreconditionFailed().json(json!({ "error": "No animation set" }));
     };
 
     match db.0.get_parameters(animation_id).await {
         Ok(Some(params)) => {
-            let _ = controller.set_parameters(&params);
-            match controller.get_parameters() {
+            let _ = controller.set_parameters(&params).await;
+            match controller.get_parameters().await {
                 Ok(animation) => HttpResponse::Ok().json(GetParametersResponse { animation }),
                 Err(e) => {
                     HttpResponse::InternalServerError().json(json!({ "error": e.to_string() }))
@@ -214,13 +220,19 @@ async fn post_params(
     params: web::Json<SetAnimationParametersRequest>,
     controller: web::Data<AnimationController>,
 ) -> HttpResponse {
-    match controller.0.lock().await.set_parameters(&params.values) {
+    match controller
+        .0
+        .lock()
+        .await
+        .set_parameters(&params.values)
+        .await
+    {
         Ok(_) => HttpResponse::Ok().json(()),
         Err(e) => HttpResponse::InternalServerError().json(json!({"error": e.to_string()})),
     }
 }
 
-fn get_animations(controller: &Controller) -> ListAnimationsResponse {
+async fn get_animations(controller: &Controller) -> ListAnimationsResponse {
     ListAnimationsResponse {
         animations: controller
             .list_animations()
@@ -232,6 +244,7 @@ fn get_animations(controller: &Controller) -> ListAnimationsResponse {
             .collect::<Vec<_>>(),
         current_animation_id: controller
             .current_animation()
+            .await
             .map(|a| a.animation_id().to_owned()),
     }
 }
@@ -240,7 +253,7 @@ fn get_animations(controller: &Controller) -> ListAnimationsResponse {
 async fn discover(controller: web::Data<AnimationController>) -> HttpResponse {
     let mut controller = controller.0.lock().await;
     match controller.discover_animations() {
-        Ok(_) => HttpResponse::Ok().json(get_animations(&controller)),
+        Ok(_) => HttpResponse::Ok().json(get_animations(&controller).await),
         Err(e) => HttpResponse::InternalServerError().json(json!({"error": e.to_string()})),
     }
 }
@@ -248,7 +261,7 @@ async fn discover(controller: web::Data<AnimationController>) -> HttpResponse {
 #[get("/list")]
 async fn list(controller: web::Data<AnimationController>) -> HttpResponse {
     let controller = controller.0.lock().await;
-    HttpResponse::Ok().json(get_animations(&controller))
+    HttpResponse::Ok().json(get_animations(&controller).await)
 }
 
 #[get("/frames")]

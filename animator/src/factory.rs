@@ -7,7 +7,8 @@ use log::warn;
 
 use crate::{
     jsonrpc::JsonRpcPlugin,
-    plugin::{AnimationPluginError, PluginConfig, PluginConfigError},
+    plugin::{AnimationPluginError, Plugin, PluginConfig, PluginConfigError, PluginType},
+    wasm::WasmPlugin,
 };
 
 #[derive(Debug, thiserror::Error)]
@@ -83,12 +84,19 @@ impl AnimationFactory {
         &self.available_plugins
     }
 
-    pub fn make(&self, name: &str) -> Result<JsonRpcPlugin, AnimationFactoryError> {
+    pub async fn make(&self, name: &str) -> Result<Box<dyn Plugin>, AnimationFactoryError> {
         let Some(plugin) = self.available_plugins.get(name) else {
             return Err(AnimationFactoryError::AnimationNotFound);
         };
 
-        Ok(JsonRpcPlugin::new(plugin.clone(), self.points.clone())?)
+        match plugin.plugin_type() {
+            PluginType::Native => Ok(Box::new(
+                JsonRpcPlugin::new(plugin.clone(), self.points.clone()).await?,
+            )),
+            PluginType::Wasm => Ok(Box::new(
+                WasmPlugin::new(plugin.clone(), self.points.clone()).await?,
+            )),
+        }
     }
 
     pub fn points(&self) -> &[(f64, f64, f64)] {

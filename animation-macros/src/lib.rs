@@ -4,10 +4,30 @@ use quote::quote;
 use syn::parse_macro_input;
 
 #[proc_macro_attribute]
+pub fn wasm_plugin(_attr: TokenStream, item: TokenStream) -> TokenStream {
+    let ast: syn::ItemStruct = syn::parse2(item.into()).unwrap();
+    generate_wasm_plugin(ast).into()
+}
+
+fn generate_wasm_plugin(ast: syn::ItemStruct) -> proc_macro2::TokenStream {
+    let name = &ast.ident;
+    quote! {
+        #ast
+
+        type WrappedGuestPlugin = animation_wasm_wrapper::guest::GuestPluginWrapper<#name>;
+        animation_wasm_wrapper::guest::export!(WrappedGuestPlugin with_types_in animation_wasm_wrapper::guest);
+    }
+}
+
+#[proc_macro_attribute]
 pub fn plugin(_attr: TokenStream, item: TokenStream) -> TokenStream {
     let ast: syn::ItemStruct = syn::parse2(item.into()).unwrap();
+    generate_native_plugin(ast).into()
+}
+
+fn generate_native_plugin(ast: syn::ItemStruct) -> proc_macro2::TokenStream {
     let name = &ast.ident;
-    let output = quote! {
+    quote! {
         #ast
 
         fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
@@ -130,9 +150,7 @@ pub fn plugin(_attr: TokenStream, item: TokenStream) -> TokenStream {
             }
             Ok(())
         }
-    };
-
-    output.into()
+    }
 }
 
 #[derive(Debug, Clone, FromMeta)]

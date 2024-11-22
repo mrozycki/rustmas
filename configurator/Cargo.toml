@@ -12,7 +12,7 @@ clap = { version = "4.0.8", features = ["derive", "string"] }
 csv = "1.1.6"
 indicatif = "0.17.1"
 itertools = "0.10.5"
-opencv = { version = "0.91", features = ["clang-runtime"] }
+opencv = { version = "0.93", features = ["clang-runtime"] }
 serde = { version = "1.0", features = ["derive"] }
 nalgebra = "0.31.4"
 statistical = "1.0.0"

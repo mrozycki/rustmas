@@ -4,6 +4,7 @@ members = [
     "animation-macros",
     "animation-template",
     "animation-utils",
+    "animation-wasm-wrapper",
     "animations",
     "light-client",
     "configurator",
@@ -15,6 +16,7 @@ members = [
     "webui",
     "visualizer",
     "events",
+    "test-wasm-animation",
 ]
 
 resolver = "2"
