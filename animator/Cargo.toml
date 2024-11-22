@@ -20,6 +20,13 @@ tokio = { version = "1", features = ["full"] }
 log = "0.4.17"
 env_logger = "0.10.0"
 thiserror = "1.0.60"
+itertools = "0.13.0"
+async-trait = "0.1.83"
+
+[dependencies.animation-wasm-wrapper]
+path = "../animation-wasm-wrapper"
+default-features = false
+features = ["host"]
 
 [features]
 default = ["midi", "audio"]

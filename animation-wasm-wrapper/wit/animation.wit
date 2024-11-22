@@ -1,0 +1,31 @@
+package guest:animation;
+
+interface plugin {
+    record position {
+        x: f64,
+        y: f64,
+        z: f64,
+    }
+    
+    record color {
+        r: u8,
+        g: u8,
+        b: u8,
+    }
+    
+    resource animation {
+        constructor(points: list<position>);
+        
+        update: func(time-delta: f64);
+        render: func() -> list<color>;
+        get-schema: func() -> string;
+        get-parameters: func() -> string;
+        set-parameters: func(values: string);
+        get-fps: func() -> f64;
+        on-event: func(event: string);
+    }
+}
+
+world animation {
+  export plugin;
+}

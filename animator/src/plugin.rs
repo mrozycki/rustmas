@@ -9,10 +9,8 @@ use animation_api::{
     schema::{Configuration, ConfigurationSchema, ParameterValue},
     AnimationError,
 };
-use log::info;
+use async_trait::async_trait;
 use serde::Deserialize;
-
-use crate::jsonrpc::JsonRpcEndpoint;
 
 #[derive(Debug, thiserror::Error)]
 pub enum PluginConfigError {
@@ -23,12 +21,22 @@ pub enum PluginConfigError {
     NonUtf8DirectoryName,
 }
 
-#[derive(Clone, Deserialize)]
-pub struct PluginManifest {
-    display_name: String,
+#[derive(Debug, Clone, Copy, Default, PartialEq, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum PluginType {
+    #[default]
+    Native,
+    Wasm,
 }
 
-#[derive(Clone)]
+#[derive(Debug, Clone, Deserialize)]
+pub struct PluginManifest {
+    display_name: String,
+    #[serde(default)]
+    plugin_type: PluginType,
+}
+
+#[derive(Debug, Clone)]
 pub struct PluginConfig {
     animation_id: String,
     manifest: PluginManifest,
@@ -69,30 +77,31 @@ impl PluginConfig {
         &self.manifest.display_name
     }
 
-    fn executable_path(&self) -> PathBuf {
-        #[cfg(windows)]
-        let executable_name = "plugin.exe";
+    pub fn plugin_type(&self) -> PluginType {
+        self.manifest.plugin_type
+    }
 
-        #[cfg(not(windows))]
-        let executable_name = "plugin";
+    pub fn executable_path(&self) -> PathBuf {
+        let executable_name = if self.manifest.plugin_type == PluginType::Wasm {
+            "plugin.wasm"
+        } else if cfg!(windows) {
+            "plugin.exe"
+        } else {
+            "plugin"
+        };
 
         self.path.join(executable_name)
     }
 
-    pub fn start(&self) -> std::io::Result<JsonRpcEndpoint> {
-        info!(
-            "Trying to start plugin app '{}' from directory '{:?}'",
-            self.animation_id, self.path
-        );
-        JsonRpcEndpoint::new(self.executable_path())
-    }
-
     pub fn is_executable(&self) -> bool {
-        Command::new(self.executable_path())
-            .stdout(Stdio::null())
-            .stdin(Stdio::null())
-            .spawn()
-            .is_ok()
+        match self.manifest.plugin_type {
+            PluginType::Native => Command::new(self.executable_path())
+                .stdout(Stdio::null())
+                .stdin(Stdio::null())
+                .spawn()
+                .is_ok(),
+            PluginType::Wasm => self.executable_path().exists(),
+        }
     }
 }
 
@@ -102,20 +111,25 @@ pub enum AnimationPluginError {
     AnimationError(#[from] AnimationError),
 
     #[error("Communication error: {0}")]
-    CommunicationError(#[from] Box<dyn Error>),
+    CommunicationError(#[from] Box<dyn Error + Send + Sync>),
 }
 
-pub trait Plugin {
+#[async_trait]
+pub trait Plugin: Send + Sync {
     fn plugin_config(&self) -> &PluginConfig;
-    fn configuration(&self) -> Result<Configuration, AnimationPluginError>;
-    fn update(&mut self, time_delta: f64) -> Result<(), AnimationPluginError>;
-    fn render(&self) -> Result<lightfx::Frame, AnimationPluginError>;
-    fn get_schema(&self) -> Result<ConfigurationSchema, AnimationPluginError>;
-    fn set_parameters(
+    async fn configuration(&self) -> Result<Configuration, AnimationPluginError>;
+    async fn update(&mut self, time_delta: f64) -> Result<(), AnimationPluginError>;
+    async fn render(&self) -> Result<lightfx::Frame, AnimationPluginError>;
+    async fn get_schema(&self) -> Result<ConfigurationSchema, AnimationPluginError>;
+    async fn set_parameters(
         &mut self,
         params: &HashMap<String, ParameterValue>,
     ) -> Result<(), AnimationPluginError>;
-    fn get_parameters(&self) -> Result<HashMap<String, ParameterValue>, AnimationPluginError>;
-    fn get_fps(&self) -> Result<f64, AnimationPluginError>;
-    fn send_event(&self, event: animation_api::event::Event) -> Result<(), AnimationPluginError>;
+    async fn get_parameters(&self)
+        -> Result<HashMap<String, ParameterValue>, AnimationPluginError>;
+    async fn get_fps(&self) -> Result<f64, AnimationPluginError>;
+    async fn send_event(
+        &self,
+        event: animation_api::event::Event,
+    ) -> Result<(), AnimationPluginError>;
 }

@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use std::error::Error;
 use std::path::{Path, PathBuf};
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
 
 use animation_api::event::Event;
 use animation_api::schema::{Configuration, ParameterValue};
@@ -14,14 +14,14 @@ use events::event_generator::EventGenerator;
 use events::fft_generator::FftEventGenerator;
 #[cfg(feature = "midi")]
 use events::midi_generator::MidiEventGenerator;
+use lightfx::Frame;
 use log::{info, warn};
 use rustmas_light_client as client;
 use rustmas_light_client::LightClientError;
-use tokio::sync::mpsc;
+use tokio::sync::{mpsc, Mutex};
 use tokio::task::JoinHandle;
 
 use crate::factory::{AnimationFactory, AnimationFactoryError};
-use crate::jsonrpc::JsonRpcPlugin;
 use crate::plugin::{AnimationPluginError, Plugin, PluginConfig};
 use crate::ControllerConfig;
 
@@ -41,7 +41,7 @@ pub enum ControllerError {
 }
 
 struct ControllerState {
-    animation: Option<JsonRpcPlugin>,
+    animation: Option<Box<dyn Plugin>>,
     last_frame: DateTime<Utc>,
     next_frame: DateTime<Utc>,
     fps: f64,
@@ -49,13 +49,16 @@ struct ControllerState {
 }
 
 impl ControllerState {
-    fn set_animation(&mut self, animation: Option<JsonRpcPlugin>) -> Result<(), ControllerError> {
+    async fn set_animation(
+        &mut self,
+        animation: Option<Box<dyn Plugin>>,
+    ) -> Result<(), ControllerError> {
         let now = Utc::now();
-        self.fps = animation
-            .as_ref()
-            .map(|a| a.get_fps())
-            .transpose()?
-            .unwrap_or_default();
+        self.fps = if let Some(animation) = &animation {
+            animation.get_fps().await?
+        } else {
+            0.0
+        };
         self.last_frame = now;
         self.next_frame = now;
         self.animation = animation;
@@ -69,6 +72,11 @@ pub struct Controller {
     state: Arc<Mutex<ControllerState>>,
     animation_factory: AnimationFactory,
     event_sender: mpsc::Sender<Event>,
+}
+
+enum PollFrameResult {
+    Ready(Frame),
+    TryLater(DateTime<Utc>),
 }
 
 impl Controller {
@@ -102,10 +110,10 @@ impl Controller {
         }
     }
 
-    pub fn current_animation(&self) -> Option<PluginConfig> {
+    pub async fn current_animation(&self) -> Option<PluginConfig> {
         self.state
             .lock()
-            .unwrap()
+            .await
             .animation
             .as_ref()
             .map(|animation| animation.plugin_config().clone())
@@ -152,29 +160,12 @@ impl Controller {
             )
             .await;
 
-            let (Ok(frame),) = ({
-                let mut state = state.lock().unwrap();
-                if now < state.next_frame {
-                    next_check = state.next_frame.min(now + Duration::seconds(1));
+            let frame = match Self::poll_next_frame(&state, now, point_count).await {
+                PollFrameResult::Ready(frame) => frame,
+                PollFrameResult::TryLater(when) => {
+                    next_check = when;
                     continue;
                 }
-                state.next_frame = if state.fps != 0.0 {
-                    now + Duration::milliseconds((1000.0 / state.fps) as i64)
-                } else {
-                    now + Duration::days(1)
-                };
-
-                let delta = now - state.last_frame;
-                state.last_frame = now;
-                if let Some(ref mut animation) = state.animation {
-                    animation
-                        .update(delta.num_milliseconds() as f64 / 1000.0)
-                        .and_then(|_| animation.render())
-                } else {
-                    Ok(lightfx::Frame::new_black(point_count))
-                }
-            },) else {
-                continue;
             };
 
             if client.display_frame(&frame).await == Err(LightClientError::ProcessExited) {
@@ -184,11 +175,46 @@ impl Controller {
         }
     }
 
+    async fn poll_next_frame(
+        state: &Mutex<ControllerState>,
+        now: DateTime<Utc>,
+        frame_size: usize,
+    ) -> PollFrameResult {
+        let mut state = state.lock().await;
+        let in_one_second = state.next_frame.min(now + Duration::seconds(1));
+        if now < state.next_frame {
+            return PollFrameResult::TryLater(in_one_second);
+        }
+        state.next_frame = if state.fps != 0.0 {
+            now + Duration::milliseconds((1000.0 / state.fps) as i64)
+        } else {
+            now + Duration::days(1)
+        };
+
+        let delta = now - state.last_frame;
+        state.last_frame = now;
+        if let Some(ref mut animation) = state.animation {
+            if animation
+                .update(delta.num_milliseconds() as f64 / 1000.0)
+                .await
+                .is_err()
+            {
+                PollFrameResult::TryLater(in_one_second)
+            } else if let Ok(frame) = animation.render().await {
+                PollFrameResult::Ready(frame)
+            } else {
+                PollFrameResult::TryLater(in_one_second)
+            }
+        } else {
+            PollFrameResult::Ready(lightfx::Frame::new_black(frame_size))
+        }
+    }
+
     async fn event_loop(state: Arc<Mutex<ControllerState>>, mut receiver: mpsc::Receiver<Event>) {
         while let Some(event) = receiver.recv().await {
-            let state = state.lock().unwrap();
+            let state = state.lock().await;
             if let Some(animation) = &state.animation {
-                let _ = animation.send_event(event);
+                let _ = animation.send_event(event).await;
             }
         }
     }
@@ -214,20 +240,20 @@ impl Controller {
         self.animation_factory.points()
     }
 
-    pub fn restart_event_generators(&self) {
+    pub async fn restart_event_generators(&self) {
         info!("Restarting event generators");
         self.state
             .lock()
-            .unwrap()
+            .await
             .event_generators
             .iter_mut()
             .for_each(|(_, evg)| evg.restart());
     }
 
-    pub fn get_event_generator_parameters(&self) -> Vec<Configuration> {
+    pub async fn get_event_generator_parameters(&self) -> Vec<Configuration> {
         self.state
             .lock()
-            .unwrap()
+            .await
             .event_generators
             .iter()
             .map(|(id, evg)| Configuration {
@@ -239,11 +265,11 @@ impl Controller {
             .collect()
     }
 
-    pub fn set_event_generator_parameters(
+    pub async fn set_event_generator_parameters(
         &self,
         values: &HashMap<String, HashMap<String, ParameterValue>>,
     ) -> Result<(), ControllerError> {
-        let mut state = self.state.lock().unwrap();
+        let mut state = self.state.lock().await;
 
         for (id, parameters) in values {
             let Some(evg) = state.event_generators.get_mut(id) else {
@@ -269,8 +295,8 @@ impl Controller {
             })
     }
 
-    pub fn reload_animation(&self) -> Result<Configuration, ControllerError> {
-        let mut state = self.state.lock().unwrap();
+    pub async fn reload_animation(&self) -> Result<Configuration, ControllerError> {
+        let mut state = self.state.lock().await;
         let Some(id) = state
             .animation
             .as_ref()
@@ -279,52 +305,54 @@ impl Controller {
             return Err(ControllerError::NoAnimationSelected);
         };
         info!("Reloading animation \"{}\"", id);
-        let animation = self.animation_factory.make(id)?;
-        let configuration = animation.configuration()?;
-        state.set_animation(Some(animation))?;
+        let animation = self.animation_factory.make(id).await?;
+        let configuration = animation.configuration().await?;
+        state.set_animation(Some(animation)).await?;
         Ok(configuration)
     }
 
-    pub fn switch_animation(&self, animation_id: &str) -> Result<Configuration, ControllerError> {
+    pub async fn switch_animation(
+        &self,
+        animation_id: &str,
+    ) -> Result<Configuration, ControllerError> {
         info!("Trying to switch animation to \"{}\"", animation_id);
-        let mut state = self.state.lock().unwrap();
-        let animation = self.animation_factory.make(animation_id)?;
-        let configuration = animation.configuration()?;
-        state.set_animation(Some(animation))?;
+        let animation = self.animation_factory.make(animation_id).await?;
+        let configuration = animation.configuration().await?;
+        let mut state = self.state.lock().await;
+        state.set_animation(Some(animation)).await?;
         Ok(configuration)
     }
 
-    pub fn turn_off(&self) {
+    pub async fn turn_off(&self) {
         info!("Turning off the animation");
-        let _ = self.state.lock().unwrap().set_animation(None);
+        let _ = self.state.lock().await.set_animation(None).await;
     }
 
-    pub fn get_parameters(&self) -> Result<Option<Configuration>, ControllerError> {
-        Ok(self
-            .state
-            .lock()
-            .unwrap()
-            .animation
-            .as_ref()
-            .map(Plugin::configuration)
-            .transpose()?)
+    pub async fn get_parameters(&self) -> Result<Option<Configuration>, ControllerError> {
+        let state = self.state.lock().await;
+        let Some(animation) = &state.animation else {
+            return Ok(None);
+        };
+        Ok(Some(animation.configuration().await?))
     }
 
-    pub fn get_parameter_values(&self) -> Result<HashMap<String, ParameterValue>, ControllerError> {
-        if let Some(animation) = &self.state.lock().unwrap().animation {
-            Ok(animation.get_parameters()?)
+    pub async fn get_parameter_values(
+        &self,
+    ) -> Result<HashMap<String, ParameterValue>, ControllerError> {
+        if let Some(animation) = &self.state.lock().await.animation {
+            Ok(animation.get_parameters().await?)
         } else {
             Ok(HashMap::new())
         }
     }
 
-    pub fn set_parameters(
+    pub async fn set_parameters(
         &mut self,
         parameters: &HashMap<String, ParameterValue>,
     ) -> Result<(), ControllerError> {
-        let mut state = self.state.lock().unwrap();
+        let mut state = self.state.lock().await;
         if let Some(ref mut animation) = state.animation {
-            animation.set_parameters(parameters)?;
+            animation.set_parameters(parameters).await?;
             state.next_frame = Utc::now();
         }
         Ok(())
