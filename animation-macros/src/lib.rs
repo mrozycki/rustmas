@@ -1,6 +1,7 @@
 use darling::{FromField, FromMeta, FromVariant};
 use proc_macro::TokenStream;
 use quote::quote;
+use syn::parse_macro_input;
 
 #[proc_macro_attribute]
 pub fn plugin(_attr: TokenStream, item: TokenStream) -> TokenStream {
@@ -153,18 +154,48 @@ struct FieldAttributes {
     enum_options: bool,
 }
 
-#[proc_macro_derive(Schema, attributes(schema_field))]
+#[proc_macro_derive(Schema, attributes(schema_field, number))]
 pub fn derive_schema(input: TokenStream) -> TokenStream {
-    let ast: syn::ItemStruct = syn::parse2(input.into()).unwrap();
+    let input = parse_macro_input!(input);
+
+    match derive_schema_inner(input) {
+        Ok(output) => output,
+        Err(e) => e.write_errors(),
+    }
+    .into()
+}
+
+fn quote_potentially_negative_number(value: f64) -> proc_macro2::TokenStream {
+    if value < 0.0 {
+        let value = -value;
+        quote! { -(#value) }
+    } else {
+        quote! { #value }
+    }
+}
+
+fn derive_schema_inner(
+    input: proc_macro2::TokenStream,
+) -> Result<proc_macro2::TokenStream, darling::Error> {
+    let mut errors = darling::Error::accumulator();
+    let Some(ast): Option<syn::ItemStruct> = errors.handle(
+        syn::parse2(input)
+            .map_err(|e| darling::Error::custom(format!("Failed to parse macro input: {e}"))),
+    ) else {
+        return errors.finish_with(quote! {});
+    };
     let fields: proc_macro2::TokenStream = ast
         .fields
         .into_iter()
-        .map(|field| {
-            let attrs = FieldAttributes::from_field(&field).unwrap();
+        .filter_map(|field| {
+            let attrs = errors.handle(FieldAttributes::from_field(&field))?;
             let value = if let Some(number) = attrs.number {
-                let min = number.min;
-                let max = number.max;
+                let min = quote_potentially_negative_number(number.min);
+                let max = quote_potentially_negative_number(number.max);
                 let step = number.step;
+                if step.is_infinite() || step.is_nan() || !step.is_sign_positive() {
+                    errors.push(darling::Error::custom("Step has to a finite positive number"));
+                }
                 quote! {
                     animation_api::schema::ValueSchema::Number {
                         min: (#min),
@@ -192,7 +223,8 @@ pub fn derive_schema(input: TokenStream) -> TokenStream {
                     }
                 }
             } else {
-                panic!("One of 'number', 'color', 'percentage', 'speed' or 'enum' required in 'schema'");
+                errors.push(darling::Error::custom("One of 'number', 'color', 'percentage', 'speed' or 'enum' required in 'schema'"));
+                return None;
             };
 
             let ident = field.ident;
@@ -202,19 +234,19 @@ pub fn derive_schema(input: TokenStream) -> TokenStream {
             } else {
                 quote! { None }
             };
-            quote! {
+            Some(quote! {
                 animation_api::schema::ParameterSchema {
                     id: stringify!(#ident).to_owned(),
                     name: #name.to_owned(),
                     description: #description,
                     value: #value,
                 },
-            }
+            })
         })
         .collect();
 
     let ident = ast.ident;
-    quote! {
+    errors.finish_with(quote! {
         impl animation_api::schema::GetSchema for #ident {
             fn schema() -> animation_api::schema::ConfigurationSchema {
                 animation_api::schema::ConfigurationSchema {
@@ -224,8 +256,7 @@ pub fn derive_schema(input: TokenStream) -> TokenStream {
                 }
             }
         }
-    }
-    .into()
+    })
 }
 
 #[derive(FromVariant, Debug)]
@@ -263,4 +294,46 @@ pub fn derive_enum_schema(input: TokenStream) -> TokenStream {
         }
     }
     .into()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_derive_schema_negative_numbers() {
+        let input = quote! {
+            pub struct Parameters {
+                #[schema_field(name = "Param", number(min = "-1.0", max = 1.0, step = 0.1))]
+                param: f64,
+            }
+        };
+
+        let output = derive_schema_inner(input).unwrap();
+
+        assert_eq!(
+            output.to_string(),
+            quote! {
+                impl animation_api::schema::GetSchema for Parameters {
+                    fn schema() -> animation_api::schema::ConfigurationSchema {
+                        animation_api::schema::ConfigurationSchema {
+                            parameters: vec![
+                                animation_api::schema::ParameterSchema {
+                                    id: stringify!(param).to_owned(),
+                                    name: "Param".to_owned(),
+                                    description: None,
+                                    value: animation_api::schema::ValueSchema::Number {
+                                        min: (-(1f64)),
+                                        max: (1f64),
+                                        step: (0.1f64),
+                                    },
+                                },
+                            ],
+                        }
+                    }
+                }
+            }
+            .to_string()
+        )
+    }
 }
