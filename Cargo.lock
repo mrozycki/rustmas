@@ -494,9 +494,9 @@ dependencies = [
 [[package]]
 name = "animation-api"
 version = "0.1.0"
-source = "git+https://github.com/mrozycki/rustmas?rev=bbbd4f4#bbbd4f44cfa71299e961710c7215f7d32e9fe342"
+source = "git+https://github.com/mrozycki/rustmas?rev=2dd3637#2dd3637e66e0f0decd3ff7f3c3ab44ef56bfc8f4"
 dependencies = [
- "lightfx 0.1.0 (git+https://github.com/mrozycki/rustmas?rev=bbbd4f4)",
+ "lightfx 0.1.0 (git+https://github.com/mrozycki/rustmas?rev=2dd3637)",
  "midi-msg",
  "serde",
  "serde_json",
@@ -514,9 +514,9 @@ dependencies = [
 ]
 
 [[package]]
-name = "animation-plugin-macro"
+name = "animation-macros"
 version = "0.1.0"
-source = "git+https://github.com/mrozycki/rustmas?rev=bbbd4f4#bbbd4f44cfa71299e961710c7215f7d32e9fe342"
+source = "git+https://github.com/mrozycki/rustmas?rev=2dd3637#2dd3637e66e0f0decd3ff7f3c3ab44ef56bfc8f4"
 dependencies = [
  "darling",
  "proc-macro2",
@@ -525,12 +525,23 @@ dependencies = [
 ]
 
 [[package]]
-name = "animation-template"
+name = "animation-template-native"
 version = "0.1.0"
 dependencies = [
- "animation-api 0.1.0 (git+https://github.com/mrozycki/rustmas?rev=bbbd4f4)",
- "animation-utils 0.1.0 (git+https://github.com/mrozycki/rustmas?rev=bbbd4f4)",
- "lightfx 0.1.0 (git+https://github.com/mrozycki/rustmas?rev=bbbd4f4)",
+ "animation-api 0.1.0 (git+https://github.com/mrozycki/rustmas?rev=2dd3637)",
+ "animation-utils 0.1.0 (git+https://github.com/mrozycki/rustmas?rev=2dd3637)",
+ "lightfx 0.1.0 (git+https://github.com/mrozycki/rustmas?rev=2dd3637)",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "animation-template-wasm"
+version = "0.1.0"
+dependencies = [
+ "animation-api 0.1.0 (git+https://github.com/mrozycki/rustmas?rev=2dd3637)",
+ "animation-utils 0.1.0 (git+https://github.com/mrozycki/rustmas?rev=2dd3637)",
+ "lightfx 0.1.0 (git+https://github.com/mrozycki/rustmas?rev=2dd3637)",
  "serde",
  "serde_json",
 ]
@@ -540,7 +551,7 @@ name = "animation-utils"
 version = "0.1.0"
 dependencies = [
  "animation-api 0.1.0",
- "animation-macros",
+ "animation-macros 0.1.0",
  "lightfx 0.1.0",
  "nalgebra",
  "rand 0.8.5",
@@ -551,11 +562,11 @@ dependencies = [
 [[package]]
 name = "animation-utils"
 version = "0.1.0"
-source = "git+https://github.com/mrozycki/rustmas?rev=bbbd4f4#bbbd4f44cfa71299e961710c7215f7d32e9fe342"
+source = "git+https://github.com/mrozycki/rustmas?rev=2dd3637#2dd3637e66e0f0decd3ff7f3c3ab44ef56bfc8f4"
 dependencies = [
- "animation-api 0.1.0 (git+https://github.com/mrozycki/rustmas?rev=bbbd4f4)",
- "animation-plugin-macro",
- "lightfx 0.1.0 (git+https://github.com/mrozycki/rustmas?rev=bbbd4f4)",
+ "animation-api 0.1.0 (git+https://github.com/mrozycki/rustmas?rev=2dd3637)",
+ "animation-macros 0.1.0 (git+https://github.com/mrozycki/rustmas?rev=2dd3637)",
+ "lightfx 0.1.0 (git+https://github.com/mrozycki/rustmas?rev=2dd3637)",
  "nalgebra",
  "rand 0.8.5",
  "serde",
@@ -4354,7 +4365,7 @@ dependencies = [
 [[package]]
 name = "lightfx"
 version = "0.1.0"
-source = "git+https://github.com/mrozycki/rustmas?rev=bbbd4f4#bbbd4f44cfa71299e961710c7215f7d32e9fe342"
+source = "git+https://github.com/mrozycki/rustmas?rev=2dd3637#2dd3637e66e0f0decd3ff7f3c3ab44ef56bfc8f4"
 dependencies = [
  "serde",
  "serde_json",

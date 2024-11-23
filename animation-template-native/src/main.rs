@@ -1,5 +1,8 @@
 use animation_api::{event::Event, Animation};
-use animation_utils::Schema;
+use animation_utils::{
+    decorators::{BrightnessControlled, SpeedControlled},
+    Schema,
+};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 
@@ -24,8 +27,11 @@ pub struct MyAnimation {
     parameters: Parameters,
 }
 
-impl MyAnimation {
-    pub fn create(points: Vec<(f64, f64, f64)>) -> Self {
+impl Animation for MyAnimation {
+    type Parameters = Parameters;
+    type Wrapped = SpeedControlled<BrightnessControlled<Self>>;
+
+    fn new(points: Vec<(f64, f64, f64)>) -> Self {
         // TODO: Initialize animation state from a set of light locations
         Self {
             points_count: points.len(),
@@ -33,10 +39,6 @@ impl MyAnimation {
             parameters: Default::default(),
         }
     }
-}
-
-impl Animation for MyAnimation {
-    type Parameters = Parameters;
 
     fn update(&mut self, time_delta: f64) {
         // TODO: Update your animation state by time_delta seconds

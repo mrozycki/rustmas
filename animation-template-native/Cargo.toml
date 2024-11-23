@@ -1,0 +1,12 @@
+[package]
+name = "animation-template-native"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+animation-utils = { git = "https://github.com/mrozycki/rustmas", rev = "2dd3637" }
+animation-api = { git = "https://github.com/mrozycki/rustmas", rev = "2dd3637" }
+lightfx = { git = "https://github.com/mrozycki/rustmas", rev = "2dd3637" }
+
+serde = { version = "1.0.152", features = ["derive"] }
+serde_json = "1.0.93"
