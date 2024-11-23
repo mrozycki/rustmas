@@ -541,6 +541,7 @@ version = "0.1.0"
 dependencies = [
  "animation-api 0.1.0 (git+https://github.com/mrozycki/rustmas?rev=2dd3637)",
  "animation-utils 0.1.0 (git+https://github.com/mrozycki/rustmas?rev=2dd3637)",
+ "animation-wasm-wrapper 0.1.0 (git+https://github.com/mrozycki/rustmas?rev=2dd3637)",
  "lightfx 0.1.0 (git+https://github.com/mrozycki/rustmas?rev=2dd3637)",
  "serde",
  "serde_json",
@@ -588,6 +589,22 @@ dependencies = [
  "tokio",
  "wasmtime",
  "wasmtime-wasi",
+ "wit-bindgen",
+]
+
+[[package]]
+name = "animation-wasm-wrapper"
+version = "0.1.0"
+source = "git+https://github.com/mrozycki/rustmas?rev=2dd3637#2dd3637e66e0f0decd3ff7f3c3ab44ef56bfc8f4"
+dependencies = [
+ "animation-api 0.1.0 (git+https://github.com/mrozycki/rustmas?rev=2dd3637)",
+ "animation-utils 0.1.0 (git+https://github.com/mrozycki/rustmas?rev=2dd3637)",
+ "itertools 0.13.0",
+ "lightfx 0.1.0 (git+https://github.com/mrozycki/rustmas?rev=2dd3637)",
+ "log",
+ "serde",
+ "serde_json",
+ "thiserror 2.0.3",
  "wit-bindgen",
 ]
 
@@ -6175,7 +6192,7 @@ name = "rustmas-animator"
 version = "0.1.0"
 dependencies = [
  "animation-api 0.1.0",
- "animation-wasm-wrapper",
+ "animation-wasm-wrapper 0.1.0",
  "async-trait",
  "chrono",
  "clap",
@@ -7037,7 +7054,7 @@ version = "0.1.0"
 dependencies = [
  "animation-api 0.1.0",
  "animation-utils 0.1.0",
- "animation-wasm-wrapper",
+ "animation-wasm-wrapper 0.1.0",
  "itertools 0.10.5",
  "lightfx 0.1.0",
  "serde",

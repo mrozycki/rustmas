@@ -4,7 +4,6 @@ use animation_utils::{
     Schema,
 };
 use serde::{Deserialize, Serialize};
-use serde_json::json;
 
 #[derive(Clone, Serialize, Deserialize, Schema)]
 pub struct Parameters {
@@ -19,7 +18,7 @@ impl Default for Parameters {
     }
 }
 
-#[animation_utils::plugin]
+#[animation_utils::wasm_plugin]
 pub struct MyAnimation {
     // TODO: Define your animation's state
     points_count: usize,
