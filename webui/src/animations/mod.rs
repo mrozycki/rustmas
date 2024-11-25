@@ -1,7 +1,10 @@
+mod animation_control;
 mod animation_list;
+
 #[cfg(feature = "visualizer")]
 mod visualizer;
 
+pub use animation_control::AnimationControl;
 pub use animation_list::AnimationList;
 
 #[cfg(not(feature = "visualizer"))]
