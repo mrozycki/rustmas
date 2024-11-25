@@ -10,7 +10,7 @@ use rustmas_webapi_client::RustmasApiClient;
 use settings::Settings;
 use url::Url;
 use yew::prelude::*;
-use yew_router::{prelude::Link, BrowserRouter, Routable, Switch};
+use yew_router::{BrowserRouter, Routable, Switch};
 
 #[derive(Debug, Clone, PartialEq, Routable)]
 enum Route {
@@ -52,9 +52,6 @@ pub fn app() -> Html {
             <BrowserRouter>
                 <header>
                     <h1>{"Rustmas"}</h1>
-                    <Link<Route> to={Route::SettingsMain}>
-                        <img class="button" src="/settings.png" alt="Settings" />
-                    </Link<Route>>
                 </header>
                 <div class="content">
                     <Switch<Route> render={switch} />

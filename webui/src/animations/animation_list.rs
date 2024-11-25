@@ -3,6 +3,9 @@ use rustmas_webapi_client::{Animation, RustmasApiClient};
 use wasm_bindgen::JsCast;
 use web_sys::HtmlAnchorElement;
 use yew::{html, Callback, Html, MouseEvent};
+use yew_router::prelude::Link;
+
+use crate::Route;
 
 #[derive(Clone, Debug, PartialEq, yew::Properties)]
 pub struct AnimationListProps {
@@ -80,24 +83,6 @@ pub fn animation_list(props: &AnimationListProps) -> Html {
         }
     });
 
-    let discover = Callback::from({
-        let api = api.clone();
-        let animation_list = animation_list.clone();
-        move |_| {
-            let api = api.clone();
-            let animation_list = animation_list.clone();
-            wasm_bindgen_futures::spawn_local(async move {
-                match api.discover_animations().await {
-                    Ok(mut new_animations) => {
-                        new_animations.sort_by(|a, b| a.name.cmp(&b.name));
-                        animation_list.set(Some(new_animations));
-                    }
-                    Err(e) => error!("Failed to discover animations, reason: {}", e),
-                }
-            });
-        }
-    });
-
     if animation_list.is_none() {
         let api = api.clone();
         let animation_id = animation_id.clone();
@@ -120,7 +105,12 @@ pub fn animation_list(props: &AnimationListProps) -> Html {
         <nav>
             <ul>
                 <li><a onclick={turn_off}>{ "⏻ Off" }</a></li>
-                <li><a onclick={discover}>{ "⟳ Refresh list" }</a></li>
+                <li>
+                    <Link<Route> to={Route::SettingsMain}>
+                        <img class="button" src="/settings.png" alt="Settings" />
+                        { " Settings"}
+                    </Link<Route>>
+                </li>
                 <hr />
                 {
                     if let Some(ref animations) = *animation_list {
