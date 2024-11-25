@@ -54,10 +54,16 @@ header .button {
     text-decoration: none;
 }
 
-header img.button {
-    height: 3rem;
-    filter: invert();
-    padding: 0.5rem 0;
+a:hover img.button {
+    filter: invert() opacity(80%);
+}
+
+img.button {
+    height: 1rem;
+    width: 1rem;
+    filter: invert() opacity(50%);
+    position: relative;
+    top: calc(1rem / 8);
 }
 
 .settings header {
@@ -75,6 +81,16 @@ header img.button {
     font-size: 1.5rem;
     line-height: 2rem;
     font-weight: normal;
+}
+
+.settings .animation-list {
+    list-style-type: none;
+}
+
+.settings .animation-list li {
+    line-height: 2rem;
+    padding: 0.5rem;
+    border-bottom: 1px solid #888;
 }
 
 .content {
@@ -140,8 +156,7 @@ nav hr {
     margin: 0.5rem 1rem;
 }
 
-.parameter-control-list,
-.settings-list {
+.parameter-control-list {
     flex: 1 0 300px;
     padding: 0 3rem;
     margin-bottom: 2rem;
@@ -338,17 +353,6 @@ input[type=range]::-ms-fill-upper {
     font-size: 1rem;
 }
 
-.settings {
-    width: 50vw;
-    height: 80vh;
-    margin: 10vh 25vw;
-    padding: 3rem;
-}
-
-.settings::backdrop {
-    background-color: rgba(0, 0, 0, 0.5);
-}
-
 @media screen and (max-width: 560px) {
     .content {
         flex-direction: column;
@@ -367,10 +371,5 @@ input[type=range]::-ms-fill-upper {
 
     .parameter-control-list {
         padding: 0 1.5rem;
-    }
-
-    .settings {
-        width: 100vw;
-        height: 100vh;
     }
 }
