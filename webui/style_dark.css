@@ -54,7 +54,7 @@ header .button {
     text-decoration: none;
 }
 
-header .button img {
+header img.button {
     height: 3rem;
     filter: invert();
     padding: 0.5rem 0;
@@ -90,6 +90,11 @@ nav {
     background-color: black;
 }
 
+nav h2 {
+    font-weight: lighter;
+    padding: 1rem;
+}
+
 nav::after {
     position: absolute;
     right: 0;
@@ -115,6 +120,7 @@ nav a {
     border-left: 1px solid transparent;
     cursor: pointer;
     color: #888;
+    text-decoration: none;
 }
 
 nav a:hover {
@@ -134,7 +140,8 @@ nav hr {
     margin: 0.5rem 1rem;
 }
 
-.parameter-control-list {
+.parameter-control-list,
+.settings-list {
     flex: 1 0 300px;
     padding: 0 3rem;
     margin-bottom: 2rem;
@@ -179,7 +186,8 @@ nav hr {
 }
 
 .parameter-control-list input[type="submit"],
-.parameter-control-list input[type="button"] {
+.parameter-control-list input[type="button"],
+.parameter-control-list button {
     -webkit-appearance: none;
     -moz-appearance: none;
     appearance: none;
@@ -195,7 +203,8 @@ nav hr {
     background-color: #020;
 }
 
-.parameter-control-list input[type="button"] {
+.parameter-control-list input[type="button"],
+.parameter-control-list button {
     background-color: #111;
     color: #ccc;
 }
@@ -204,7 +213,8 @@ nav hr {
     background-color: #030;
 }
 
-.parameter-control-list input[type="button"]:hover {
+.parameter-control-list input[type="button"]:hover,
+.parameter-control-list button:hover {
     background-color: #222;
 }
 

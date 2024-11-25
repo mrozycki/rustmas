@@ -5,14 +5,25 @@ mod utils;
 
 use std::error::Error;
 
-use animations::AnimationList;
+use animations::AnimationControl;
 use rustmas_webapi_client::RustmasApiClient;
+use settings::Settings;
 use url::Url;
 use yew::prelude::*;
+use yew_router::{prelude::Link, BrowserRouter, Routable, Switch};
 
-use crate::animations::Visualizer;
-use crate::controls::ParameterControlList;
-use crate::settings::SettingsModal;
+#[derive(Debug, Clone, PartialEq, Routable)]
+enum Route {
+    #[at("/")]
+    Home,
+    #[at("/settings")]
+    SettingsMain,
+    #[at("/settings/:section")]
+    Settings { section: String },
+    #[not_found]
+    #[at("/404")]
+    NotFound,
+}
 
 fn create_api() -> RustmasApiClient {
     let api_url = if cfg!(feature = "local") {
@@ -35,56 +46,30 @@ fn window_width() -> i32 {
 #[yew::function_component(App)]
 pub fn app() -> Html {
     let api = create_api();
-    let animation_id = yew::use_state::<Option<String>, _>(|| None);
-    let modal_open_dummy = yew::use_state(|| 0);
-    let dirty = yew::use_state(|| false);
-
-    let toggle_settings = Callback::from({
-        let modal_open_dummy = modal_open_dummy.clone();
-        move |_| {
-            modal_open_dummy.set(*modal_open_dummy + 1);
-        }
-    });
-
-    let animation_switched_callback = Callback::from({
-        let animation_id = animation_id.clone();
-        let dirty = dirty.clone();
-        move |new_animation_id: Option<String>| {
-            animation_id.set(new_animation_id);
-            dirty.set(false);
-        }
-    });
-
-    let parameters_dirty = Callback::from({
-        let dirty = dirty.clone();
-        move |new_dirty| dirty.set(new_dirty)
-    });
 
     html! {
         <ContextProvider<RustmasApiClient> context={api.clone()}>
-        <>
-            <header>
-                <h1>{"Rustmas"}</h1>
-                <a href="#settings" class="button" onclick={toggle_settings}>
-                    <img src="/settings.png" alt="Settings" />
-                </a>
-            </header>
-            <div class="content">
-                <AnimationList dirty={*dirty} {animation_switched_callback} />
-                {
-                    if window_width() > 640 {
-                        html!(<Visualizer />)
-                    } else {
-                        html!()
-                    }
-                }
-                <ParameterControlList
-                    animation_id={(*animation_id).clone()}
-                    parameters_dirty={parameters_dirty} />
-            </div>
-            <SettingsModal open_dummy={*modal_open_dummy} />
-        </>
+            <BrowserRouter>
+                <header>
+                    <h1>{"Rustmas"}</h1>
+                    <Link<Route> to={Route::SettingsMain}>
+                        <img class="button" src="/settings.png" alt="Settings" />
+                    </Link<Route>>
+                </header>
+                <div class="content">
+                    <Switch<Route> render={switch} />
+                </div>
+            </BrowserRouter>
         </ContextProvider<RustmasApiClient>>
+    }
+}
+
+fn switch(routes: Route) -> Html {
+    match routes {
+        Route::Home => html! { <AnimationControl /> },
+        Route::Settings { section } => html! { <Settings section={section} /> },
+        Route::SettingsMain => html! { <Settings section={None::<String>} /> },
+        Route::NotFound => html! { <h2> {"Not found"} </h2> },
     }
 }
 
