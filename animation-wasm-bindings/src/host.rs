@@ -1,4 +1,9 @@
-use std::{collections::HashMap, path::Path};
+use std::{
+    collections::HashMap,
+    fs::File,
+    io::{BufReader, Read},
+    path::Path,
+};
 
 use animation_api::{event::Event, schema};
 use exports::guest::animation::plugin::{Color, Position};
@@ -33,6 +38,9 @@ impl WasiView for State {
 pub enum HostedPluginError {
     #[error("wasmtime returned error: {0}")]
     WasmtimeError(#[from] wasmtime::Error),
+
+    #[error("cannot open plugin: {0}")]
+    PluginOpenError(#[from] std::io::Error),
 }
 type Result<T> = std::result::Result<T, HostedPluginError>;
 
@@ -44,10 +52,18 @@ pub struct HostedPlugin {
 
 impl HostedPlugin {
     pub async fn new(executable_path: &Path, points: Vec<(f64, f64, f64)>) -> Result<Self> {
+        let reader = BufReader::new(File::open(executable_path)?);
+        Self::from_reader(reader, points).await
+    }
+
+    pub async fn from_reader<R: Read>(mut reader: R, points: Vec<(f64, f64, f64)>) -> Result<Self> {
+        let mut data = Vec::new();
+        reader.read_to_end(&mut data)?;
+
         let mut config = Config::new();
         config.async_support(true);
         let engine = Engine::new(&config)?;
-        let component = Component::from_file(&engine, executable_path)?;
+        let component = Component::from_binary(&engine, &data)?;
 
         let mut linker = Linker::new(&engine);
         wasmtime_wasi::add_to_linker_async(&mut linker)?;

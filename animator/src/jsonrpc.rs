@@ -10,12 +10,13 @@ use animation_api::{
     schema::{Configuration, ConfigurationSchema, ParameterValue},
     AnimationError, JsonRpcMessage, JsonRpcMethod, JsonRpcResponse, JsonRpcResult,
 };
+use animation_wrapper::config::PluginConfig;
 use async_trait::async_trait;
 use log::error;
 use serde::de::DeserializeOwned;
 use tokio::sync::Mutex;
 
-use crate::plugin::{AnimationPluginError, Plugin, PluginConfig};
+use crate::plugin::{AnimationPluginError, Plugin};
 
 #[derive(Debug, thiserror::Error)]
 pub enum JsonRpcEndpointError {

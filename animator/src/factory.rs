@@ -3,11 +3,15 @@ use std::{
     path::{Path, PathBuf},
 };
 
+use animation_wrapper::{
+    config::{PluginConfig, PluginConfigError, PluginType},
+    unwrap,
+};
 use log::warn;
 
 use crate::{
     jsonrpc::JsonRpcPlugin,
-    plugin::{AnimationPluginError, Plugin, PluginConfig, PluginConfigError, PluginType},
+    plugin::{AnimationPluginError, Plugin},
     wasm::WasmPlugin,
 };
 
@@ -75,7 +79,19 @@ impl AnimationFactory {
             warn!("Discovered {} plugins which are not executable. Please make sure the animations were built and have correct permissions.", invalid_plugins.len());
         }
 
+        let crab_plugins = self
+            .plugin_dir
+            .read_dir()
+            .map_err(|e| AnimationFactoryError::InternalError {
+                reason: format!("Failed to read plugin directory: {e}"),
+            })?
+            .filter_map(|d| d.ok())
+            .filter(|d| d.file_name().to_str().is_some_and(|d| d.ends_with(".crab")))
+            .filter_map(|d| unwrap::unwrap_plugin(&d.path()).ok())
+            .map(|p| (p.animation_id().to_owned(), p));
+
         self.available_plugins = valid_plugins;
+        self.available_plugins.extend(crab_plugins);
 
         Ok(())
     }

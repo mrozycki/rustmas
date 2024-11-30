@@ -5,6 +5,9 @@ edition = "2021"
 
 [dependencies]
 rustmas-light-client = { path = "../light-client", default-features = false }
+animation-wrapper = { path = "../animation-wrapper", default-features = false, features = [
+    "unwrap",
+] }
 lightfx = { path = "../lightfx" }
 animation-api = { path = "../animation-api" }
 events = { path = "../events", default-features = false }

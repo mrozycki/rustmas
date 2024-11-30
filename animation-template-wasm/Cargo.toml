@@ -3,6 +3,9 @@ name = "animation-template-wasm"
 version = "0.1.0"
 edition = "2021"
 
+[lib]
+crate-type = ["cdylib"]
+
 [dependencies]
 animation-utils = { git = "https://github.com/mrozycki/rustmas", rev = "835ad9e" }
 animation-api = { git = "https://github.com/mrozycki/rustmas", rev = "835ad9e" }

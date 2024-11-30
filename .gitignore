@@ -1,5 +1,6 @@
 /target
 **/captures
+*.crab
 
 *.csv
 *.log
