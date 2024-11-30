@@ -5,6 +5,7 @@ use std::sync::Arc;
 
 use animation_api::event::Event;
 use animation_api::schema::{Configuration, ParameterValue};
+use animation_wrapper::config::PluginConfig;
 use chrono::{DateTime, Duration, Utc};
 use client::combined::{CombinedLightClient, CombinedLightClientBuilder};
 #[cfg(feature = "audio")]
@@ -22,7 +23,7 @@ use tokio::sync::{mpsc, Mutex};
 use tokio::task::JoinHandle;
 
 use crate::factory::{AnimationFactory, AnimationFactoryError};
-use crate::plugin::{AnimationPluginError, Plugin, PluginConfig};
+use crate::plugin::{AnimationPluginError, Plugin};
 use crate::ControllerConfig;
 
 #[derive(Debug, thiserror::Error)]

@@ -6,6 +6,7 @@ members = [
     "animation-template-wasm",
     "animation-utils",
     "animation-wasm-bindings",
+    "animation-wrapper",
     "animations",
     "light-client",
     "configurator",

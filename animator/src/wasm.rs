@@ -2,10 +2,11 @@ use std::collections::HashMap;
 
 use animation_api::{event::Event, schema};
 use animation_wasm_bindings::host::HostedPlugin;
+use animation_wrapper::{config::PluginConfig, unwrap};
 use async_trait::async_trait;
 use tokio::sync::Mutex;
 
-use crate::plugin::{AnimationPluginError, Plugin, PluginConfig};
+use crate::plugin::{AnimationPluginError, Plugin};
 
 pub struct WasmPlugin {
     inner: Mutex<HostedPlugin>,
@@ -17,12 +18,22 @@ impl WasmPlugin {
         config: PluginConfig,
         points: Vec<(f64, f64, f64)>,
     ) -> Result<Self, AnimationPluginError> {
+        let plugin = if config
+            .path()
+            .extension()
+            .and_then(|ext| ext.to_str())
+            .is_some_and(|ext| ext == "crab")
+        {
+            let reader = unwrap::reader_from_crab(&config.path())
+                .map_err(|e| AnimationPluginError::CommunicationError(Box::new(e)))?;
+            HostedPlugin::from_reader(reader, points).await
+        } else {
+            HostedPlugin::new(&config.executable_path(), points).await
+        }
+        .map_err(|e| AnimationPluginError::CommunicationError(Box::new(e)))?;
+
         Ok(Self {
-            inner: Mutex::new(
-                HostedPlugin::new(&config.executable_path(), points)
-                    .await
-                    .map_err(|e| AnimationPluginError::CommunicationError(Box::new(e)))?,
-            ),
+            inner: Mutex::new(plugin),
             plugin_config: config,
         })
     }
