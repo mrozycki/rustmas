@@ -14,8 +14,8 @@ fn generate_wasm_plugin(ast: syn::ItemStruct) -> proc_macro2::TokenStream {
     quote! {
         #ast
 
-        type WrappedGuestPlugin = animation_wasm_wrapper::guest::GuestPluginWrapper<#name>;
-        animation_wasm_wrapper::guest::export!(WrappedGuestPlugin with_types_in animation_wasm_wrapper::guest);
+        type WrappedGuestPlugin = animation_wasm_bindings::guest::GuestPluginBindings<#name>;
+        animation_wasm_bindings::guest::export!(WrappedGuestPlugin with_types_in animation_wasm_bindings::guest);
     }
 }
 

@@ -541,7 +541,7 @@ version = "0.1.0"
 dependencies = [
  "animation-api 0.1.0 (git+https://github.com/mrozycki/rustmas?rev=2dd3637)",
  "animation-utils 0.1.0 (git+https://github.com/mrozycki/rustmas?rev=2dd3637)",
- "animation-wasm-wrapper 0.1.0 (git+https://github.com/mrozycki/rustmas?rev=2dd3637)",
+ "animation-wasm-wrapper",
  "lightfx 0.1.0 (git+https://github.com/mrozycki/rustmas?rev=2dd3637)",
  "serde",
  "serde_json",
@@ -575,7 +575,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "animation-wasm-wrapper"
+name = "animation-wasm-bindings"
 version = "0.1.0"
 dependencies = [
  "animation-api 0.1.0",
@@ -6201,7 +6201,7 @@ name = "rustmas-animator"
 version = "0.1.0"
 dependencies = [
  "animation-api 0.1.0",
- "animation-wasm-wrapper 0.1.0",
+ "animation-wasm-bindings",
  "async-trait",
  "chrono",
  "clap",
@@ -7064,7 +7064,7 @@ version = "0.1.0"
 dependencies = [
  "animation-api 0.1.0",
  "animation-utils 0.1.0",
- "animation-wasm-wrapper 0.1.0",
+ "animation-wasm-bindings",
  "itertools 0.10.5",
  "lightfx 0.1.0",
  "serde",

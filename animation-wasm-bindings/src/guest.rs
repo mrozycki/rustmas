@@ -8,20 +8,20 @@ wit_bindgen::generate!({
     pub_export_macro: true,
 });
 
-pub struct GuestPluginWrapper<T: animation_api::Animation> {
+pub struct GuestPluginBindings<T: animation_api::Animation> {
     _phantom: PhantomData<T>,
 }
 
-impl<T: animation_api::Animation + 'static> Guest for GuestPluginWrapper<T> {
-    type Animation = GuestAnimationWrapper<<T as animation_api::Animation>::Wrapped>;
+impl<T: animation_api::Animation + 'static> Guest for GuestPluginBindings<T> {
+    type Animation = GuestAnimationBindings<<T as animation_api::Animation>::Wrapped>;
 }
 
-pub struct GuestAnimationWrapper<T: animation_api::Animation<Parameters: GetSchema>> {
+pub struct GuestAnimationBindings<T: animation_api::Animation<Parameters: GetSchema>> {
     inner: RefCell<T>,
 }
 
 impl<T: animation_api::Animation + 'static> exports::guest::animation::plugin::GuestAnimation
-    for GuestAnimationWrapper<T>
+    for GuestAnimationBindings<T>
 {
     fn new(points: Vec<Position>) -> Self {
         Self {

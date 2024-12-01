@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use animation_api::{event::Event, schema};
-use animation_wasm_wrapper::host::HostedPlugin;
+use animation_wasm_bindings::host::HostedPlugin;
 use async_trait::async_trait;
 use tokio::sync::Mutex;
 
