@@ -625,7 +625,6 @@ dependencies = [
  "animation-api 0.1.0",
  "animation-utils 0.1.0",
  "bracket-noise",
- "cpal",
  "env_logger",
  "itertools 0.10.5",
  "lightfx 0.1.0",

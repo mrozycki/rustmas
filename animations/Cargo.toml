@@ -3,9 +3,6 @@ name = "animations"
 version = "0.1.0"
 edition = "2021"
 
-[features]
-audio = ["dep:cpal"]
-
 [dependencies]
 animation-utils = { path = "../animation-utils" }
 animation-api = { path = "../animation-api" }
@@ -18,7 +15,6 @@ itertools = "0.10.5"
 nalgebra = "0.31"
 rand = "0.8.5"
 bracket-noise = "0.8"
-cpal = { version = "0.15.2", optional = true }
 env_logger = "0.10.0"
 rustfft = "6.1.0"
 midi-msg = "0.4.0"

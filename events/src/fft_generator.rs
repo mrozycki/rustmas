@@ -155,9 +155,12 @@ impl AudioStream {
 
         let event_generator_thread = thread::spawn(move || {
             while !channel.is_closed() {
-                let mut spectrum = {
+                let (mut spectrum, wave) = {
                     let buf = buffer.lock().unwrap();
-                    buf.iter().map(|x| Complex32::new(*x, 0.0)).collect_vec()
+                    (
+                        buf.iter().map(|x| Complex32::new(*x, 0.0)).collect_vec(),
+                        buf.iter().copied().collect(),
+                    )
                 };
                 fft.process(spectrum.as_mut_slice());
                 let bands = bands
@@ -175,7 +178,7 @@ impl AudioStream {
                             / (high_bin - low_bin) as f32
                     })
                     .collect_vec();
-                let _ = channel.blocking_send(Event::FftEvent { bands });
+                let _ = channel.blocking_send(Event::FftEvent { bands, wave });
                 std::thread::sleep(Duration::from_secs_f64(1.0 / fps));
             }
         });

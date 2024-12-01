@@ -68,7 +68,7 @@ impl Animation for AudioVisualizer {
     }
 
     fn on_event(&mut self, event: Event) {
-        if let Event::FftEvent { bands } = event {
+        if let Event::FftEvent { bands, .. } = event {
             self.bands = bands;
         }
     }
