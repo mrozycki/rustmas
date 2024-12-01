@@ -9,6 +9,7 @@ pub enum Event {
     },
     FftEvent {
         bands: Vec<f32>,
+        wave: Vec<f32>,
     },
     MidiEvent(
         #[serde(
