@@ -23,8 +23,8 @@ thiserror = "1.0.60"
 itertools = "0.13.0"
 async-trait = "0.1.83"
 
-[dependencies.animation-wasm-wrapper]
-path = "../animation-wasm-wrapper"
+[dependencies.animation-wasm-bindings]
+path = "../animation-wasm-bindings"
 default-features = false
 features = ["host"]
 
