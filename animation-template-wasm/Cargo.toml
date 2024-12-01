@@ -4,15 +4,15 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-animation-utils = { git = "https://github.com/mrozycki/rustmas", rev = "2dd3637" }
-animation-api = { git = "https://github.com/mrozycki/rustmas", rev = "2dd3637" }
-lightfx = { git = "https://github.com/mrozycki/rustmas", rev = "2dd3637" }
+animation-utils = { git = "https://github.com/mrozycki/rustmas", rev = "835ad9e" }
+animation-api = { git = "https://github.com/mrozycki/rustmas", rev = "835ad9e" }
+lightfx = { git = "https://github.com/mrozycki/rustmas", rev = "835ad9e" }
 
 serde = { version = "1.0.152", features = ["derive"] }
 serde_json = "1.0.93"
 
-[dependencies.animation-wasm-wrapper]
+[dependencies.animation-wasm-bindings]
 git = "https://github.com/mrozycki/rustmas"
-rev = "2dd3637"
+rev = "835ad9e"
 default-features = false
 features = ["guest"]
