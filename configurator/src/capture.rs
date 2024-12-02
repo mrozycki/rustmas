@@ -167,10 +167,10 @@ impl Capturer {
     ) -> Result<Vec<WithConfidence<Point2>>, Box<dyn Error>> {
         let mut coords = Vec::new();
         let timestamp = chrono::offset::Local::now().format("%FT%X");
-        let base_dir = PathBuf::from(format!("captures/{}", timestamp));
-        let on_dir = base_dir.join("img/on");
-        let off_dir = base_dir.join("img/off");
-        let marked_dir = base_dir.join("img/marked");
+        let base_dir = PathBuf::from(format!("captures/{}/", timestamp));
+        let on_dir = base_dir.join("img/on/");
+        let off_dir = base_dir.join("img/off/");
+        let marked_dir = base_dir.join("img/marked/");
 
         std::fs::create_dir_all(&base_dir)?;
         if save_pictures {
@@ -200,7 +200,7 @@ impl Capturer {
             thread::sleep(Duration::from_millis(100));
             let base_picture = self.camera.capture()?;
             if save_pictures {
-                base_picture.save_to_file(off_dir.with_file_name(format!("{:03}.jpg", i)))?;
+                base_picture.save_to_file(off_dir.join(format!("{:03}.jpg", i)))?;
             }
 
             let frame = self.single_light_on(i);
@@ -214,9 +214,9 @@ impl Capturer {
 
             let found_coords = cv::find_light_from_diff(&base_picture, &led_picture)?;
             if save_pictures {
-                led_picture.save_to_file(on_dir.with_file_name(format!("{:03}.jpg", i)))?;
+                led_picture.save_to_file(on_dir.join(format!("{:03}.jpg", i)))?;
                 led_picture.mark(&found_coords)?;
-                led_picture.save_to_file(marked_dir.with_file_name(format!("{:03}.jpg", i)))?;
+                led_picture.save_to_file(marked_dir.join(format!("{:03}.jpg", i)))?;
             }
             coords.push(found_coords);
         }
@@ -229,11 +229,8 @@ impl Capturer {
         for point in &coords {
             all_lights_picture.mark(point)?;
         }
-        all_lights_picture.save_to_file(base_dir.with_file_name("reference.jpg"))?;
-        Self::save_2d_coordinates(
-            base_dir.with_file_name(format!("{perspective_name}.csv")),
-            &coords,
-        )?;
+        all_lights_picture.save_to_file(base_dir.join("reference.jpg"))?;
+        Self::save_2d_coordinates(base_dir.join(format!("{perspective_name}.csv")), &coords)?;
 
         Ok(Self::normalize(Self::mark_outliers_by_distance(
             coords,
