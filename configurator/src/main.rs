@@ -9,7 +9,10 @@ use cv::Camera;
 use itertools::Itertools;
 use log::{debug, info};
 use nalgebra::Vector3;
-use rustmas_light_client as light_client;
+use rustmas_light_client::{
+    combined::CombinedLightClient, ByteOrder, LightsConfig, LightsEndpoint, TtyLightsConfig,
+};
+use url::Url;
 
 #[derive(Debug, thiserror::Error)]
 #[error("Configurator error: {message}")]
@@ -113,38 +116,31 @@ fn capturer_from_options(
         Camera::new_default()?
     };
 
-    let light_client: Box<dyn light_client::LightClient> = if let Some(endpoint) = lights_endpoint {
-        match endpoint {
-            http_endpoint if endpoint.starts_with("http://") => {
-                info!(
-                    "Using remote HTTP light client at endpoint: {}",
-                    http_endpoint
-                );
-                Box::new(light_client::http::HttpLightClient::new(&http_endpoint))
+    let light_client_config = lights_endpoint
+        .and_then(|endpoint| {
+            if endpoint.starts_with("http://")
+                || endpoint.starts_with("tcp://")
+                || endpoint.starts_with("udp://")
+            {
+                let Ok(url) = Url::parse(&endpoint) else {
+                    eprintln!("Invalid url: {endpoint}");
+                    return None;
+                };
+                Some(LightsEndpoint::Remote(url))
+            } else {
+                Some(LightsEndpoint::Tty(TtyLightsConfig::Detect))
             }
-            tcp_endpoint if endpoint.starts_with("tcp://") => {
-                info!(
-                    "Using remote TCP light client at endpoint: {}",
-                    tcp_endpoint
-                );
-                Box::new(light_client::tcp::TcpLightClient::new(&tcp_endpoint))
-            }
-            udp_endpoint if endpoint.starts_with("udp://") => {
-                info!(
-                    "Using remote UDP light client at endpoint: {}",
-                    udp_endpoint
-                );
-                Box::new(light_client::udp::UdpLightClient::new(&udp_endpoint))
-            }
-            _ => {
-                info!("Using local TTY light client");
-                Box::new(light_client::tty::TtyLightClient::new()?)
-            }
-        }
-    } else {
-        info!("Using mock light client");
-        Box::new(light_client::MockLightClient::new())
-    };
+        })
+        .map(|endpoint| LightsConfig {
+            endpoint,
+            byte_order: ByteOrder::Rgb,
+        })
+        .into_iter()
+        .collect_vec();
+
+    let light_client = CombinedLightClient::builder()
+        .with_config(light_client_config)?
+        .build();
 
     Ok(Capturer::new(light_client, camera, number_of_lights))
 }

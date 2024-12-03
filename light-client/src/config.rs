@@ -3,9 +3,25 @@ use std::path::PathBuf;
 use serde::{Deserialize, Serialize};
 use url::Url;
 
+#[derive(Debug, Copy, Clone, Default, Serialize, Deserialize)]
+#[serde(rename_all = "UPPERCASE")]
+pub enum ByteOrder {
+    #[default]
+    Rgb,
+    Grb,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct LightsConfig {
+    #[serde(flatten)]
+    pub endpoint: LightsEndpoint,
+    #[serde(default)]
+    pub byte_order: ByteOrder,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
-pub enum LightsConfig {
+pub enum LightsEndpoint {
     Remote(Url),
     #[serde(with = "tty_serde")]
     Tty(TtyLightsConfig),

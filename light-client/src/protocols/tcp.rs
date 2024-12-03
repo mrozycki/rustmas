@@ -1,11 +1,12 @@
-use crate::{backoff_decorator::BackoffDecorator, LightClient, LightClientError};
+use crate::LightClientError;
 use async_trait::async_trait;
-use bytes::Buf;
+use bytes::{Buf, Bytes};
 use futures_util::TryFutureExt;
-use lightfx::Frame;
 use log::{debug, error, info};
 use std::{io::Cursor, sync::Arc, time::Duration};
 use tokio::{io::AsyncWriteExt, net::TcpStream, sync::Mutex};
+
+use super::ProtocolLightClient;
 
 #[derive(Clone)]
 pub struct TcpLightClient {
@@ -22,10 +23,6 @@ impl TcpLightClient {
             stream: Arc::new(Mutex::new(None)),
             timeout: Duration::from_secs(1),
         }
-    }
-
-    pub fn with_backoff(self) -> BackoffDecorator<Self> {
-        BackoffDecorator::new(self)
     }
 
     async fn connect(&self) -> Result<TcpStream, LightClientError> {
@@ -50,15 +47,8 @@ impl TcpLightClient {
 }
 
 #[async_trait]
-impl LightClient for TcpLightClient {
-    async fn display_frame(&self, frame: &Frame) -> Result<(), LightClientError> {
-        let pixels: Vec<_> = frame
-            .pixels_iter()
-            .cloned()
-            .map(crate::gamma_correction)
-            .flat_map(|pixel| vec![pixel.g, pixel.r, pixel.b])
-            .collect();
-
+impl ProtocolLightClient for TcpLightClient {
+    async fn display_frame(&self, pixels: Bytes) -> Result<(), LightClientError> {
         let mut stream = self.stream.lock().await;
 
         let res = {
@@ -69,7 +59,7 @@ impl LightClient for TcpLightClient {
                 stream.as_mut().unwrap()
             };
             let mut buf =
-                Cursor::new([&(pixels.len() as u16).to_le_bytes(), pixels.as_slice()].concat());
+                Cursor::new([(pixels.len() as u16).to_le_bytes().as_ref(), &pixels].concat());
             let result = tokio::time::timeout(self.timeout, stream.write_all_buf(&mut buf)).await;
             if buf.remaining() != 0 && buf.remaining() != buf.get_ref().len() {
                 error!(

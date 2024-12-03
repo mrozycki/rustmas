@@ -110,3 +110,9 @@ where
         }
     }
 }
+
+pub trait WithBackoff: Sized + LightClient {
+    fn with_backoff(self) -> BackoffDecorator<Self> {
+        BackoffDecorator::new(self)
+    }
+}
