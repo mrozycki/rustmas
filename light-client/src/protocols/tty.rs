@@ -1,12 +1,14 @@
 use std::{error::Error, io::Write, time::Duration};
 
 use async_trait::async_trait;
-use lightfx::Frame;
+use bytes::Bytes;
 use log::info;
 use serialport::{SerialPort, SerialPortType};
 use tokio::sync::Mutex;
 
-use crate::{LightClient, LightClientError};
+use crate::LightClientError;
+
+use super::ProtocolLightClient;
 
 pub struct TtyLightClient {
     tty: Mutex<Box<dyn SerialPort>>,
@@ -41,20 +43,9 @@ fn get_port() -> Result<String, Box<dyn Error>> {
     }))
 }
 
-fn component_gamma_correction(component: u8) -> u8 {
-    (((component as f64) / 255.0).powi(2) * 255.0) as u8
-}
-
 #[async_trait]
-impl LightClient for TtyLightClient {
-    async fn display_frame(&self, frame: &Frame) -> Result<(), LightClientError> {
-        let pixels: Vec<_> = frame
-            .pixels_iter()
-            .cloned()
-            .flat_map(|pixel| vec![pixel.g, pixel.r, pixel.b])
-            .map(component_gamma_correction)
-            .collect();
-
+impl ProtocolLightClient for TtyLightClient {
+    async fn display_frame(&self, pixels: Bytes) -> Result<(), LightClientError> {
         let mut tty = self.tty.lock().await;
         let bytes_written = tty.write_all(&(pixels.len() as u16).to_le_bytes());
         if bytes_written.is_ok() {

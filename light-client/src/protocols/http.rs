@@ -1,9 +1,11 @@
-use crate::{backoff_decorator::BackoffDecorator, LightClient, LightClientError};
+use crate::LightClientError;
 use async_trait::async_trait;
-use lightfx::Frame;
+use bytes::Bytes;
 use log::debug;
 use reqwest::header::CONNECTION;
 use std::time::Duration;
+
+use super::ProtocolLightClient;
 
 #[derive(Clone)]
 pub struct HttpLightClient {
@@ -23,22 +25,11 @@ impl HttpLightClient {
                 .unwrap(),
         }
     }
-
-    pub fn with_backoff(self) -> BackoffDecorator<Self> {
-        BackoffDecorator::new(self)
-    }
 }
 
 #[async_trait]
-impl LightClient for HttpLightClient {
-    async fn display_frame(&self, frame: &Frame) -> Result<(), LightClientError> {
-        let pixels: Vec<_> = frame
-            .pixels_iter()
-            .cloned()
-            .map(crate::gamma_correction)
-            .flat_map(|pixel| vec![pixel.g, pixel.r, pixel.b])
-            .collect();
-
+impl ProtocolLightClient for HttpLightClient {
+    async fn display_frame(&self, pixels: Bytes) -> Result<(), LightClientError> {
         match self
             .http_client
             .post(&self.url)

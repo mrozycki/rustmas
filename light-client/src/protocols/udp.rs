@@ -1,10 +1,12 @@
-use crate::{LightClient, LightClientError};
+use crate::LightClientError;
 use async_trait::async_trait;
+use bytes::Bytes;
 use futures_util::TryFutureExt;
-use lightfx::Frame;
 use log::{debug, info};
 use std::sync::Arc;
 use tokio::{net::UdpSocket, sync::Mutex};
+
+use super::ProtocolLightClient;
 
 #[derive(Clone)]
 pub struct UdpLightClient {
@@ -45,15 +47,8 @@ impl UdpLightClient {
 }
 
 #[async_trait]
-impl LightClient for UdpLightClient {
-    async fn display_frame(&self, frame: &Frame) -> Result<(), LightClientError> {
-        let pixels: Vec<_> = frame
-            .pixels_iter()
-            .cloned()
-            .map(crate::gamma_correction)
-            .flat_map(|pixel| vec![pixel.g, pixel.r, pixel.b])
-            .collect();
-
+impl ProtocolLightClient for UdpLightClient {
+    async fn display_frame(&self, pixels: Bytes) -> Result<(), LightClientError> {
         let mut socket = self.socket.lock().await;
 
         let res = {
@@ -64,7 +59,7 @@ impl LightClient for UdpLightClient {
                 socket.as_mut().unwrap()
             };
             socket
-                .send(&[&(pixels.len() as u16).to_le_bytes(), pixels.as_slice()].concat())
+                .send(&[(pixels.len() as u16).to_le_bytes().as_ref(), &pixels].concat())
                 .await
         };
 
