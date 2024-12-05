@@ -1,0 +1,11 @@
+{
+    "id": "io.rustmas.circle_wave",
+    "display_name": "Circle Wave",
+    "author": "Mariusz Różycki <mar.rozycki@gmail.com>",
+    "plugin_type": "wasm",
+    "api_version": "0.9",
+    "version": "1.0",
+    "tags": [
+        "2d"
+    ]
+}

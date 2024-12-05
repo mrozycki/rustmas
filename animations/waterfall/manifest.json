@@ -1,0 +1,12 @@
+{
+    "id": "io.rustmas.waterfall",
+    "display_name": "Waterfall",
+    "author": "Mariusz Różycki <mar.rozycki@gmail.com>",
+    "plugin_type": "wasm",
+    "api_version": "0.9",
+    "version": "1.0",
+    "tags": [
+        "2d",
+        "3d"
+    ]
+}

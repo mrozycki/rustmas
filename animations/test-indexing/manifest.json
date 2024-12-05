@@ -1,0 +1,13 @@
+{
+    "id": "io.rustmas.test.indexing",
+    "display_name": "TEST: Indexing",
+    "author": "Mariusz Różycki <mar.rozycki@gmail.com>",
+    "plugin_type": "wasm",
+    "api_version": "0.9",
+    "version": "1.0",
+    "tags": [
+        "1d",
+        "testing",
+        "interactive"
+    ]
+}
