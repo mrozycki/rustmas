@@ -1,0 +1,13 @@
+{
+    "id": "io.rustmas.rainbow_sphere",
+    "display_name": "Rainbow Sphere",
+    "author": "Mariusz Różycki <mar.rozycki@gmail.com>",
+    "plugin_type": "wasm",
+    "api_version": "0.9",
+    "version": "1.0",
+    "tags": [
+        "2d",
+        "3d",
+        "rainbow"
+    ]
+}
