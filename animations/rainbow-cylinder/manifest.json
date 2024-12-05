@@ -1,0 +1,12 @@
+{
+    "id": "io.rustmas.rainbow_cylinder",
+    "display_name": "Rainbow Cylinder",
+    "author": "Mariusz Różycki <mar.rozycki@gmail.com>",
+    "plugin_type": "wasm",
+    "api_version": "0.9",
+    "version": "1.0",
+    "tags": [
+        "3d",
+        "rainbow"
+    ]
+}

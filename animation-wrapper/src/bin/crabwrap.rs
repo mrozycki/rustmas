@@ -1,8 +1,39 @@
 use std::{
-    fs::read_dir,
+    fs::{read_dir, File},
+    io::{BufReader, Read},
     path::PathBuf,
     process::{Command, ExitStatus},
 };
+
+fn find_project_name() -> std::io::Result<String> {
+    #[derive(serde::Deserialize)]
+    struct Package {
+        name: String,
+    }
+
+    #[derive(serde::Deserialize)]
+    struct CargoToml {
+        package: Package,
+    }
+
+    let cargo_toml_path = std::env::current_dir()?.join("Cargo.toml");
+    let mut buf = Vec::new();
+    BufReader::new(File::open(&cargo_toml_path)?).read_to_end(&mut buf)?;
+    let cargo_toml = toml::from_str::<CargoToml>(&String::from_utf8(buf).map_err(|_| {
+        std::io::Error::new(
+            std::io::ErrorKind::InvalidData,
+            "Cargo.toml is not valid UTF-8",
+        )
+    })?)
+    .map_err(|_| {
+        std::io::Error::new(
+            std::io::ErrorKind::InvalidData,
+            "Cargo.toml is not valid TOML",
+        )
+    })?;
+
+    Ok(cargo_toml.package.name)
+}
 
 fn build_plugin() -> std::io::Result<ExitStatus> {
     let mut cmd = Command::new("cargo")
@@ -35,16 +66,16 @@ fn find_manifest() -> std::io::Result<PathBuf> {
 
 fn find_animation_executable() -> std::io::Result<PathBuf> {
     let project_root = find_project_root()?;
-    let animation_id = find_animation_id()?;
+    let project_name = find_project_name()?.replace('-', "_");
 
     let executable_path = project_root
         .join("target/wasm32-wasip2/release")
-        .join(format!("{animation_id}.wasm"));
+        .join(format!("{project_name}.wasm"));
 
     if !executable_path.exists() {
         Err(std::io::Error::new(
             std::io::ErrorKind::NotFound,
-            "Could not find animation executable",
+            format!("Could not find animation executable at {executable_path:?}"),
         ))
     } else {
         Ok(executable_path)
@@ -80,16 +111,17 @@ fn find_project_root() -> std::io::Result<PathBuf> {
         })
 }
 
-fn main() {
-    let manifest_path = find_manifest().expect("Could not find manifest.json file");
+fn main() -> std::io::Result<()> {
+    let manifest_path = find_manifest()?;
 
-    build_plugin().expect("Failed to build the plugin");
+    build_plugin()?;
 
-    let executable_path = find_animation_executable().expect("Could not find animation executable");
-    let output_path = get_output_path().expect("Could not generate output path");
+    let executable_path = find_animation_executable()?;
+    let output_path = get_output_path()?;
 
-    animation_wrapper::wrap::wrap_plugin(&output_path, &executable_path, &manifest_path)
-        .expect("Failed to wrap the plugin");
+    animation_wrapper::wrap::wrap_plugin(&output_path, &executable_path, &manifest_path)?;
 
     println!("Plugin ready at {}", output_path.to_string_lossy());
+
+    Ok(())
 }

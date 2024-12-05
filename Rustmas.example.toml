@@ -4,8 +4,8 @@ database_path = "db.sqlite"
 [controller]
 # path to CSV file with light positions
 points_path = "lights.csv"
-# path to the [animation plugins directory](../plugins/README.md)
-plugin_path = "plugins/"
+# path to the [animation plugins directory](../animations/README.md)
+plugin_path = "target/animations/"
 
 # you can specify multiple light endpoints
 [[controller.lights]]

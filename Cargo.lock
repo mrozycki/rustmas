@@ -554,7 +554,7 @@ dependencies = [
  "animation-api 0.1.0",
  "animation-macros 0.1.0",
  "lightfx 0.1.0",
- "nalgebra",
+ "nalgebra 0.31.4",
  "rand 0.8.5",
  "serde",
  "serde_json",
@@ -568,7 +568,7 @@ dependencies = [
  "animation-api 0.1.0 (git+https://github.com/mrozycki/rustmas?rev=835ad9e)",
  "animation-macros 0.1.0 (git+https://github.com/mrozycki/rustmas?rev=835ad9e)",
  "lightfx 0.1.0 (git+https://github.com/mrozycki/rustmas?rev=835ad9e)",
- "nalgebra",
+ "nalgebra 0.31.4",
  "rand 0.8.5",
  "serde",
  "serde_json",
@@ -616,25 +616,7 @@ dependencies = [
  "serde_json",
  "tar",
  "thiserror 2.0.3",
-]
-
-[[package]]
-name = "animations"
-version = "0.1.0"
-dependencies = [
- "animation-api 0.1.0",
- "animation-utils 0.1.0",
- "bracket-noise",
- "env_logger",
- "itertools 0.10.5",
- "lightfx 0.1.0",
- "log",
- "midi-msg",
- "nalgebra",
- "rand 0.8.5",
- "rustfft",
- "serde",
- "serde_json",
+ "toml",
 ]
 
 [[package]]
@@ -1651,30 +1633,6 @@ name = "boolinator"
 version = "2.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cfa8873f51c92e232f9bac4065cddef41b714152812bfc5f7672ba16d6ef8cd9"
-
-[[package]]
-name = "bracket-noise"
-version = "0.8.7"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f0b7443d0990c69db7a83f376f0101d684c20a911698e5f932bffbda2c8b08dd"
-dependencies = [
- "bracket-random",
-]
-
-[[package]]
-name = "bracket-random"
-version = "0.8.7"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "437be61484077b1ddb57002ce3c96b7d03cbf500b5d15157ee7e67e22332c39b"
-dependencies = [
- "getrandom",
- "js-sys",
- "lazy_static",
- "rand 0.8.5",
- "rand_xorshift 0.3.0",
- "regex",
- "wasm-bindgen",
-]
 
 [[package]]
 name = "brotli"
@@ -4813,11 +4771,27 @@ checksum = "20bd243ab3dbb395b39ee730402d2e5405e448c75133ec49cc977762c4cba3d1"
 dependencies = [
  "approx",
  "matrixmultiply",
- "nalgebra-macros",
+ "nalgebra-macros 0.1.0",
  "num-complex 0.4.6",
  "num-rational 0.4.2",
  "num-traits",
- "simba",
+ "simba 0.7.3",
+ "typenum",
+]
+
+[[package]]
+name = "nalgebra"
+version = "0.33.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "26aecdf64b707efd1310e3544d709c5c0ac61c13756046aaaba41be5c4f66a3b"
+dependencies = [
+ "approx",
+ "matrixmultiply",
+ "nalgebra-macros 0.2.2",
+ "num-complex 0.4.6",
+ "num-rational 0.4.2",
+ "num-traits",
+ "simba 0.9.0",
  "typenum",
 ]
 
@@ -4830,6 +4804,17 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn 1.0.109",
+]
+
+[[package]]
+name = "nalgebra-macros"
+version = "0.2.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "254a5372af8fc138e36684761d3c0cdb758a4410e938babcff1c860ce14ddbfc"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.89",
 ]
 
 [[package]]
@@ -4925,6 +4910,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "noise"
+version = "0.9.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6da45c8333f2e152fc665d78a380be060eb84fad8ca4c9f7ac8ca29216cff0cc"
+dependencies = [
+ "num-traits",
+ "rand 0.8.5",
+ "rand_xorshift 0.3.0",
+]
+
+[[package]]
 name = "nom"
 version = "7.1.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4956,7 +4952,7 @@ version = "0.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b8536030f9fea7127f841b45bb6243b27255787fb4eb83958aa1ef9d2fdc0c36"
 dependencies = [
- "num-bigint",
+ "num-bigint 0.2.6",
  "num-complex 0.2.4",
  "num-integer",
  "num-iter",
@@ -4971,6 +4967,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "090c7f9998ee0ff65aa5b723e4009f7b217707f1fb5ea551329cc4d6231fb304"
 dependencies = [
  "autocfg 1.3.0",
+ "num-integer",
+ "num-traits",
+]
+
+[[package]]
+name = "num-bigint"
+version = "0.4.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a5e44f723f1133c9deac646763579fdb3ac745e418f2a7af9cd0c431da1f20b9"
+dependencies = [
  "num-integer",
  "num-traits",
 ]
@@ -5055,7 +5061,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5c000134b5dbf44adc5cb772486d335293351644b801551abe8f75c84cfa4aef"
 dependencies = [
  "autocfg 1.3.0",
- "num-bigint",
+ "num-bigint 0.2.6",
  "num-integer",
  "num-traits",
 ]
@@ -5066,6 +5072,7 @@ version = "0.4.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f83d14da390562dca69fc84082e73e548e1ad308d24accdedd2720017cb37824"
 dependencies = [
+ "num-bigint 0.4.6",
  "num-integer",
  "num-traits",
 ]
@@ -6365,6 +6372,380 @@ dependencies = [
 ]
 
 [[package]]
+name = "rustmas-animation-audio-boom"
+version = "1.0.0"
+dependencies = [
+ "animation-api 0.1.0",
+ "animation-utils 0.1.0",
+ "animation-wasm-bindings 0.1.0",
+ "itertools 0.10.5",
+ "lightfx 0.1.0",
+ "serde",
+]
+
+[[package]]
+name = "rustmas-animation-audio-visualizer"
+version = "1.0.0"
+dependencies = [
+ "animation-api 0.1.0",
+ "animation-utils 0.1.0",
+ "animation-wasm-bindings 0.1.0",
+ "itertools 0.10.5",
+ "lightfx 0.1.0",
+ "serde",
+]
+
+[[package]]
+name = "rustmas-animation-audio-wave"
+version = "1.0.0"
+dependencies = [
+ "animation-api 0.1.0",
+ "animation-utils 0.1.0",
+ "animation-wasm-bindings 0.1.0",
+ "itertools 0.10.5",
+ "lightfx 0.1.0",
+ "serde",
+]
+
+[[package]]
+name = "rustmas-animation-barber-pole"
+version = "1.0.0"
+dependencies = [
+ "animation-api 0.1.0",
+ "animation-utils 0.1.0",
+ "animation-wasm-bindings 0.1.0",
+ "itertools 0.10.5",
+ "lightfx 0.1.0",
+ "serde",
+]
+
+[[package]]
+name = "rustmas-animation-beats"
+version = "1.0.0"
+dependencies = [
+ "animation-api 0.1.0",
+ "animation-utils 0.1.0",
+ "animation-wasm-bindings 0.1.0",
+ "itertools 0.10.5",
+ "lightfx 0.1.0",
+ "serde",
+]
+
+[[package]]
+name = "rustmas-animation-circle-boom"
+version = "1.0.0"
+dependencies = [
+ "animation-api 0.1.0",
+ "animation-utils 0.1.0",
+ "animation-wasm-bindings 0.1.0",
+ "itertools 0.10.5",
+ "lightfx 0.1.0",
+ "serde",
+]
+
+[[package]]
+name = "rustmas-animation-circle-grid"
+version = "1.0.0"
+dependencies = [
+ "animation-api 0.1.0",
+ "animation-utils 0.1.0",
+ "animation-wasm-bindings 0.1.0",
+ "itertools 0.10.5",
+ "lightfx 0.1.0",
+ "serde",
+]
+
+[[package]]
+name = "rustmas-animation-circle-wave"
+version = "1.0.0"
+dependencies = [
+ "animation-api 0.1.0",
+ "animation-utils 0.1.0",
+ "animation-wasm-bindings 0.1.0",
+ "itertools 0.10.5",
+ "lightfx 0.1.0",
+ "serde",
+]
+
+[[package]]
+name = "rustmas-animation-classic"
+version = "1.0.0"
+dependencies = [
+ "animation-api 0.1.0",
+ "animation-utils 0.1.0",
+ "animation-wasm-bindings 0.1.0",
+ "itertools 0.10.5",
+ "lightfx 0.1.0",
+ "serde",
+]
+
+[[package]]
+name = "rustmas-animation-doom-fire"
+version = "1.0.0"
+dependencies = [
+ "animation-api 0.1.0",
+ "animation-utils 0.1.0",
+ "animation-wasm-bindings 0.1.0",
+ "itertools 0.10.5",
+ "lightfx 0.1.0",
+ "nalgebra 0.33.2",
+ "rand 0.8.5",
+ "serde",
+]
+
+[[package]]
+name = "rustmas-animation-draw"
+version = "1.0.0"
+dependencies = [
+ "animation-api 0.1.0",
+ "animation-utils 0.1.0",
+ "animation-wasm-bindings 0.1.0",
+ "itertools 0.10.5",
+ "lightfx 0.1.0",
+ "nalgebra 0.33.2",
+ "serde",
+]
+
+[[package]]
+name = "rustmas-animation-heartbeat"
+version = "1.0.0"
+dependencies = [
+ "animation-api 0.1.0",
+ "animation-utils 0.1.0",
+ "animation-wasm-bindings 0.1.0",
+ "itertools 0.10.5",
+ "lightfx 0.1.0",
+ "serde",
+]
+
+[[package]]
+name = "rustmas-animation-lightspeed"
+version = "1.0.0"
+dependencies = [
+ "animation-api 0.1.0",
+ "animation-utils 0.1.0",
+ "animation-wasm-bindings 0.1.0",
+ "itertools 0.10.5",
+ "lightfx 0.1.0",
+ "rand 0.8.5",
+ "serde",
+]
+
+[[package]]
+name = "rustmas-animation-midi-wave"
+version = "1.0.0"
+dependencies = [
+ "animation-api 0.1.0",
+ "animation-utils 0.1.0",
+ "animation-wasm-bindings 0.1.0",
+ "itertools 0.10.5",
+ "lightfx 0.1.0",
+ "midi-msg",
+ "serde",
+]
+
+[[package]]
+name = "rustmas-animation-moon"
+version = "1.0.0"
+dependencies = [
+ "animation-api 0.1.0",
+ "animation-utils 0.1.0",
+ "animation-wasm-bindings 0.1.0",
+ "itertools 0.10.5",
+ "lightfx 0.1.0",
+ "nalgebra 0.33.2",
+ "noise",
+ "rand 0.8.5",
+ "serde",
+]
+
+[[package]]
+name = "rustmas-animation-particle-fire"
+version = "1.0.0"
+dependencies = [
+ "animation-api 0.1.0",
+ "animation-utils 0.1.0",
+ "animation-wasm-bindings 0.1.0",
+ "itertools 0.10.5",
+ "lightfx 0.1.0",
+ "nalgebra 0.33.2",
+ "rand 0.8.5",
+ "serde",
+]
+
+[[package]]
+name = "rustmas-animation-pillars"
+version = "1.0.0"
+dependencies = [
+ "animation-api 0.1.0",
+ "animation-utils 0.1.0",
+ "animation-wasm-bindings 0.1.0",
+ "itertools 0.10.5",
+ "lightfx 0.1.0",
+ "rand 0.8.5",
+ "serde",
+]
+
+[[package]]
+name = "rustmas-animation-present"
+version = "1.0.0"
+dependencies = [
+ "animation-api 0.1.0",
+ "animation-utils 0.1.0",
+ "animation-wasm-bindings 0.1.0",
+ "itertools 0.10.5",
+ "lightfx 0.1.0",
+ "nalgebra 0.33.2",
+ "rand 0.8.5",
+ "serde",
+]
+
+[[package]]
+name = "rustmas-animation-rainbow-cable"
+version = "1.0.0"
+dependencies = [
+ "animation-api 0.1.0",
+ "animation-utils 0.1.0",
+ "animation-wasm-bindings 0.1.0",
+ "itertools 0.10.5",
+ "lightfx 0.1.0",
+ "serde",
+]
+
+[[package]]
+name = "rustmas-animation-rainbow-cylinder"
+version = "1.0.0"
+dependencies = [
+ "animation-api 0.1.0",
+ "animation-utils 0.1.0",
+ "animation-wasm-bindings 0.1.0",
+ "itertools 0.10.5",
+ "lightfx 0.1.0",
+ "serde",
+]
+
+[[package]]
+name = "rustmas-animation-rainbow-halves"
+version = "1.0.0"
+dependencies = [
+ "animation-api 0.1.0",
+ "animation-utils 0.1.0",
+ "animation-wasm-bindings 0.1.0",
+ "itertools 0.10.5",
+ "lightfx 0.1.0",
+ "serde",
+]
+
+[[package]]
+name = "rustmas-animation-rainbow-sphere"
+version = "1.0.0"
+dependencies = [
+ "animation-api 0.1.0",
+ "animation-utils 0.1.0",
+ "animation-wasm-bindings 0.1.0",
+ "itertools 0.10.5",
+ "lightfx 0.1.0",
+ "serde",
+]
+
+[[package]]
+name = "rustmas-animation-rainbow-spiral"
+version = "1.0.0"
+dependencies = [
+ "animation-api 0.1.0",
+ "animation-utils 0.1.0",
+ "animation-wasm-bindings 0.1.0",
+ "itertools 0.10.5",
+ "lightfx 0.1.0",
+ "serde",
+]
+
+[[package]]
+name = "rustmas-animation-rainbow-waterfall"
+version = "1.0.0"
+dependencies = [
+ "animation-api 0.1.0",
+ "animation-utils 0.1.0",
+ "animation-wasm-bindings 0.1.0",
+ "itertools 0.10.5",
+ "lightfx 0.1.0",
+ "serde",
+]
+
+[[package]]
+name = "rustmas-animation-random-sweep"
+version = "1.0.0"
+dependencies = [
+ "animation-api 0.1.0",
+ "animation-utils 0.1.0",
+ "animation-wasm-bindings 0.1.0",
+ "itertools 0.10.5",
+ "lightfx 0.1.0",
+ "nalgebra 0.31.4",
+ "serde",
+]
+
+[[package]]
+name = "rustmas-animation-single-color"
+version = "1.0.0"
+dependencies = [
+ "animation-api 0.1.0",
+ "animation-utils 0.1.0",
+ "animation-wasm-bindings 0.1.0",
+ "itertools 0.10.5",
+ "lightfx 0.1.0",
+ "serde",
+]
+
+[[package]]
+name = "rustmas-animation-spinning-halves"
+version = "1.0.0"
+dependencies = [
+ "animation-api 0.1.0",
+ "animation-utils 0.1.0",
+ "animation-wasm-bindings 0.1.0",
+ "itertools 0.10.5",
+ "lightfx 0.1.0",
+ "serde",
+]
+
+[[package]]
+name = "rustmas-animation-test-indexing"
+version = "1.0.0"
+dependencies = [
+ "animation-api 0.1.0",
+ "animation-utils 0.1.0",
+ "animation-wasm-bindings 0.1.0",
+ "itertools 0.10.5",
+ "lightfx 0.1.0",
+ "serde",
+]
+
+[[package]]
+name = "rustmas-animation-test-manual-sweep"
+version = "1.0.0"
+dependencies = [
+ "animation-api 0.1.0",
+ "animation-utils 0.1.0",
+ "animation-wasm-bindings 0.1.0",
+ "itertools 0.10.5",
+ "lightfx 0.1.0",
+ "serde",
+]
+
+[[package]]
+name = "rustmas-animation-waterfall"
+version = "1.0.0"
+dependencies = [
+ "animation-api 0.1.0",
+ "animation-utils 0.1.0",
+ "animation-wasm-bindings 0.1.0",
+ "itertools 0.10.5",
+ "lightfx 0.1.0",
+ "serde",
+]
+
+[[package]]
 name = "rustmas-animator"
 version = "0.1.0"
 dependencies = [
@@ -6400,7 +6781,7 @@ dependencies = [
  "itertools 0.10.5",
  "lightfx 0.1.0",
  "log",
- "nalgebra",
+ "nalgebra 0.31.4",
  "opencv",
  "rustmas-light-client",
  "serde",
@@ -6767,6 +7148,19 @@ name = "simba"
 version = "0.7.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2f3fd720c48c53cace224ae62bef1bbff363a70c68c4802a78b5cc6159618176"
+dependencies = [
+ "approx",
+ "num-complex 0.4.6",
+ "num-traits",
+ "paste",
+ "wide",
+]
+
+[[package]]
+name = "simba"
+version = "0.9.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b3a386a501cd104797982c15ae17aafe8b9261315b5d07e3ec803f2ea26be0fa"
 dependencies = [
  "approx",
  "num-complex 0.4.6",
@@ -7247,19 +7641,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "06794f8f6c5c898b3275aebefa6b8a1cb24cd2c6c79397ab15774837a0bc5755"
 dependencies = [
  "winapi-util",
-]
-
-[[package]]
-name = "test-wasm-animation"
-version = "0.1.0"
-dependencies = [
- "animation-api 0.1.0",
- "animation-utils 0.1.0",
- "animation-wasm-bindings 0.1.0",
- "itertools 0.10.5",
- "lightfx 0.1.0",
- "serde",
- "serde_json",
 ]
 
 [[package]]

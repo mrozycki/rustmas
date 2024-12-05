@@ -1,0 +1,11 @@
+{
+    "id": "io.rustmas.spinning_halves",
+    "display_name": "Spinning Halves",
+    "author": "Krzysztof Mazur <krzmazur1@gmail.com>",
+    "plugin_type": "wasm",
+    "api_version": "0.9",
+    "version": "1.0",
+    "tags": [
+        "3d"
+    ]
+}
