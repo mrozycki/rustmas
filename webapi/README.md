@@ -24,7 +24,7 @@ curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 source "$HOME/.cargo/env"
 ```
 
-Then you will need to install `trunk` to serve the frontend code and add 
+Then you will need to install `trunk` to serve the frontend code and add
 a WASM target for Rust to compile the frontend. This can be done with:
 
 ```
@@ -35,7 +35,7 @@ rustup target add wasm32-unknown-unknown
 You may also need to install additional dependencies. For example on ubuntu:
 
 ```
-sudo apt install libxinerama-dev libxcursor-dev xorg-dev libgl1 libgl1-mesa-dev libudev-dev clang libclang-dev 
+sudo apt install libxinerama-dev libxcursor-dev xorg-dev libgl1 libgl1-mesa-dev libudev-dev clang libclang-dev
 ```
 
 Optionally, if you want to use animations with audio support:
@@ -47,12 +47,12 @@ sudo apt install libasound2-dev
 And if you want to run the configurator:
 
 ```
-sudo apt install libopencv-dev 
+sudo apt install libopencv-dev
 ```
 
 ### Database
 
-Rustmas WebAPI uses an SQLite database to store animation parameter values. 
+Rustmas WebAPI uses an SQLite database to store animation parameter values.
 It runs appropriate migrations at startup, so for an initial run you only need
 to provide an empty SQLite database file. One has been provided in the repository
 as [`db.sqlite.example`](../db.sqlite.example) in the root of the project.
@@ -65,7 +65,7 @@ cp db.sqlite.example db.sqlite
 ### Configuration file
 
 In order to run WebAPI locally, you need to create a Rustmas.toml file.
-You can find an example with options explained in the [Rustmas.example.toml](../Rustmas.example.toml) 
+You can find an example with options explained in the [Rustmas.example.toml](../Rustmas.example.toml)
 file. Simply make a copy of it and adjust it however you need.
 
 ```
@@ -78,7 +78,7 @@ Animations are provided as separate binaries and have to be built separately.
 You can do it with:
 
 ```
-cargo run --release -p animations
+cargo build --release -p animations
 ```
 
 The `plugin` directory, where the WebAPI will be looking for plugins, has been
@@ -122,15 +122,15 @@ trunk serve --features local,visualizer
 > For this to work, you need `trunk` version 0.17.0 or newer. Earlier versions
 > ignore the `--features` flag.
 
-The `local` feature will cause WebUI to connect to a locally running WebAPI. 
+The `local` feature will cause WebUI to connect to a locally running WebAPI.
 
 The `visualizer` feature will include an embedded visualizer in the app.
 This is particularly useful for animation development, since it allows you to
 run the entire system without physical lights. It also is the most convenient
 way to produce mouse events for animations that make use of them (like Draw).
 
-However, the visualizer is quite resource intensive, especially in a debug build, 
-so for testing on less powerful devices and/or with physical lights available, 
+However, the visualizer is quite resource intensive, especially in a debug build,
+so for testing on less powerful devices and/or with physical lights available,
 you may choose to omit it:
 
 ```
