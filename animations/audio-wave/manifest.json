@@ -1,0 +1,13 @@
+{
+    "id": "io.rustmas.audio.wave",
+    "display_name": "Audio Wave",
+    "author": "Krzysztof Mazur <krzmazur1@gmail.com>",
+    "plugin_type": "wasm",
+    "api_version": "0.9",
+    "version": "1.0",
+    "tags": [
+        "2d",
+        "3d",
+        "audio"
+    ]
+}

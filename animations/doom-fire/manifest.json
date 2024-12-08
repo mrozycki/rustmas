@@ -1,0 +1,11 @@
+{
+    "id": "io.rustmas.doom_fire",
+    "display_name": "Doom Fire",
+    "author": "Mariusz Różycki <mar.rozycki@gmail.com>",
+    "plugin_type": "wasm",
+    "api_version": "0.9",
+    "version": "1.0",
+    "tags": [
+        "2d"
+    ]
+}

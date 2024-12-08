@@ -7,7 +7,6 @@ members = [
     "animation-utils",
     "animation-wasm-bindings",
     "animation-wrapper",
-    "animations",
     "light-client",
     "configurator",
     "animator",
@@ -19,6 +18,10 @@ members = [
     "visualizer",
     "events",
     "test-wasm-animation",
+    "animations/*",
 ]
-
 resolver = "2"
+
+[profile.release-animation]
+inherits = "release"
+lto = true

@@ -1,0 +1,21 @@
+[package]
+name = "rustmas-animation-random-sweep"
+version = "1.0.0"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+animation-utils = { path = "../../animation-utils" }
+animation-api = { path = "../../animation-api" }
+lightfx = { path = "../../lightfx" }
+
+itertools = "0.10.5"
+serde = "1.0.215"
+nalgebra = "0.31"
+
+[dependencies.animation-wasm-bindings]
+path = "../../animation-wasm-bindings"
+default-features = false
+features = ["guest"]
