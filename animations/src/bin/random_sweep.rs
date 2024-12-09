@@ -18,6 +18,9 @@ pub enum SweepType {
 
 #[derive(Clone, Serialize, Deserialize, Schema)]
 pub struct Parameters {
+    #[schema_field(name = "Lead length", number(min = 0.0, max = 2.0, step = 0.05))]
+    lead_length: f64,
+
     #[schema_field(name = "Tail length", number(min = 0.0, max = 2.0, step = 0.05))]
     tail_length: f64,
 
@@ -28,6 +31,7 @@ pub struct Parameters {
 impl Default for Parameters {
     fn default() -> Self {
         Self {
+            lead_length: 0.1,
             tail_length: 0.5,
             sweep_type: Default::default(),
         }
@@ -74,7 +78,9 @@ impl Animation for RandomSweep {
     }
 
     fn update(&mut self, delta: f64) {
-        if self.heights.is_empty() {
+        if self.heights.is_empty()
+            || self.current_height > self.max_height + self.parameters.tail_length
+        {
             let rotation = match self.parameters.sweep_type {
                 SweepType::Sweep2D => animation_utils::random_rotation_around(&Vector3::z_axis()),
                 SweepType::Sweep3D => animation_utils::random_rotation(),
@@ -88,16 +94,14 @@ impl Animation for RandomSweep {
             self.color = animation_utils::random_hue(1.0, 1.0);
             (self.current_height, self.max_height) =
                 match self.heights.iter().filter_map(|x| x.as_ref()).minmax() {
-                    itertools::MinMaxResult::MinMax(min, max) => (*min, *max),
+                    itertools::MinMaxResult::MinMax(min, max) => {
+                        (*min - self.parameters.lead_length, *max)
+                    }
                     _ => return,
                 };
         }
 
         self.current_height += delta;
-
-        if self.current_height > self.max_height + self.parameters.tail_length {
-            self.heights = Vec::new();
-        }
     }
 
     fn render(&self) -> lightfx::Frame {
@@ -105,11 +109,12 @@ impl Animation for RandomSweep {
             .iter()
             .map(|h| {
                 if let Some(h) = h {
-                    if *h < self.current_height
-                        && *h > self.current_height - self.parameters.tail_length
-                    {
-                        self.color
-                            .dim(1.0 - (self.current_height - h) / self.parameters.tail_length)
+                    let h = h - self.current_height;
+
+                    if h >= 0.0 && h < self.parameters.lead_length {
+                        self.color.dim(1.0 - h / self.parameters.lead_length)
+                    } else if h < 0.0 && h > -self.parameters.tail_length {
+                        self.color.dim(1.0 + h / self.parameters.tail_length)
                     } else {
                         lightfx::Color::black()
                     }
