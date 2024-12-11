@@ -159,7 +159,7 @@ impl Animation for ParticleFire {
             parameters: Default::default(),
             particles: Vec::new(),
             to_generate: 0.0,
-            gradient: Gradient::new(vec![
+            gradient: Gradient::from([
                 Color::rgb_unit(0.0, 0.0, 0.0), // black
                 Color::rgb_unit(1.0, 0.0, 0.0), // red
                 Color::rgb_unit(1.0, 0.3, 0.0), // orange
@@ -209,20 +209,16 @@ impl Animation for ParticleFire {
                     self.particles
                         .iter()
                         .map(|p| (p.power, p.distance_to(x, y, z)))
-                        .fold(
-                            Color::black().with_alpha(0.0),
-                            |color, (power, distance)| {
-                                self.gradient
-                                    .at(power)
-                                    .with_alpha(
-                                        (1.0 - (distance
-                                            / (self.parameters.particle_range * power))
-                                            .powi(2))
-                                        .clamp(0.0, 1.0),
-                                    )
-                                    .blend(&color)
-                            },
-                        )
+                        .map(|(power, distance)| {
+                            (
+                                power,
+                                1.0 - (distance / (self.parameters.particle_range * power)).powi(2),
+                            )
+                        })
+                        .filter(|(_, alpha)| *alpha > 0.0)
+                        .fold(Color::black().with_alpha(0.0), |color, (power, alpha)| {
+                            self.gradient.at(power).with_alpha(alpha).blend(&color)
+                        })
                         .apply_alpha()
                 }
             })

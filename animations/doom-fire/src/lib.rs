@@ -51,7 +51,7 @@ impl DoomFire {
         }
         Self {
             surface,
-            gradient: Gradient::new(vec![
+            gradient: Gradient::from([
                 Color::rgb_unit(0.0, 0.0, 0.0), // black
                 Color::rgb_unit(1.0, 0.0, 0.0), // red
                 Color::rgb_unit(1.0, 0.5, 0.0), // orange
