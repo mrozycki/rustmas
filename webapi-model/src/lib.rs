@@ -1,7 +1,9 @@
 use std::collections::HashMap;
 
 pub use animation_api::event::Event;
-pub use animation_api::schema::{Configuration, ParameterSchema, ParameterValue};
+pub use animation_api::schema::{
+    Configuration, ConfigurationSchema, ParameterSchema, ParameterValue, ValueSchema,
+};
 use serde::{Deserialize, Serialize};
 
 #[derive(Deserialize)]

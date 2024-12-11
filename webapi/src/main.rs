@@ -10,12 +10,13 @@ use config::RustmasConfig;
 use log::{info, warn};
 use rustmas_animator::Controller;
 use serde_json::json;
-use std::error::Error;
+use std::{collections::HashMap, error::Error};
 use tokio::sync::{mpsc, Mutex};
 use webapi_model::{
-    Animation, Configuration, GetEventGeneratorSchemaResponse, GetParametersResponse,
-    GetPointsResponse, ListAnimationsResponse, SendEventRequest, SetAnimationParametersRequest,
-    SetEventGeneratorParametersRequest, SwitchAnimationRequest, SwitchAnimationResponse,
+    Animation, Configuration, ConfigurationSchema, GetEventGeneratorSchemaResponse,
+    GetParametersResponse, GetPointsResponse, ListAnimationsResponse, ParameterValue,
+    SendEventRequest, SetAnimationParametersRequest, SetEventGeneratorParametersRequest,
+    SwitchAnimationRequest, SwitchAnimationResponse, ValueSchema,
 };
 
 use actix_web::{get, post, web, App, HttpRequest, HttpResponse, HttpServer};
@@ -74,6 +75,49 @@ async fn send_event(
     }
 }
 
+fn reconcile_parameters(
+    defaults: HashMap<String, ParameterValue>,
+    mut values: HashMap<String, ParameterValue>,
+    schema: &ConfigurationSchema,
+) -> HashMap<String, ParameterValue> {
+    let mut schema_map = schema
+        .parameters
+        .iter()
+        .map(|s| (s.id.clone(), s.value.clone()))
+        .collect::<HashMap<_, _>>();
+
+    defaults
+        .into_iter()
+        .map(|(id, v)| {
+            let new_value = if let (Some(param_value), Some(schema_value)) =
+                (values.remove(&id), schema_map.remove(&id))
+            {
+                match (param_value, schema_value) {
+                    (n @ ParameterValue::Number(_), ValueSchema::Speed) => n,
+                    (n @ ParameterValue::Number(_), ValueSchema::Percentage) => n,
+                    (ParameterValue::Number(n), ValueSchema::Number { min, max, step }) => {
+                        ParameterValue::Number(
+                            ((n.clamp(min, max) - min) / step).round() * step + min,
+                        )
+                    }
+                    (c @ ParameterValue::Color(_), ValueSchema::Color) => c,
+                    (ParameterValue::EnumOption(e), ValueSchema::Enum { values }) => {
+                        if values.into_iter().any(|en| en.value == e) {
+                            ParameterValue::EnumOption(e)
+                        } else {
+                            v
+                        }
+                    }
+                    _ => v,
+                }
+            } else {
+                v
+            };
+            (id, new_value)
+        })
+        .collect()
+}
+
 async fn restore_params(
     controller: &mut Controller,
     configuration: Configuration,
@@ -81,6 +125,11 @@ async fn restore_params(
 ) -> Result<Configuration, String> {
     match db.get_parameters(&configuration.id).await {
         Ok(Some(values)) => {
+            let defaults = controller
+                .get_parameter_values()
+                .await
+                .map_err(|e| format!("Failed to load parameters from animation: {}", e))?;
+            let values = reconcile_parameters(defaults, values, &configuration.schema);
             let _ = controller.set_parameters(&values).await;
             Ok(Configuration {
                 values,
