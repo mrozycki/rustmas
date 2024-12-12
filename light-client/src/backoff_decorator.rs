@@ -1,11 +1,33 @@
-use std::time::Duration as StdDuration;
-
 use async_trait::async_trait;
 use chrono::{DateTime, Duration, Utc};
 use log::{info, warn};
 use tokio::sync::Mutex;
 
 use crate::{LightClient, LightClientError};
+
+#[derive(Clone, Copy, Debug)]
+pub struct BackoffConfig {
+    pub start_delay: Duration,
+    pub max_delay: Duration,
+}
+
+impl Default for BackoffConfig {
+    fn default() -> Self {
+        Self {
+            start_delay: Duration::milliseconds(125),
+            max_delay: Duration::seconds(1),
+        }
+    }
+}
+
+impl BackoffConfig {
+    pub fn slow() -> Self {
+        Self {
+            start_delay: Duration::seconds(1),
+            max_delay: Duration::seconds(8),
+        }
+    }
+}
 
 #[derive(PartialEq)]
 enum ConnectionStatus {
@@ -24,39 +46,21 @@ pub struct BackoffDecorator<T: LightClient> {
     inner: T,
     start_delay: Duration,
     max_delay: Duration,
-    timeout: StdDuration,
     state: Mutex<BackoffState>,
 }
 
 impl<T: LightClient> BackoffDecorator<T> {
-    pub fn new(light_client: T) -> BackoffDecorator<T> {
-        let default_start_delay = Duration::seconds(1);
+    pub fn new(light_client: T, config: BackoffConfig) -> BackoffDecorator<T> {
         Self {
             inner: light_client,
-            start_delay: default_start_delay,
-            max_delay: Duration::seconds(8),
-            timeout: StdDuration::from_millis(100),
+            start_delay: config.start_delay,
+            max_delay: config.max_delay,
             state: Mutex::new(BackoffState {
                 status: ConnectionStatus::Healthy,
-                delay: default_start_delay,
+                delay: config.start_delay,
                 next_check: Utc::now(),
             }),
         }
-    }
-
-    pub fn with_start_delay(mut self, delay: Duration) -> Self {
-        self.start_delay = delay;
-        self
-    }
-
-    pub fn with_max_delay(mut self, delay: Duration) -> Self {
-        self.max_delay = delay;
-        self
-    }
-
-    pub fn with_timeout(mut self, timeout: StdDuration) -> Self {
-        self.timeout = timeout;
-        self
     }
 }
 
@@ -112,7 +116,15 @@ where
 }
 
 pub trait WithBackoff: Sized + LightClient {
-    fn with_backoff(self) -> BackoffDecorator<Self> {
-        BackoffDecorator::new(self)
+    fn with_backoff(self, config: BackoffConfig) -> BackoffDecorator<Self> {
+        BackoffDecorator::new(self, config)
+    }
+
+    fn with_default_backoff(self) -> BackoffDecorator<Self> {
+        Self::with_backoff(self, Default::default())
+    }
+
+    fn with_slow_backoff(self) -> BackoffDecorator<Self> {
+        Self::with_backoff(self, BackoffConfig::slow())
     }
 }

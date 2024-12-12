@@ -98,7 +98,7 @@ impl CombinedLightClientBuilder {
         self.with(
             HttpLightClient::new(url.as_ref())
                 .with_byte_order(byte_order)
-                .with_backoff(),
+                .with_slow_backoff(),
         )
     }
 
@@ -107,7 +107,7 @@ impl CombinedLightClientBuilder {
         self.with(
             TcpLightClient::new(url.as_ref())
                 .with_byte_order(byte_order)
-                .with_backoff(),
+                .with_default_backoff(),
         )
     }
 
@@ -116,7 +116,7 @@ impl CombinedLightClientBuilder {
         self.with(
             UdpLightClient::new(url.as_ref())
                 .with_byte_order(byte_order)
-                .with_backoff(),
+                .with_default_backoff(),
         )
     }
 
@@ -125,7 +125,7 @@ impl CombinedLightClientBuilder {
         Ok(self.with(
             TtyLightClient::new()?
                 .with_byte_order(byte_order)
-                .with_backoff(),
+                .with_default_backoff(),
         ))
     }
 
