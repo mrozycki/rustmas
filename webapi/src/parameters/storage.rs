@@ -4,11 +4,12 @@ use sqlx::{sqlite::SqliteConnectOptions, ConnectOptions, Executor, Row, SqliteCo
 use tokio::sync::Mutex;
 use webapi_model::ParameterValue;
 
-pub struct Db {
+#[derive(Debug, Clone)]
+pub struct Storage {
     conn: Arc<Mutex<SqliteConnection>>,
 }
 
-impl Db {
+impl Storage {
     pub async fn new(path: &str) -> Result<Self, Box<dyn Error>> {
         let mut conn = SqliteConnectOptions::from_str(path)?
             .disable_statement_logging()
@@ -22,7 +23,7 @@ impl Db {
         })
     }
 
-    pub async fn set_parameters(
+    pub async fn save(
         &self,
         animation_id: &str,
         parameters: &HashMap<String, ParameterValue>,
@@ -35,7 +36,7 @@ impl Db {
         Ok(())
     }
 
-    pub async fn get_parameters(
+    pub async fn fetch(
         &self,
         animation_id: &str,
     ) -> Result<Option<HashMap<String, ParameterValue>>, Box<dyn Error>> {

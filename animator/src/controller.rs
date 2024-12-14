@@ -329,12 +329,12 @@ impl Controller {
         let _ = self.state.lock().await.set_animation(None).await;
     }
 
-    pub async fn get_parameters(&self) -> Result<Option<Configuration>, ControllerError> {
+    pub async fn get_parameters(&self) -> Result<Configuration, ControllerError> {
         let state = self.state.lock().await;
         let Some(animation) = &state.animation else {
-            return Ok(None);
+            return Err(ControllerError::NoAnimationSelected);
         };
-        Ok(Some(animation.configuration().await?))
+        Ok(animation.configuration().await?)
     }
 
     pub async fn get_parameter_values(
@@ -350,13 +350,16 @@ impl Controller {
     pub async fn set_parameters(
         &mut self,
         parameters: &HashMap<String, ParameterValue>,
-    ) -> Result<(), ControllerError> {
+    ) -> Result<Configuration, ControllerError> {
         let mut state = self.state.lock().await;
         if let Some(ref mut animation) = state.animation {
             animation.set_parameters(parameters).await?;
+            let configuration = animation.configuration().await?;
             state.next_frame = Utc::now();
+            Ok(configuration)
+        } else {
+            Err(ControllerError::NoAnimationSelected)
         }
-        Ok(())
     }
 
     pub async fn join(self) -> Result<(), ControllerError> {

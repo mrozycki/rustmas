@@ -139,12 +139,15 @@ impl RustmasApiClient {
     }
 
     pub async fn get_params(&self) -> Result<Option<Configuration>> {
-        Ok(self.get::<GetParametersResponse>("params").await?.animation)
+        Ok(self
+            .get::<GetParametersResponse>("params/")
+            .await?
+            .animation)
     }
 
     pub async fn set_params(&self, params: &HashMap<String, ParameterValue>) -> Result<()> {
         self.post(
-            "params",
+            "params/",
             &SetAnimationParametersRequest {
                 values: params.clone(),
             },
@@ -153,13 +156,13 @@ impl RustmasApiClient {
     }
 
     pub async fn save_params(&self) -> Result<()> {
-        let _ = self.post::<()>("params/save", &()).await;
+        let _ = self.post::<()>("params/save/", &()).await;
         Ok(())
     }
 
     pub async fn reset_params(&self) -> Result<Configuration> {
         Ok(self
-            .post::<SwitchAnimationResponse>("params/reset", &())
+            .post::<SwitchAnimationResponse>("params/reset/", &())
             .await?
             .animation)
     }
