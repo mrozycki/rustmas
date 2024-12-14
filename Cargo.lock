@@ -6686,6 +6686,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "rustmas-animation-random-wipe"
+version = "1.0.0"
+dependencies = [
+ "animation-api 0.1.0",
+ "animation-utils 0.1.0",
+ "animation-wasm-bindings 0.1.0",
+ "itertools 0.10.5",
+ "lightfx 0.1.0",
+ "nalgebra 0.31.4",
+ "rand 0.8.5",
+ "serde",
+]
+
+[[package]]
 name = "rustmas-animation-single-color"
 version = "1.0.0"
 dependencies = [
