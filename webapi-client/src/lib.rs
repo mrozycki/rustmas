@@ -74,21 +74,24 @@ impl RustmasApiClient {
     pub fn frames(&self) -> Url {
         let mut endpoint = self.endpoint.clone();
         endpoint.set_scheme("ws").unwrap();
-        endpoint.join("frames").unwrap()
+        endpoint.join("visualizer/frames/").unwrap()
     }
 
     #[cfg(feature = "visualizer")]
     pub async fn get_points(&self) -> Result<Vec<(f32, f32, f32)>> {
-        Ok(self.get::<GetPointsResponse>("points").await?.points)
+        Ok(self
+            .get::<GetPointsResponse>("visualizer/points/")
+            .await?
+            .points)
     }
 
     pub async fn restart_events(&self) -> Result<()> {
-        self.post("events/restart", &()).await
+        self.post("events/restart/", &()).await
     }
 
     pub async fn events_schema(&self) -> Result<Vec<Configuration>> {
         Ok(self
-            .get::<GetEventGeneratorSchemaResponse>("events/schema")
+            .get::<GetEventGeneratorSchemaResponse>("events/schema/")
             .await?
             .event_generators)
     }
@@ -98,7 +101,7 @@ impl RustmasApiClient {
         params: &HashMap<String, HashMap<String, ParameterValue>>,
     ) -> Result<()> {
         self.post(
-            "events/values",
+            "events/values/",
             &SetEventGeneratorParametersRequest {
                 event_generators: params.clone(),
             },
@@ -107,16 +110,16 @@ impl RustmasApiClient {
     }
 
     pub async fn send_event(&self, event: Event) -> Result<()> {
-        self.post("events/send", &SendEventRequest { event }).await
+        self.post("events/send/", &SendEventRequest { event }).await
     }
 
     pub async fn list_animations(&self) -> Result<ListAnimationsResponse> {
-        self.get::<ListAnimationsResponse>("list").await
+        self.get::<ListAnimationsResponse>("animations/list/").await
     }
 
     pub async fn discover_animations(&self) -> Result<Vec<Animation>> {
         Ok(self
-            .post::<ListAnimationsResponse>("discover", &())
+            .post::<ListAnimationsResponse>("animations/discover/", &())
             .await?
             .animations)
     }
@@ -124,7 +127,7 @@ impl RustmasApiClient {
     pub async fn switch_animation(&self, animation_id: String) -> Result<Configuration> {
         Ok(self
             .post::<SwitchAnimationResponse>(
-                "switch",
+                "animations/switch/",
                 &SwitchAnimationRequest {
                     animation: animation_id,
                     params: None,
@@ -135,7 +138,7 @@ impl RustmasApiClient {
     }
 
     pub async fn turn_off(&self) -> Result<()> {
-        self.post("turn_off", &()).await
+        self.post("animations/turn_off/", &()).await
     }
 
     pub async fn get_params(&self) -> Result<Option<Configuration>> {

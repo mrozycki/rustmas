@@ -228,13 +228,13 @@ impl Controller {
         }
     }
 
-    pub fn builder_from(config: ControllerConfig) -> Result<ControllerBuilder, Box<dyn Error>> {
+    pub fn builder_from(config: &ControllerConfig) -> Result<ControllerBuilder, Box<dyn Error>> {
         ControllerBuilder {
             points: None,
-            plugin_dir_: Some(config.plugin_path),
-            client_builder: CombinedLightClient::builder().with_config(config.lights)?,
+            plugin_dir_: Some(config.plugin_path.clone()),
+            client_builder: CombinedLightClient::builder().with_config(&config.lights)?,
         }
-        .points_from_file(config.points_path)
+        .points_from_file(&config.points_path)
     }
 
     pub fn points(&self) -> &[(f64, f64, f64)] {
@@ -421,7 +421,7 @@ impl ControllerBuilder {
 
     pub fn lights(
         mut self,
-        config: Vec<rustmas_light_client::LightsConfig>,
+        config: &[rustmas_light_client::LightsConfig],
     ) -> Result<Self, Box<dyn Error>> {
         self.client_builder = self.client_builder.with_config(config)?;
         Ok(self)
