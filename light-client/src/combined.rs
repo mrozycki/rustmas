@@ -72,9 +72,9 @@ impl CombinedLightClientBuilder {
         self
     }
 
-    pub fn with_config(mut self, configs: Vec<LightsConfig>) -> Result<Self, Box<dyn Error>> {
-        for config in configs.into_iter() {
-            match config.endpoint {
+    pub fn with_config(mut self, configs: &[LightsConfig]) -> Result<Self, Box<dyn Error>> {
+        for config in configs.iter() {
+            match &config.endpoint {
                 LightsEndpoint::Remote(url) => match url.scheme() {
                     "http" => self = self.http_lights(url, config.byte_order),
                     "tcp" => self = self.tcp_lights(url, config.byte_order),
@@ -93,28 +93,28 @@ impl CombinedLightClientBuilder {
         Ok(self)
     }
 
-    pub fn http_lights(self, url: Url, byte_order: ByteOrder) -> Self {
+    pub fn http_lights(self, url: &Url, byte_order: ByteOrder) -> Self {
         info!("Using http light client with endpoint {}", url);
         self.with(
-            HttpLightClient::new(url.as_ref())
+            HttpLightClient::new(url.as_str())
                 .with_byte_order(byte_order)
                 .with_slow_backoff(),
         )
     }
 
-    pub fn tcp_lights(self, url: Url, byte_order: ByteOrder) -> Self {
+    pub fn tcp_lights(self, url: &Url, byte_order: ByteOrder) -> Self {
         info!("Using tcp light client with endpoint {}", url);
         self.with(
-            TcpLightClient::new(url.as_ref())
+            TcpLightClient::new(url.as_str())
                 .with_byte_order(byte_order)
                 .with_default_backoff(),
         )
     }
 
-    pub fn udp_lights(self, url: Url, byte_order: ByteOrder) -> Self {
+    pub fn udp_lights(self, url: &Url, byte_order: ByteOrder) -> Self {
         info!("Using udp light client with endpoint {}", url);
         self.with(
-            UdpLightClient::new(url.as_ref())
+            UdpLightClient::new(url.as_str())
                 .with_byte_order(byte_order)
                 .with_default_backoff(),
         )

@@ -139,7 +139,7 @@ fn capturer_from_options(
         .collect_vec();
 
     let light_client = CombinedLightClient::builder()
-        .with_config(light_client_config)?
+        .with_config(&light_client_config)?
         .build();
 
     Ok(Capturer::new(light_client, camera, number_of_lights))
