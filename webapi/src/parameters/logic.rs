@@ -31,37 +31,40 @@ impl Logic {
         Ok(Self::new(parameters_storage))
     }
 
-    pub async fn restore(
+    pub async fn restore_from_db(
         &self,
         controller: &mut rustmas_animator::Controller,
         configuration: Configuration,
-    ) -> Result<Configuration, String> {
-        match self.storage.fetch(&configuration.id).await {
-            Ok(Some(values)) => {
-                let defaults = controller
-                    .get_parameter_values()
-                    .await
-                    .map_err(|e| format!("Failed to load parameters from animation: {}", e))?;
-                let values = reconcile_parameters(defaults, values, &configuration.schema);
-                let _ = controller.set_parameters(&values).await;
-                Ok(Configuration {
-                    values,
-                    ..configuration
-                })
-            }
-            Ok(None) => {
-                match controller.get_parameter_values().await {
-                    Ok(params) => {
-                        let _ = self.storage.save(&configuration.id, &params).await;
-                    }
-                    Err(e) => {
-                        warn!("Failed to set parameters in DB: {}", e);
-                    }
+    ) -> Result<Configuration, LogicError> {
+        let db_params = self
+            .storage
+            .fetch(&configuration.id)
+            .await
+            .map_err(|e| LogicError::InternalError(e.to_string()))?;
+
+        let Some(values) = db_params else {
+            match controller.get_parameter_values().await {
+                Ok(params) => {
+                    let _ = self.storage.save(&configuration.id, &params).await;
                 }
-                Ok(configuration)
+                Err(e) => {
+                    warn!("Failed to set parameters in DB: {}", e);
+                }
             }
-            Err(e) => Err(format!("Failed to load parameters from db: {e}")),
-        }
+            return Ok(configuration);
+        };
+
+        let defaults = controller
+            .get_parameter_values()
+            .await
+            .map_err(|e| LogicError::InternalError(e.to_string()))?;
+
+        let values = reconcile_parameters(defaults, values, &configuration.schema);
+        let _ = controller.set_parameters(&values).await;
+        Ok(Configuration {
+            values,
+            ..configuration
+        })
     }
 
     pub async fn save(&self, controller: &rustmas_animator::Controller) -> Result<(), LogicError> {

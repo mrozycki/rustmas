@@ -29,6 +29,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
     info!("Setting up database");
     let parameters = web::Data::new(parameters::Logic::from(&config).await?);
+    let animations = web::Data::new(animations::Logic::new());
 
     let (sender, receiver) = mpsc::channel::<lightfx::Frame>(1);
 
@@ -55,6 +56,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
             .service(visualizer_service())
             .app_data(controller.clone())
             .app_data(parameters.clone())
+            .app_data(animations.clone())
     })
     .bind(("0.0.0.0", 8081))?
     .run()

@@ -30,7 +30,7 @@ pub struct Parameter {
 
 #[derive(Serialize, Deserialize)]
 pub struct SwitchAnimationRequest {
-    pub animation: String,
+    pub animation_id: String,
     pub params: Option<HashMap<String, ParameterValue>>,
 }
 

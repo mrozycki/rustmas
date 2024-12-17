@@ -129,7 +129,7 @@ impl RustmasApiClient {
             .post::<SwitchAnimationResponse>(
                 "animations/switch/",
                 &SwitchAnimationRequest {
-                    animation: animation_id,
+                    animation_id,
                     params: None,
                 },
             )
