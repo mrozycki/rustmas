@@ -1,5 +1,6 @@
 mod animations;
 mod config;
+mod db;
 mod events;
 mod parameters;
 mod visualizer;
@@ -7,6 +8,7 @@ mod visualizer;
 use ::config::Config;
 use actix_cors::Cors;
 use config::RustmasConfig;
+use db::SharedDbConnection;
 use log::info;
 use std::error::Error;
 use tokio::sync::{mpsc, Mutex};
@@ -28,7 +30,8 @@ async fn main() -> Result<(), Box<dyn Error>> {
         .try_deserialize::<RustmasConfig>()?;
 
     info!("Setting up database");
-    let parameters = web::Data::new(parameters::Logic::from(&config).await?);
+    let shared_db = SharedDbConnection::from_config(&config).await?;
+    let parameters = web::Data::new(parameters::Logic::from(shared_db));
     let animations = web::Data::new(animations::Logic::new());
 
     let (sender, receiver) = mpsc::channel::<lightfx::Frame>(1);

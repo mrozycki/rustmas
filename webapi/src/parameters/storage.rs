@@ -1,26 +1,18 @@
-use std::{collections::HashMap, error::Error, str::FromStr, sync::Arc};
+use std::{collections::HashMap, error::Error};
 
-use sqlx::{sqlite::SqliteConnectOptions, ConnectOptions, Executor, Row, SqliteConnection};
-use tokio::sync::Mutex;
+use sqlx::{Executor, Row};
 use webapi_model::ParameterValue;
+
+use crate::db::SharedDbConnection;
 
 #[derive(Debug, Clone)]
 pub struct Storage {
-    conn: Arc<Mutex<SqliteConnection>>,
+    conn: SharedDbConnection,
 }
 
 impl Storage {
-    pub async fn new(path: &str) -> Result<Self, Box<dyn Error>> {
-        let mut conn = SqliteConnectOptions::from_str(path)?
-            .disable_statement_logging()
-            .connect()
-            .await?;
-
-        sqlx::migrate!("../migrations").run(&mut conn).await?;
-
-        Ok(Self {
-            conn: Arc::new(Mutex::new(conn)),
-        })
+    pub fn new(conn: SharedDbConnection) -> Self {
+        Self { conn }
     }
 
     pub async fn save(
