@@ -1,13 +1,12 @@
 use std::collections::HashMap;
 use std::error::Error;
-use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
 use animation_api::event::Event;
 use animation_api::schema::{Configuration, ParameterValue};
 use animation_wrapper::config::PluginConfig;
 use chrono::{DateTime, Duration, Utc};
-use client::combined::{CombinedLightClient, CombinedLightClientBuilder};
+use client::combined::CombinedLightClient;
 #[cfg(feature = "audio")]
 use events::beat_generator::BeatEventGenerator;
 use events::event_generator::EventGenerator;
@@ -22,7 +21,7 @@ use rustmas_light_client::LightClientError;
 use tokio::sync::{mpsc, Mutex};
 use tokio::task::JoinHandle;
 
-use crate::factory::{AnimationFactory, AnimationFactoryError};
+use crate::factory::AnimationFactoryError;
 use crate::plugin::{AnimationPluginError, Plugin};
 use crate::ControllerConfig;
 
@@ -71,7 +70,6 @@ pub struct Controller {
     animation_join_handle: JoinHandle<()>,
     event_generator_join_handle: JoinHandle<()>,
     state: Arc<Mutex<ControllerState>>,
-    animation_factory: AnimationFactory,
     event_sender: mpsc::Sender<Event>,
 }
 
@@ -81,10 +79,9 @@ enum PollFrameResult {
 }
 
 impl Controller {
-    fn new<P: AsRef<Path>>(
-        points: Vec<(f64, f64, f64)>,
-        plugin_dir: P,
+    fn new(
         client: Box<dyn rustmas_light_client::LightClient + Sync + Send>,
+        points_count: usize,
     ) -> Self {
         let now = Utc::now();
         let (event_sender, event_receiver) = mpsc::channel(16);
@@ -97,16 +94,14 @@ impl Controller {
             event_generators: Self::start_generators(event_sender.clone()),
         }));
 
-        let animation_join_handle = tokio::spawn(Self::run(state.clone(), client, points.len()));
+        let animation_join_handle = tokio::spawn(Self::run(state.clone(), client, points_count));
         let event_generator_join_handle =
             tokio::spawn(Self::event_loop(state.clone(), event_receiver));
-        let animation_factory = AnimationFactory::new(plugin_dir, points);
 
         Self {
             state,
             animation_join_handle,
             event_generator_join_handle,
-            animation_factory,
             event_sender,
         }
     }
@@ -220,25 +215,19 @@ impl Controller {
         }
     }
 
-    pub fn builder() -> ControllerBuilder {
-        ControllerBuilder {
-            points: None,
-            plugin_dir_: None,
-            client_builder: CombinedLightClient::builder(),
+    pub fn from_config(
+        config: &ControllerConfig,
+        feedback: Option<mpsc::Sender<lightfx::Frame>>,
+        point_count: usize,
+    ) -> Result<Self, Box<dyn Error>> {
+        let mut light_client_builder =
+            CombinedLightClient::builder().with_config(&config.lights)?;
+        if let Some(sender) = feedback {
+            light_client_builder =
+                light_client_builder.with(client::feedback::FeedbackLightClient::new(sender));
         }
-    }
 
-    pub fn builder_from(config: &ControllerConfig) -> Result<ControllerBuilder, Box<dyn Error>> {
-        ControllerBuilder {
-            points: None,
-            plugin_dir_: Some(config.plugin_path.clone()),
-            client_builder: CombinedLightClient::builder().with_config(&config.lights)?,
-        }
-        .points_from_file(&config.points_path)
-    }
-
-    pub fn points(&self) -> &[(f64, f64, f64)] {
-        self.animation_factory.points()
+        Ok(Self::new(light_client_builder.build(), point_count))
     }
 
     pub async fn restart_event_generators(&self) {
@@ -296,28 +285,10 @@ impl Controller {
             })
     }
 
-    pub async fn reload_animation(&self) -> Result<Configuration, ControllerError> {
-        let mut state = self.state.lock().await;
-        let Some(id) = state
-            .animation
-            .as_ref()
-            .map(|a| a.plugin_config().animation_id())
-        else {
-            return Err(ControllerError::NoAnimationSelected);
-        };
-        info!("Reloading animation \"{}\"", id);
-        let animation = self.animation_factory.make(id).await?;
-        let configuration = animation.configuration().await?;
-        state.set_animation(Some(animation)).await?;
-        Ok(configuration)
-    }
-
     pub async fn switch_animation(
         &self,
-        animation_id: &str,
+        animation: Box<dyn Plugin>,
     ) -> Result<Configuration, ControllerError> {
-        info!("Trying to switch animation to \"{}\"", animation_id);
-        let animation = self.animation_factory.make(animation_id).await?;
         let configuration = animation.configuration().await?;
         let mut state = self.state.lock().await;
         state.set_animation(Some(animation)).await?;
@@ -376,74 +347,5 @@ impl Controller {
             })?;
 
         Ok(())
-    }
-
-    pub fn discover_animations(&mut self) -> Result<(), ControllerError> {
-        self.animation_factory.discover()?;
-        Ok(())
-    }
-
-    pub fn list_animations(&self) -> &HashMap<String, PluginConfig> {
-        self.animation_factory.list()
-    }
-}
-
-pub struct ControllerBuilder {
-    points: Option<Vec<(f64, f64, f64)>>,
-    plugin_dir_: Option<PathBuf>,
-    client_builder: CombinedLightClientBuilder,
-}
-
-impl ControllerBuilder {
-    pub fn points_from_file<P: AsRef<Path>>(mut self, path: P) -> Result<Self, Box<dyn Error>> {
-        fn points_from_path(path: &Path) -> Result<Vec<(f64, f64, f64)>, ControllerError> {
-            let points: Vec<_> = csv::ReaderBuilder::new()
-                .has_headers(false)
-                .from_path(path)
-                .map_err(|e| ControllerError::InternalError {
-                    reason: format!("Could not read CSV file: {}", e),
-                })?
-                .deserialize()
-                .filter_map(|record: Result<(f64, f64, f64), _>| record.ok())
-                .collect();
-            info!(
-                "Loaded {} points from {}",
-                points.len(),
-                path.to_string_lossy()
-            );
-            Ok(points)
-        }
-
-        let path = path.as_ref();
-        self.points = Some(points_from_path(path)?);
-        Ok(self)
-    }
-
-    pub fn lights(
-        mut self,
-        config: &[rustmas_light_client::LightsConfig],
-    ) -> Result<Self, Box<dyn Error>> {
-        self.client_builder = self.client_builder.with_config(config)?;
-        Ok(self)
-    }
-
-    pub fn lights_feedback(mut self, sender: mpsc::Sender<lightfx::Frame>) -> Self {
-        self.client_builder = self
-            .client_builder
-            .with(client::feedback::FeedbackLightClient::new(sender));
-        self
-    }
-
-    pub fn plugin_dir<P: AsRef<Path>>(mut self, path: P) -> Self {
-        self.plugin_dir_ = Some(path.as_ref().into());
-        self
-    }
-
-    pub fn build(self) -> Controller {
-        Controller::new(
-            self.points.unwrap(),
-            self.plugin_dir_.unwrap(),
-            self.client_builder.build(),
-        )
     }
 }
