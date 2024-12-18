@@ -73,6 +73,18 @@ enum Commands {
         #[arg(long = "override")]
         override_coordinates: Option<String>,
     },
+    CaptureFastTest {
+        #[arg(short, long, default_value = "lights_2d.csv")]
+        output: String,
+        #[arg(short, long)]
+        lights_endpoint: Option<String>,
+        #[arg(short, long)]
+        camera: Option<String>,
+        #[arg(short, long, default_value_t = 500)]
+        number_of_lights: usize,
+        #[arg(short, long, default_value_t = false)]
+        save_pictures: bool,
+    },
     /// Merge measurements taken from 4 perspectives to produce 3D coordinates
     Merge {
         #[arg(short, long, default_value = "lights.csv")]
@@ -190,7 +202,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
                 })?;
             }
 
-            let coords = cv::find_light_from_diff_with_output(&before, &after, Some(output_dir))?;
+            let coords = cv::find_light_from_diff_with_output(&before, &after, Some(&output_dir))?;
             println!(
                 "Found coords: x:{},y:{}, confidence: {}",
                 coords.inner.0, coords.inner.1, coords.confidence
@@ -269,6 +281,27 @@ async fn main() -> Result<(), Box<dyn Error>> {
             let light_positions = Capturer::interpolate_gaps(light_positions);
             let light_positions = Capturer::extrapolate_ends(light_positions);
 
+            Capturer::save_3d_coordinates(output, &light_positions)?;
+            Ok(())
+        }
+        Commands::CaptureFastTest {
+            output,
+            lights_endpoint,
+            camera,
+            number_of_lights,
+            save_pictures,
+        } => {
+            let mut capturer = capturer_from_options(lights_endpoint, camera, number_of_lights)?;
+            let coords = capturer
+                .capture_perspective_fast("2d", save_pictures)
+                .await?;
+            let light_positions = coords
+                .iter()
+                .map(|x| WithConfidence::<Vector3<f64>> {
+                    inner: Vector3::<f64>::new(x.inner.0, -x.inner.1, 0.0),
+                    confidence: x.confidence,
+                })
+                .collect_vec();
             Capturer::save_3d_coordinates(output, &light_positions)?;
             Ok(())
         }

@@ -12,12 +12,13 @@ use indicatif::{ProgressBar, ProgressFinish, ProgressIterator, ProgressState, Pr
 use itertools::Itertools;
 use log::{info, warn};
 use nalgebra::Vector3;
+use opencv::core::{Mat, MatTraitConst, CV_32F};
 use rustmas_light_client as client;
 use serde::{Deserialize, Serialize};
 
-use crate::cv::{self, Display};
+use crate::cv::{self, preprocess_diff, Display, Picture};
 
-type Point2 = (f64, f64);
+pub type Point2 = (f64, f64);
 
 #[derive(Debug, Default, Clone, Serialize, Deserialize)]
 pub struct WithConfidence<T: Default> {
@@ -77,6 +78,20 @@ impl Capturer {
 
     fn single_light_on(&self, index: usize) -> lightfx::Frame {
         lightfx::Frame::new_black(self.number_of_lights).with_pixel(index, lightfx::Color::white())
+    }
+
+    fn nth_bit_on(&self, bit_index: usize) -> lightfx::Frame {
+        assert!(bit_index < 32);
+        (0..self.number_of_lights)
+            .map(|i| (i, (i >> bit_index) % 2 == 1))
+            .map(|(i, on)| {
+                if on && i % 5 == 0 {
+                    lightfx::Color::white()
+                } else {
+                    lightfx::Color::black()
+                }
+            })
+            .into()
     }
 
     fn preview(&mut self) -> Result<(), Box<dyn Error>> {
@@ -158,6 +173,89 @@ impl Capturer {
                 }
             }
         }
+    }
+
+    pub async fn capture_perspective_fast(
+        &mut self,
+        perspective_name: &str,
+        save_pictures: bool,
+    ) -> Result<Vec<WithConfidence<Point2>>, Box<dyn Error>> {
+        let timestamp = chrono::offset::Local::now().format("%FT%X");
+        let base_dir = PathBuf::from(format!("captures/{}/", timestamp));
+        let on_dir = base_dir.join("img/on/");
+        let off_dir = base_dir.join("img/off/");
+        let preproc_dir = base_dir.join("img/preproc/");
+        let marked_dir = base_dir.join("img/marked/");
+
+        std::fs::create_dir_all(&base_dir)?;
+        if save_pictures {
+            std::fs::create_dir_all(&on_dir)?;
+            std::fs::create_dir_all(&off_dir)?;
+            std::fs::create_dir_all(&preproc_dir)?;
+            std::fs::create_dir_all(&marked_dir)?;
+        }
+
+        self.display_frame_with_retry(&self.nth_bit_on(0)).await;
+        let _ = self.camera.capture()?;
+        thread::sleep(Duration::from_millis(2000));
+        self.display_frame_with_retry(&self.all_lights_off()).await;
+        thread::sleep(Duration::from_millis(200));
+        let base_picture = self.camera.capture()?;
+        if save_pictures {
+            base_picture.save_to_file(off_dir.join("off.jpeg"))?;
+        }
+
+        let mut positive_images = Vec::new();
+        let mut negative_images = Vec::new();
+        for i in 0..self.number_of_lights.ilog2() + 1 {
+            let frame = self.nth_bit_on(i as usize);
+            self.display_frame_with_retry(&frame).await;
+            thread::sleep(Duration::from_millis(200));
+
+            let led_picture = self.capture_with_retry();
+            if save_pictures {
+                led_picture.save_to_file(on_dir.join(format!("bit{i:02}.jpg")))?;
+            }
+
+            let preprocessed = Picture::from(preprocess_diff(&base_picture, &led_picture, None)?);
+            if save_pictures {
+                preprocessed.save_to_file(preproc_dir.join(format!("bit{i:02}.jpg")))?;
+            }
+            let preprocessed = preprocessed.into_inner();
+            let mut positive = Mat::default();
+            preprocessed
+                .convert_to(&mut positive, CV_32F, 1.0 / 255.0, 0.0)
+                .unwrap();
+            positive_images.push(positive);
+
+            let mut negative = Mat::default();
+            preprocessed
+                .convert_to(&mut negative, CV_32F, -1.0 / 255.0, 1.0)
+                .unwrap();
+            negative_images.push(negative);
+        }
+
+        let coords = (0..self.number_of_lights)
+            .map(|i| cv::find_light_from_bit_images(i, &positive_images, &negative_images))
+            .collect_vec();
+
+        info!("Preparing output reference image");
+        self.display_frame_with_retry(&self.all_lights_on()).await;
+
+        thread::sleep(Duration::from_millis(100));
+        let mut all_lights_picture = self.capture_with_retry();
+        for (i, point) in coords.iter().enumerate() {
+            if i % 5 == 0 {
+                all_lights_picture.mark(point)?;
+            }
+        }
+        all_lights_picture.save_to_file(base_dir.join("reference.jpg"))?;
+        Self::save_2d_coordinates(base_dir.join(format!("{perspective_name}.csv")), &coords)?;
+
+        Ok(Self::normalize(Self::mark_outliers_by_distance(
+            coords,
+            Self::distance_2d,
+        )))
     }
 
     pub async fn capture_perspective(

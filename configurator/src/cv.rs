@@ -1,9 +1,10 @@
 use std::fmt;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 use std::sync::{Arc, Mutex};
 use std::{error::Error, time::Duration};
 
 use log::debug;
+use opencv::core::{MatExprTraitConst, CV_32F};
 use opencv::imgproc::COLOR_GRAY2RGB;
 use opencv::{
     core, highgui, imgproc,
@@ -64,6 +65,10 @@ impl Picture {
             path.to_str().ok_or("Image path isn't valid unicode")?,
             1,
         )?))
+    }
+
+    pub fn into_inner(self) -> Mat {
+        self.inner
     }
 }
 
@@ -166,18 +171,11 @@ impl Drop for Display {
     }
 }
 
-pub fn find_light_from_diff(
+pub fn preprocess_diff(
     base_picture: &Picture,
     led_picture: &Picture,
-) -> Result<WithConfidence<(usize, usize)>, Box<dyn Error>> {
-    find_light_from_diff_with_output(base_picture, led_picture, None)
-}
-
-pub fn find_light_from_diff_with_output(
-    base_picture: &Picture,
-    led_picture: &Picture,
-    output_dir: Option<PathBuf>,
-) -> Result<WithConfidence<(usize, usize)>, Box<dyn Error>> {
+    output_dir: Option<&Path>,
+) -> Result<Mat, Box<dyn Error>> {
     let mut base_gray = Mat::default();
     imgproc::cvt_color(
         &base_picture.inner,
@@ -220,9 +218,27 @@ pub fn find_light_from_diff_with_output(
         core::BORDER_CONSTANT,
         border_value,
     )?;
+    let eroded = Picture::from(eroded);
     if let Some(output_dir) = &output_dir {
-        Picture::from(eroded.clone()).save_to_file(output_dir.with_file_name("4_eroded.jpg"))?;
+        eroded.save_to_file(output_dir.with_file_name("4_eroded.jpg"))?;
     }
+
+    Ok(eroded.inner)
+}
+
+pub fn find_light_from_diff(
+    base_picture: &Picture,
+    led_picture: &Picture,
+) -> Result<WithConfidence<(usize, usize)>, Box<dyn Error>> {
+    find_light_from_diff_with_output(base_picture, led_picture, None)
+}
+
+pub fn find_light_from_diff_with_output(
+    base_picture: &Picture,
+    led_picture: &Picture,
+    output_dir: Option<&Path>,
+) -> Result<WithConfidence<(usize, usize)>, Box<dyn Error>> {
+    let eroded = preprocess_diff(base_picture, led_picture, output_dir)?;
 
     let mut max_loc = core::Point::default();
     let mut max_val: f64 = 0.0;
@@ -255,4 +271,58 @@ pub fn find_light_from_diff_with_output(
     }
 
     Ok(result)
+}
+
+pub fn find_light_from_bit_images(
+    index: usize,
+    positive_images: &[Mat],
+    negative_images: &[Mat],
+) -> WithConfidence<(usize, usize)> {
+    let base = Mat::ones(positive_images[0].rows(), positive_images[0].cols(), CV_32F)
+        .unwrap()
+        .to_mat()
+        .unwrap();
+
+    let multiplied = positive_images
+        .iter()
+        .zip(negative_images)
+        .enumerate()
+        .map(|(i, (positive, negative))| {
+            if 1 >> i & index != 0 {
+                positive
+            } else {
+                negative
+            }
+        })
+        .fold(base, |acc, elem| {
+            let mut mult = Mat::default();
+            opencv::core::multiply(&acc, elem, &mut mult, 1.0, -1).unwrap();
+            mult
+            // let mut sqrt = Mat::default();
+            // opencv::core::sqrt(&mult, &mut sqrt).unwrap();
+            // sqrt
+        });
+
+    let mut max_loc = core::Point::default();
+    let mut max_val: f64 = 0.0;
+    opencv::core::min_max_loc(
+        &multiplied,
+        None,
+        Some(&mut max_val),
+        None,
+        Some(&mut max_loc),
+        &Mat::default(),
+    )
+    .unwrap();
+    if max_loc.x < 0 || max_loc.y < 0 {
+        // OpenCV might return (-1,-1) if it can't find anything
+        return WithConfidence {
+            inner: (0, 0),
+            confidence: f64::NEG_INFINITY,
+        };
+    }
+    WithConfidence {
+        inner: (max_loc.x as usize, max_loc.y as usize),
+        confidence: max_val,
+    }
 }
