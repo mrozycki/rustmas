@@ -69,7 +69,7 @@ impl Logic {
         let animation = controller.current_animation().await;
         let animation_id = animation
             .as_ref()
-            .map(|a| a.animation_id())
+            .map(|a| &a.animation_id)
             .ok_or(LogicError::NoAnimationSelected)?;
 
         self.storage
@@ -87,7 +87,7 @@ impl Logic {
             .await
             .ok_or(LogicError::NoAnimationSelected)?;
 
-        match self.storage.fetch(animation.animation_id()).await {
+        match self.storage.fetch(&animation.animation_id).await {
             Ok(Some(params)) => controller
                 .set_parameters(&params)
                 .await

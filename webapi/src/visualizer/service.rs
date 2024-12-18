@@ -5,7 +5,6 @@ use tokio::sync::mpsc;
 use webapi_model::GetPointsResponse;
 
 use super::frame_broadcaster::{FrameBroadcaster, FrameBroadcasterSession};
-use crate::AnimationController;
 
 #[get("/frames/")]
 async fn frames(
@@ -21,15 +20,9 @@ async fn frames(
 }
 
 #[get("/points/")]
-async fn points(controller: web::Data<AnimationController>) -> HttpResponse {
+async fn points(points_data: web::Data<Vec<(f32, f32, f32)>>) -> HttpResponse {
     HttpResponse::Ok().json(GetPointsResponse {
-        points: controller
-            .lock()
-            .await
-            .points()
-            .iter()
-            .map(|(x, y, z)| (*x as f32, *y as f32, *z as f32))
-            .collect(),
+        points: (**points_data).clone(),
     })
 }
 

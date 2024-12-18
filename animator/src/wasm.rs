@@ -19,12 +19,12 @@ impl WasmPlugin {
         points: Vec<(f64, f64, f64)>,
     ) -> Result<Self, AnimationPluginError> {
         let plugin = if config
-            .path()
+            .path
             .extension()
             .and_then(|ext| ext.to_str())
             .is_some_and(|ext| ext == "crab")
         {
-            let reader = unwrap::reader_from_crab(&config.path())
+            let reader = unwrap::reader_from_crab(&config.path)
                 .map_err(|e| AnimationPluginError::CommunicationError(Box::new(e)))?;
             HostedPlugin::from_reader(reader, points).await
         } else {
@@ -47,8 +47,8 @@ impl Plugin for WasmPlugin {
 
     async fn configuration(&self) -> Result<schema::Configuration, AnimationPluginError> {
         Ok(schema::Configuration {
-            id: self.plugin_config.animation_id().to_owned(),
-            name: self.plugin_config.animation_name().to_owned(),
+            id: self.plugin_config.animation_id.to_owned(),
+            name: self.plugin_config.manifest.display_name.to_owned(),
             schema: self.get_schema().await?,
             values: self.get_parameters().await?,
         })

@@ -1,4 +1,5 @@
 use actix_web::{get, post, web, HttpResponse, Scope};
+use log::error;
 use serde_json::json;
 use webapi_model::{SwitchAnimationRequest, SwitchAnimationResponse};
 
@@ -15,6 +16,14 @@ async fn reload(
         Ok(animation) => HttpResponse::Ok().json(SwitchAnimationResponse { animation }),
         Err(animations::LogicError::InternalError(e)) => {
             HttpResponse::InternalServerError().json(json!({ "error": e }))
+        }
+        Err(animations::LogicError::InvalidAnimation(e)) => {
+            HttpResponse::NotAcceptable().json(json!({ "error": e.to_string() }))
+        }
+        Err(animations::LogicError::NoSuchAnimation(animation_id)) => HttpResponse::NotAcceptable()
+            .json(json!({ "error": format!("no such animation: {animation_id}, it might have been removed")} )),
+        Err(e @ animations::LogicError::NoAnimationSelected) => {
+            HttpResponse::BadRequest().json(json!({ "error": e.to_string() }))
         }
     }
 }
@@ -41,6 +50,15 @@ async fn switch(
         Err(animations::LogicError::InternalError(e)) => {
             HttpResponse::InternalServerError().json(json!({ "error": e }))
         }
+        Err(animations::LogicError::InvalidAnimation(e)) => {
+            HttpResponse::NotAcceptable().json(json!({ "error": e.to_string() }))
+        }
+        Err(animations::LogicError::NoSuchAnimation(animation_id)) => HttpResponse::NotFound()
+            .json(json!({ "error": format!("no such animation: {animation_id}") })),
+        Err(e @ animations::LogicError::NoAnimationSelected) => {
+            error!("Unexpected logic error in /switch/ call: {e}");
+            HttpResponse::InternalServerError().json(json!({"error": "unexpected failure"}))
+        }
     }
 }
 
@@ -65,6 +83,10 @@ async fn discover(
         Err(animations::LogicError::InternalError(e)) => {
             HttpResponse::InternalServerError().json(json!({"error": e}))
         }
+        Err(e) => {
+            error!("Unexpected logic error in /discover/ call: {e}");
+            HttpResponse::InternalServerError().json(json!({"error": "unexpected failure"}))
+        }
     }
 }
 
@@ -74,7 +96,16 @@ async fn list(
     controller: web::Data<AnimationController>,
 ) -> HttpResponse {
     let controller = controller.lock().await;
-    HttpResponse::Ok().json(animations.list(&controller).await)
+    match animations.list(&controller).await {
+        Ok(animations) => HttpResponse::Ok().json(animations),
+        Err(animations::LogicError::InternalError(e)) => {
+            HttpResponse::InternalServerError().json(json!({"error": e}))
+        }
+        Err(e) => {
+            error!("Unexpected logic error in /list/ call: {e}");
+            HttpResponse::InternalServerError().json(json!({"error": "unexpected failure"}))
+        }
+    }
 }
 
 pub fn service() -> Scope {

@@ -150,8 +150,8 @@ impl Plugin for JsonRpcPlugin {
 
     async fn configuration(&self) -> Result<Configuration, AnimationPluginError> {
         Ok(Configuration {
-            id: self.plugin_config().animation_id().to_owned(),
-            name: self.plugin_config().animation_name().to_owned(),
+            id: self.plugin_config().animation_id.to_owned(),
+            name: self.plugin_config().manifest.display_name.to_owned(),
             schema: self.get_schema().await?,
             values: self.get_parameters().await?,
         })

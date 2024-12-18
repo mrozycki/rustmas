@@ -9,7 +9,9 @@ use ::config::Config;
 use actix_cors::Cors;
 use config::RustmasConfig;
 use db::SharedDbConnection;
+use itertools::Itertools;
 use log::info;
+use rustmas_animator::points_from_path;
 use std::error::Error;
 use tokio::sync::{mpsc, Mutex};
 
@@ -31,20 +33,29 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
     info!("Setting up database");
     let shared_db = SharedDbConnection::from_config(&config).await?;
-    let parameters = web::Data::new(parameters::Logic::from(shared_db));
-    let animations = web::Data::new(animations::Logic::new());
+    let parameters = web::Data::new(parameters::Logic::from(shared_db.clone()));
+    let animations = web::Data::new(animations::Logic::from(shared_db, &config)?);
 
     let (sender, receiver) = mpsc::channel::<lightfx::Frame>(1);
 
     info!("Starting controller");
-    let controller = {
-        let mut controller = rustmas_animator::Controller::builder_from(&config.controller)
-            .expect("Could not start animations controller")
-            .lights_feedback(sender)
-            .build();
+    // Workaround for points not being managed by controller anymore,
+    // until we have a separate config service, which will take this over
+    let points = web::Data::new(
+        points_from_path(&config.controller.points_path)?
+            .into_iter()
+            .map(|(x, y, z)| (x as f32, y as f32, z as f32))
+            .collect_vec(),
+    );
 
-        let _ = controller.discover_animations();
-        info!("Discovered {} plugins", controller.list_animations().len());
+    let controller = {
+        let controller = rustmas_animator::Controller::from_config(
+            &config.controller,
+            Some(sender),
+            points.len(),
+        )
+        .expect("Could not start animations controller");
+
         web::Data::new(Mutex::new(controller))
     };
 
@@ -60,6 +71,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
             .app_data(controller.clone())
             .app_data(parameters.clone())
             .app_data(animations.clone())
+            .app_data(points.clone())
     })
     .bind(("0.0.0.0", 8081))?
     .run()

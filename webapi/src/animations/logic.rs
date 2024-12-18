@@ -1,20 +1,47 @@
 use std::collections::HashMap;
 
+use log::warn;
+use rustmas_animator::{AnimationFactory, AnimationFactoryError};
 use webapi_model::{Animation, Configuration, ListAnimationsResponse, ParameterValue};
 
+use crate::animations;
+use crate::config::RustmasConfig;
+use crate::db::SharedDbConnection;
 use crate::parameters;
 
 #[derive(Debug, thiserror::Error)]
 pub enum LogicError {
     #[error("failed to perform operation: {0}")]
     InternalError(String),
+
+    #[error("no such animation: {0}")]
+    NoSuchAnimation(String),
+
+    #[error("selected animation plugin exists, but is not valid: {0}")]
+    InvalidAnimation(#[from] AnimationFactoryError),
+
+    #[error("no animation selected")]
+    NoAnimationSelected,
 }
 
-pub struct Logic;
+pub struct Logic {
+    storage: animations::Storage,
+    animation_factory: AnimationFactory,
+}
 
 impl Logic {
-    pub fn new() -> Self {
-        Self
+    pub fn new(storage: animations::Storage, animation_factory: AnimationFactory) -> Self {
+        Self {
+            storage,
+            animation_factory,
+        }
+    }
+
+    pub fn from(conn: SharedDbConnection, config: &RustmasConfig) -> anyhow::Result<Self> {
+        Ok(Self::new(
+            animations::Storage::new(conn),
+            AnimationFactory::from_config(&config.controller)?,
+        ))
     }
 
     pub async fn reload(
@@ -22,15 +49,14 @@ impl Logic {
         controller: &mut rustmas_animator::Controller,
         parameters: &parameters::Logic,
     ) -> Result<Configuration, LogicError> {
-        let configuration = controller
-            .reload_animation()
+        let animation_id = controller
+            .current_animation()
             .await
-            .map_err(|e| LogicError::InternalError(e.to_string()))?;
+            .map(|a| a.animation_id)
+            .ok_or(LogicError::NoAnimationSelected)?;
 
-        parameters
-            .restore_from_db(controller, configuration)
+        self.switch(&animation_id, None, controller, parameters)
             .await
-            .map_err(|e| LogicError::InternalError(e.to_string()))
     }
 
     pub async fn switch(
@@ -40,8 +66,20 @@ impl Logic {
         controller: &mut rustmas_animator::Controller,
         parameters: &parameters::Logic,
     ) -> Result<Configuration, LogicError> {
+        let db_plugin = self
+            .storage
+            .fetch_by_id(animation_id)
+            .await
+            .map_err(|e| LogicError::InternalError(e.to_string()))?
+            .ok_or_else(|| LogicError::NoSuchAnimation(animation_id.to_owned()))?;
+
+        let plugin = self
+            .animation_factory
+            .make_from_path(&db_plugin.path)
+            .await?;
+
         let configuration = controller
-            .switch_animation(animation_id)
+            .switch_animation(plugin)
             .await
             .map_err(|e| LogicError::InternalError(e.to_string()))?;
 
@@ -67,27 +105,40 @@ impl Logic {
         &self,
         controller: &mut rustmas_animator::Controller,
     ) -> Result<ListAnimationsResponse, LogicError> {
-        controller
-            .discover_animations()
+        let animations = self
+            .animation_factory
+            .discover()
             .map_err(|e| LogicError::InternalError(e.to_string()))?;
 
-        Ok(self.list(controller).await)
+        for (id, config) in animations.iter() {
+            let _ = self.storage.install(config).await.inspect_err(|e| {
+                warn!(
+                    "Failed to install animation plugin with ID {id}, from path {:?}: {e}",
+                    config.path
+                )
+            });
+        }
+
+        self.list(controller).await
     }
 
-    pub async fn list(&self, controller: &rustmas_animator::Controller) -> ListAnimationsResponse {
-        ListAnimationsResponse {
-            animations: controller
-                .list_animations()
-                .iter()
-                .map(|(id, plugin)| Animation {
-                    id: id.to_owned(),
-                    name: plugin.animation_name().to_owned(),
+    pub async fn list(
+        &self,
+        controller: &rustmas_animator::Controller,
+    ) -> Result<ListAnimationsResponse, LogicError> {
+        Ok(ListAnimationsResponse {
+            animations: self
+                .storage
+                .fetch_all()
+                .await
+                .map_err(|e| LogicError::InternalError(e.to_string()))?
+                .into_iter()
+                .map(|db_plugin| Animation {
+                    id: db_plugin.animation_id,
+                    name: db_plugin.manifest.display_name,
                 })
                 .collect(),
-            current_animation_id: controller
-                .current_animation()
-                .await
-                .map(|a| a.animation_id().to_owned()),
-        }
+            current_animation_id: controller.current_animation().await.map(|a| a.animation_id),
+        })
     }
 }
