@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use log::warn;
 use webapi_model::{Configuration, ConfigurationSchema, ParameterValue, ValueSchema};
 
-use crate::config::RustmasConfig;
+use crate::db::SharedDbConnection;
 use crate::parameters;
 
 #[derive(Debug, thiserror::Error)]
@@ -22,13 +22,6 @@ pub struct Logic {
 impl Logic {
     fn new(storage: parameters::Storage) -> Self {
         Self { storage }
-    }
-
-    pub async fn from(config: &RustmasConfig) -> Result<Self, LogicError> {
-        let parameters_storage = parameters::Storage::new(&config.database_path.to_string_lossy())
-            .await
-            .map_err(|e| LogicError::InternalError(e.to_string()))?;
-        Ok(Self::new(parameters_storage))
     }
 
     pub async fn restore_from_db(
@@ -104,6 +97,12 @@ impl Logic {
             )),
             Err(e) => Err(LogicError::InternalError(e.to_string())),
         }
+    }
+}
+
+impl From<SharedDbConnection> for Logic {
+    fn from(value: SharedDbConnection) -> Self {
+        Self::new(parameters::Storage::new(value))
     }
 }
 
