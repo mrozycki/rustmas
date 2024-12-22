@@ -14,14 +14,12 @@ events = { path = "../events", default-features = false }
 
 csv = "1.1.6"
 chrono = "0.4.30"
-clap = { version = "4.0.18", features = ["derive"] }
 glob = "0.3.1"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 tokio = { version = "1", features = ["full"] }
 
 log = "0.4.17"
-env_logger = "0.10.0"
 thiserror = "1.0.60"
 itertools = "0.13.0"
 async-trait = "0.1.83"

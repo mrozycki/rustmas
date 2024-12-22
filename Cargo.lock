@@ -116,29 +116,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "actix-files"
-version = "0.6.6"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0773d59061dedb49a8aed04c67291b9d8cf2fe0b60130a381aab53c6dd86e9be"
-dependencies = [
- "actix-http",
- "actix-service",
- "actix-utils",
- "actix-web",
- "bitflags 2.6.0",
- "bytes",
- "derive_more",
- "futures-core",
- "http-range",
- "log",
- "mime",
- "mime_guess",
- "percent-encoding",
- "pin-project-lite",
- "v_htmlescape",
-]
-
-[[package]]
 name = "actix-http"
 version = "3.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -579,7 +556,6 @@ name = "animation-wasm-bindings"
 version = "0.1.0"
 dependencies = [
  "animation-api 0.1.0",
- "animation-utils 0.1.0",
  "itertools 0.13.0",
  "lightfx 0.1.0",
  "log",
@@ -3409,26 +3385,6 @@ dependencies = [
 
 [[package]]
 name = "gloo-net"
-version = "0.2.6"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9902a044653b26b99f7e3693a42f171312d9be8b26b5697bd1e43ad1f8a35e10"
-dependencies = [
- "futures-channel",
- "futures-core",
- "futures-sink",
- "gloo-utils 0.1.7",
- "js-sys",
- "pin-project",
- "serde",
- "serde_json",
- "thiserror 1.0.63",
- "wasm-bindgen",
- "wasm-bindgen-futures",
- "web-sys",
-]
-
-[[package]]
-name = "gloo-net"
 version = "0.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a66b4e3c7d9ed8d315fd6b97c8b1f74a7c6ecbbc2320e65ae7ed38b7068cc620"
@@ -3866,12 +3822,6 @@ dependencies = [
  "http 0.2.12",
  "pin-project-lite",
 ]
-
-[[package]]
-name = "http-range"
-version = "0.1.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "21dec9db110f5f872ed9699c3ecf50cf16f423502706ba5c72462e28d3157573"
 
 [[package]]
 name = "httparse"
@@ -4499,7 +4449,6 @@ name = "lightfx"
 version = "0.1.0"
 dependencies = [
  "serde",
- "serde_json",
 ]
 
 [[package]]
@@ -4682,16 +4631,6 @@ name = "mime"
 version = "0.3.17"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6877bb514081ee2a7ff5ef9de3281f14a4dd4bceac4c09388074a6b5df8a139a"
-
-[[package]]
-name = "mime_guess"
-version = "2.0.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f7c44f8e672c00fe5308fa235f821cb4198414e1c77935c1ab6948d3fd78550e"
-dependencies = [
- "mime",
- "unicase",
-]
 
 [[package]]
 name = "minimal-lexical"
@@ -6390,7 +6329,6 @@ dependencies = [
  "animation-api 0.1.0",
  "animation-utils 0.1.0",
  "animation-wasm-bindings 0.1.0",
- "itertools 0.10.5",
  "lightfx 0.1.0",
  "serde",
 ]
@@ -6402,7 +6340,6 @@ dependencies = [
  "animation-api 0.1.0",
  "animation-utils 0.1.0",
  "animation-wasm-bindings 0.1.0",
- "itertools 0.10.5",
  "lightfx 0.1.0",
  "serde",
 ]
@@ -6414,7 +6351,6 @@ dependencies = [
  "animation-api 0.1.0",
  "animation-utils 0.1.0",
  "animation-wasm-bindings 0.1.0",
- "itertools 0.10.5",
  "lightfx 0.1.0",
  "serde",
 ]
@@ -6426,7 +6362,6 @@ dependencies = [
  "animation-api 0.1.0",
  "animation-utils 0.1.0",
  "animation-wasm-bindings 0.1.0",
- "itertools 0.10.5",
  "lightfx 0.1.0",
  "serde",
 ]
@@ -6438,7 +6373,6 @@ dependencies = [
  "animation-api 0.1.0",
  "animation-utils 0.1.0",
  "animation-wasm-bindings 0.1.0",
- "itertools 0.10.5",
  "lightfx 0.1.0",
  "serde",
 ]
@@ -6450,7 +6384,6 @@ dependencies = [
  "animation-api 0.1.0",
  "animation-utils 0.1.0",
  "animation-wasm-bindings 0.1.0",
- "itertools 0.10.5",
  "lightfx 0.1.0",
  "serde",
 ]
@@ -6462,7 +6395,6 @@ dependencies = [
  "animation-api 0.1.0",
  "animation-utils 0.1.0",
  "animation-wasm-bindings 0.1.0",
- "itertools 0.10.5",
  "lightfx 0.1.0",
  "serde",
 ]
@@ -6486,7 +6418,6 @@ dependencies = [
  "animation-api 0.1.0",
  "animation-utils 0.1.0",
  "animation-wasm-bindings 0.1.0",
- "itertools 0.10.5",
  "lightfx 0.1.0",
  "nalgebra 0.33.2",
  "rand 0.8.5",
@@ -6500,7 +6431,6 @@ dependencies = [
  "animation-api 0.1.0",
  "animation-utils 0.1.0",
  "animation-wasm-bindings 0.1.0",
- "itertools 0.10.5",
  "lightfx 0.1.0",
  "nalgebra 0.33.2",
  "serde",
@@ -6513,7 +6443,6 @@ dependencies = [
  "animation-api 0.1.0",
  "animation-utils 0.1.0",
  "animation-wasm-bindings 0.1.0",
- "itertools 0.10.5",
  "lightfx 0.1.0",
  "serde",
 ]
@@ -6525,7 +6454,6 @@ dependencies = [
  "animation-api 0.1.0",
  "animation-utils 0.1.0",
  "animation-wasm-bindings 0.1.0",
- "itertools 0.10.5",
  "lightfx 0.1.0",
  "rand 0.8.5",
  "serde",
@@ -6551,7 +6479,6 @@ dependencies = [
  "animation-api 0.1.0",
  "animation-utils 0.1.0",
  "animation-wasm-bindings 0.1.0",
- "itertools 0.10.5",
  "lightfx 0.1.0",
  "nalgebra 0.33.2",
  "noise",
@@ -6566,9 +6493,7 @@ dependencies = [
  "animation-api 0.1.0",
  "animation-utils 0.1.0",
  "animation-wasm-bindings 0.1.0",
- "itertools 0.10.5",
  "lightfx 0.1.0",
- "nalgebra 0.33.2",
  "rand 0.8.5",
  "serde",
 ]
@@ -6580,7 +6505,6 @@ dependencies = [
  "animation-api 0.1.0",
  "animation-utils 0.1.0",
  "animation-wasm-bindings 0.1.0",
- "itertools 0.10.5",
  "lightfx 0.1.0",
  "rand 0.8.5",
  "serde",
@@ -6593,7 +6517,6 @@ dependencies = [
  "animation-api 0.1.0",
  "animation-utils 0.1.0",
  "animation-wasm-bindings 0.1.0",
- "itertools 0.10.5",
  "lightfx 0.1.0",
  "nalgebra 0.33.2",
  "rand 0.8.5",
@@ -6607,7 +6530,6 @@ dependencies = [
  "animation-api 0.1.0",
  "animation-utils 0.1.0",
  "animation-wasm-bindings 0.1.0",
- "itertools 0.10.5",
  "lightfx 0.1.0",
  "serde",
 ]
@@ -6619,7 +6541,6 @@ dependencies = [
  "animation-api 0.1.0",
  "animation-utils 0.1.0",
  "animation-wasm-bindings 0.1.0",
- "itertools 0.10.5",
  "lightfx 0.1.0",
  "serde",
 ]
@@ -6631,7 +6552,6 @@ dependencies = [
  "animation-api 0.1.0",
  "animation-utils 0.1.0",
  "animation-wasm-bindings 0.1.0",
- "itertools 0.10.5",
  "lightfx 0.1.0",
  "serde",
 ]
@@ -6643,7 +6563,6 @@ dependencies = [
  "animation-api 0.1.0",
  "animation-utils 0.1.0",
  "animation-wasm-bindings 0.1.0",
- "itertools 0.10.5",
  "lightfx 0.1.0",
  "serde",
 ]
@@ -6655,7 +6574,6 @@ dependencies = [
  "animation-api 0.1.0",
  "animation-utils 0.1.0",
  "animation-wasm-bindings 0.1.0",
- "itertools 0.10.5",
  "lightfx 0.1.0",
  "serde",
 ]
@@ -6667,7 +6585,6 @@ dependencies = [
  "animation-api 0.1.0",
  "animation-utils 0.1.0",
  "animation-wasm-bindings 0.1.0",
- "itertools 0.10.5",
  "lightfx 0.1.0",
  "serde",
 ]
@@ -6706,7 +6623,6 @@ dependencies = [
  "animation-api 0.1.0",
  "animation-utils 0.1.0",
  "animation-wasm-bindings 0.1.0",
- "itertools 0.10.5",
  "lightfx 0.1.0",
  "serde",
 ]
@@ -6718,7 +6634,6 @@ dependencies = [
  "animation-api 0.1.0",
  "animation-utils 0.1.0",
  "animation-wasm-bindings 0.1.0",
- "itertools 0.10.5",
  "lightfx 0.1.0",
  "serde",
 ]
@@ -6730,7 +6645,6 @@ dependencies = [
  "animation-api 0.1.0",
  "animation-utils 0.1.0",
  "animation-wasm-bindings 0.1.0",
- "itertools 0.10.5",
  "lightfx 0.1.0",
  "serde",
 ]
@@ -6742,7 +6656,6 @@ dependencies = [
  "animation-api 0.1.0",
  "animation-utils 0.1.0",
  "animation-wasm-bindings 0.1.0",
- "itertools 0.10.5",
  "lightfx 0.1.0",
  "serde",
 ]
@@ -6754,7 +6667,6 @@ dependencies = [
  "animation-api 0.1.0",
  "animation-utils 0.1.0",
  "animation-wasm-bindings 0.1.0",
- "itertools 0.10.5",
  "lightfx 0.1.0",
  "serde",
 ]
@@ -6768,9 +6680,7 @@ dependencies = [
  "animation-wrapper",
  "async-trait",
  "chrono",
- "clap",
  "csv",
- "env_logger",
  "events",
  "glob",
  "itertools 0.13.0",
@@ -6812,7 +6722,6 @@ dependencies = [
  "async-trait",
  "bytes",
  "chrono",
- "csv",
  "futures-util",
  "itertools 0.12.1",
  "lightfx 0.1.0",
@@ -6848,7 +6757,6 @@ version = "0.1.0"
 dependencies = [
  "actix",
  "actix-cors",
- "actix-files",
  "actix-web",
  "actix-web-actors",
  "animation-wrapper",
@@ -6886,10 +6794,8 @@ name = "rustmas-webui"
 version = "0.1.0"
 dependencies = [
  "animation-api 0.1.0",
- "gloo-net 0.2.6",
  "gloo-utils 0.1.7",
  "instant",
- "itertools 0.12.1",
  "lightfx 0.1.0",
  "log",
  "rustmas-visualizer",
@@ -8036,15 +7942,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "unicase"
-version = "2.7.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f7d2d4dafb69621809a81864c9c1b864479e1235c0dd4e199924b9742439ed89"
-dependencies = [
- "version_check",
-]
-
-[[package]]
 name = "unicode-bidi"
 version = "0.3.15"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -8158,12 +8055,6 @@ dependencies = [
  "getrandom",
  "serde",
 ]
-
-[[package]]
-name = "v_htmlescape"
-version = "0.15.8"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4e8257fbc510f0a46eb602c10215901938b5c2a7d5e70fc11483b1d3c9b5b18c"
 
 [[package]]
 name = "valuable"

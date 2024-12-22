@@ -8,7 +8,6 @@ lightfx = { path = "../lightfx" }
 
 async-trait = "0.1.57"
 bytes = "1.5.0"
-csv = "1.1.6"
 chrono = "0.4.31"
 futures-util = "0.3.28"
 itertools = "0.12.0"

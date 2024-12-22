@@ -5,7 +5,6 @@ edition = "2021"
 
 [dependencies]
 animation-api = { path = "../animation-api" }
-animation-utils = { path = "../animation-utils" }
 lightfx = { path = "../lightfx" }
 
 itertools = "0.13.0"
