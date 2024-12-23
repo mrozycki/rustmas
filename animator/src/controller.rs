@@ -3,7 +3,7 @@ use std::error::Error;
 use std::sync::Arc;
 
 use animation_api::event::Event;
-use animation_api::schema::{Configuration, ParameterValue};
+use animation_api::schema::{Configuration, ConfigurationSchema, ParameterValue};
 use animation_wrapper::config::PluginConfig;
 use chrono::{DateTime, Duration, Utc};
 use client::combined::CombinedLightClient;
@@ -249,7 +249,10 @@ impl Controller {
             .map(|(id, evg)| Configuration {
                 id: id.clone(),
                 name: evg.get_name().to_owned(),
-                schema: evg.get_schema(),
+                schema: ConfigurationSchema {
+                    parameters: evg.get_schema(),
+                    custom_triggers: vec![],
+                },
                 values: evg.get_parameters(),
             })
             .collect()

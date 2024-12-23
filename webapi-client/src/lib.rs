@@ -172,7 +172,7 @@ impl RustmasApiClient {
 
     pub async fn reload_animation(&self) -> Result<Configuration> {
         Ok(self
-            .post::<SwitchAnimationResponse>("reload", &())
+            .post::<SwitchAnimationResponse>("animations/reload/", &())
             .await?
             .animation)
     }

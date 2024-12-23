@@ -18,8 +18,8 @@ pub enum Event {
         )]
         MidiMsg,
     ),
-    ManualEvent {
-        id: usize,
+    CustomTrigger {
+        trigger_id: String,
     },
     MouseMove {
         ray_origin: [f32; 3],

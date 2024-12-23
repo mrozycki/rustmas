@@ -122,6 +122,7 @@ pub struct Lightspeed {
 
 impl Animation for Lightspeed {
     type Parameters = Parameters;
+    type CustomTriggers = ();
     type Wrapped = SpeedControlled<BrightnessControlled<Self>>;
 
     fn new(points: Vec<(f64, f64, f64)>) -> Self {

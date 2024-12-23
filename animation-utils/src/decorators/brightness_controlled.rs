@@ -1,4 +1,4 @@
-use animation_api::schema::{ConfigurationSchema, GetSchema, ParameterSchema, ValueSchema};
+use animation_api::schema::{GetEnumOptions, GetSchema, ParameterSchema, ValueSchema};
 use animation_api::Animation;
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
@@ -11,15 +11,15 @@ pub struct Parameters<P: GetSchema> {
 }
 
 impl<P: GetSchema> GetSchema for Parameters<P> {
-    fn schema() -> ConfigurationSchema {
+    fn schema() -> Vec<ParameterSchema> {
         let mut parameters = vec![ParameterSchema {
             id: "brightness_factor".to_owned(),
             name: "Brightness".to_owned(),
             description: None,
             value: ValueSchema::Percentage,
         }];
-        parameters.extend(P::schema().parameters);
-        ConfigurationSchema { parameters }
+        parameters.extend(P::schema());
+        parameters
     }
 }
 
@@ -32,8 +32,10 @@ impl<A> Animation for BrightnessControlled<A>
 where
     A: Animation,
     A::Parameters: GetSchema + Default + Clone + Serialize + DeserializeOwned,
+    A::CustomTriggers: GetEnumOptions + Clone + Serialize + DeserializeOwned,
 {
     type Parameters = Parameters<A::Parameters>;
+    type CustomTriggers = A::CustomTriggers;
     type Wrapped = Self;
 
     fn new(points: Vec<(f64, f64, f64)>) -> Self {

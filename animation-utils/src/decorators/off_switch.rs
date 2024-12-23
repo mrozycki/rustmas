@@ -1,6 +1,4 @@
-use animation_api::schema::{
-    ConfigurationSchema, GetEnumOptions, GetSchema, ParameterSchema, ValueSchema,
-};
+use animation_api::schema::{GetEnumOptions, GetSchema, ParameterSchema, ValueSchema};
 use animation_api::Animation;
 use animation_macros::EnumSchema;
 use serde::de::DeserializeOwned;
@@ -26,7 +24,7 @@ pub struct Parameters<P: GetSchema> {
 }
 
 impl<P: GetSchema> GetSchema for Parameters<P> {
-    fn schema() -> ConfigurationSchema {
+    fn schema() -> Vec<ParameterSchema> {
         let mut parameters = vec![
             ParameterSchema {
                 id: "off_switch_state".to_owned(),
@@ -47,8 +45,8 @@ impl<P: GetSchema> GetSchema for Parameters<P> {
                 },
             },
         ];
-        parameters.extend(P::schema().parameters);
-        ConfigurationSchema { parameters }
+        parameters.extend(P::schema());
+        parameters
     }
 }
 
@@ -62,8 +60,10 @@ impl<A> Animation for OffSwitch<A>
 where
     A: Animation,
     A::Parameters: GetSchema + Default + Clone + Serialize + DeserializeOwned,
+    A::CustomTriggers: GetEnumOptions + Clone + Serialize + DeserializeOwned,
 {
     type Parameters = Parameters<A::Parameters>;
+    type CustomTriggers = A::CustomTriggers;
     type Wrapped = Self;
 
     fn new(points: Vec<(f64, f64, f64)>) -> Self {
@@ -103,10 +103,6 @@ where
             .pixels_iter()
             .map(|x| x.dim(self.energy))
             .into()
-    }
-
-    fn get_schema(&self) -> ConfigurationSchema {
-        Self::Parameters::schema()
     }
 
     fn set_parameters(&mut self, parameters: Self::Parameters) {

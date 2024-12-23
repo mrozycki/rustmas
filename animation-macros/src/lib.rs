@@ -266,12 +266,8 @@ fn derive_schema_inner(
     let ident = ast.ident;
     errors.finish_with(quote! {
         impl animation_api::schema::GetSchema for #ident {
-            fn schema() -> animation_api::schema::ConfigurationSchema {
-                animation_api::schema::ConfigurationSchema {
-                    parameters: vec![
-                        #fields
-                    ],
-                }
+            fn schema() -> Vec<animation_api::schema::ParameterSchema> {
+                vec![#fields]
             }
         }
     })

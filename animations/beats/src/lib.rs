@@ -61,6 +61,7 @@ pub struct Beats {
 
 impl Animation for Beats {
     type Parameters = Parameters;
+    type CustomTriggers = ();
     type Wrapped = OffSwitch<BrightnessControlled<Self>>;
 
     fn new(points: Vec<(f64, f64, f64)>) -> Self {

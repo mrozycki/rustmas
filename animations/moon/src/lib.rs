@@ -56,6 +56,7 @@ pub struct Moon {
 
 impl Animation for Moon {
     type Parameters = Parameters;
+    type CustomTriggers = ();
     type Wrapped = OffSwitch<BrightnessControlled<Self>>;
 
     fn new(points: Vec<(f64, f64, f64)>) -> Self {

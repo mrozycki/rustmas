@@ -13,6 +13,7 @@ lightfx = { path = "../../lightfx" }
 
 serde = "1.0.215"
 nalgebra = "0.33.2"
+serde_plain = "1.0.2"
 
 [dependencies.animation-wasm-bindings]
 path = "../../animation-wasm-bindings"

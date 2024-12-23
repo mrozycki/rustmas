@@ -1,16 +1,14 @@
 use std::collections::HashMap;
 
-use animation_api::schema::{ConfigurationSchema, ParameterValue};
+use animation_api::schema::{ParameterSchema, ParameterValue};
 
 pub trait EventGenerator: Send + Sync {
     fn get_name(&self) -> &str;
 
     fn restart(&mut self) {}
 
-    fn get_schema(&self) -> ConfigurationSchema {
-        ConfigurationSchema {
-            parameters: Vec::new(),
-        }
+    fn get_schema(&self) -> Vec<ParameterSchema> {
+        Vec::new()
     }
 
     fn set_parameters(

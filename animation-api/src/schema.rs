@@ -31,23 +31,32 @@ pub struct ParameterSchema {
 
 #[derive(Serialize, Deserialize, PartialEq, Clone, Debug, Default)]
 pub struct ConfigurationSchema {
+    #[serde(default)]
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub parameters: Vec<ParameterSchema>,
+    #[serde(default)]
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub custom_triggers: Vec<EnumOption>,
 }
 
 pub trait GetSchema {
-    fn schema() -> ConfigurationSchema;
+    fn schema() -> Vec<ParameterSchema>;
 }
 
 impl GetSchema for () {
-    fn schema() -> ConfigurationSchema {
-        ConfigurationSchema {
-            parameters: Vec::new(),
-        }
+    fn schema() -> Vec<ParameterSchema> {
+        Vec::new()
     }
 }
 
 pub trait GetEnumOptions {
     fn enum_options() -> Vec<EnumOption>;
+}
+
+impl GetEnumOptions for () {
+    fn enum_options() -> Vec<EnumOption> {
+        Vec::new()
+    }
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Clone, Debug)]

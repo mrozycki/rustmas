@@ -1,9 +1,15 @@
-use animation_api::Animation;
+use animation_api::{event::Event, Animation};
 use animation_utils::{decorators::BrightnessControlled, EnumSchema, Schema};
 use lightfx::Color;
 use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Default, Serialize, Deserialize, EnumSchema, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, Serialize, Deserialize, EnumSchema, PartialEq, Eq)]
+pub enum CustomTriggers {
+    #[schema_variant(name = "Clear")]
+    Clear,
+}
+
+#[derive(Clone, Copy, Default, Serialize, Deserialize, EnumSchema, PartialEq, Eq)]
 enum Mode {
     #[schema_variant(name = "Pencil")]
     #[default]
@@ -15,7 +21,6 @@ enum Mode {
     #[schema_variant(name = "Watch")]
     Watching,
 }
-
 #[derive(Clone, Serialize, Deserialize, Schema)]
 pub struct Parameters {
     #[schema_field(name = "Mode", enum_options)]
@@ -49,6 +54,7 @@ pub struct Draw {
 
 impl Animation for Draw {
     type Parameters = Parameters;
+    type CustomTriggers = CustomTriggers;
     type Wrapped = BrightnessControlled<Self>;
 
     fn new(points: Vec<(f64, f64, f64)>) -> Self {
@@ -93,9 +99,9 @@ impl Animation for Draw {
         lightfx::Frame::from_vec(canvas)
     }
 
-    fn on_event(&mut self, event: animation_api::event::Event) {
+    fn on_event(&mut self, event: Event) {
         match event {
-            animation_api::event::Event::MouseMove {
+            Event::MouseMove {
                 ray_origin,
                 ray_direction,
             } => {
@@ -117,11 +123,22 @@ impl Animation for Draw {
                     &self.parameters,
                 );
             }
-            animation_api::event::Event::MouseDown => {
+            Event::MouseDown => {
                 self.drawing = true;
             }
-            animation_api::event::Event::MouseUp => {
+            Event::MouseUp => {
                 self.drawing = false;
+            }
+            Event::CustomTrigger { trigger_id } => {
+                let Ok(trigger) = serde_plain::from_str::<Self::CustomTriggers>(&trigger_id) else {
+                    return;
+                };
+
+                match trigger {
+                    CustomTriggers::Clear => {
+                        self.canvas.fill(lightfx::Color::black());
+                    }
+                }
             }
             _ => (),
         }

@@ -43,6 +43,7 @@ pub struct MidiWave {
 
 impl Animation for MidiWave {
     type Parameters = Parameters;
+    type CustomTriggers = ();
     type Wrapped = SpeedControlled<Self>;
 
     fn new(points: Vec<(f64, f64, f64)>) -> Self {

@@ -1,10 +1,11 @@
 use std::{collections::HashMap, time::Duration};
 
-use animation_api::schema::ConfigurationSchema;
+use animation_api::{event::Event, schema::ConfigurationSchema};
 use log::error;
 use rustmas_webapi_client::{Configuration, ParameterValue, RustmasApiClient};
-use web_sys::{FormData, HtmlFormElement};
-use yew::{html, Callback, Event, Html, InputEvent, Properties, SubmitEvent};
+use wasm_bindgen::JsCast;
+use web_sys::{FormData, HtmlFormElement, HtmlInputElement};
+use yew::{html, Callback, Html, InputEvent, Properties, SubmitEvent};
 
 use crate::{
     controls::{debouncer::Debouncer, parameter_control::ParameterControl},
@@ -98,7 +99,7 @@ pub fn parameter_control_list(props: &ParameterControlListProps) -> Html {
     });
 
     let onchange = Callback::from({
-        move |event: Event| {
+        move |event: yew::Event| {
             values_changed(utils::get_form(event.target()), true);
         }
     });
@@ -149,6 +150,24 @@ pub fn parameter_control_list(props: &ParameterControlListProps) -> Html {
         }
     });
 
+    let trigger_event = Callback::from({
+        let api = api.clone();
+        move |event: yew::MouseEvent| {
+            let Some(trigger_id) = event
+                .target()
+                .and_then(|t| t.dyn_into::<HtmlInputElement>().ok())
+                .map(|t| t.name())
+            else {
+                return;
+            };
+
+            let api = api.clone();
+            wasm_bindgen_futures::spawn_local(async move {
+                let _ = api.send_event(Event::CustomTrigger { trigger_id }).await;
+            });
+        }
+    });
+
     if animation.as_ref().map(|a| &a.id) != props.animation_id.as_ref() {
         let api = api.clone();
         let animation = animation.clone();
@@ -192,6 +211,19 @@ pub fn parameter_control_list(props: &ParameterControlListProps) -> Html {
                                                             dummy_update={*dummy_update.borrow()} />
                                                     }).collect::<Html>()
                                             }
+                                            <div class="parameter-control buttons">
+                                                {
+                                                    animation.schema.custom_triggers.iter()
+                                                    .map(|trigger| html! {
+                                                        <input type="button"
+                                                            value={trigger.name.clone()}
+                                                            name={trigger.value.clone()}
+                                                            onclick={trigger_event.clone()}
+                                                        />
+                                                    })
+                                                    .collect::<Html>()
+                                                }
+                                            </div>
                                             <div class="parameter-control buttons">
                                                 <input type="button" value="Reload" onclick={reload_animation} />
                                                 <input type="button" value="Reset" onclick={restore_params} />

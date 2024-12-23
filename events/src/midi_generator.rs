@@ -2,7 +2,7 @@ use std::{collections::HashMap, error::Error, sync::Mutex};
 
 use animation_api::{
     event::Event,
-    schema::{ConfigurationSchema, EnumOption, ParameterSchema, ParameterValue, ValueSchema},
+    schema::{EnumOption, ParameterSchema, ParameterValue, ValueSchema},
 };
 use anyhow::anyhow;
 use log::info;
@@ -113,30 +113,28 @@ impl EventGenerator for MidiEventGenerator {
             MidiStream::new(self.event_sender.clone(), &self.parameters.device).ok();
     }
 
-    fn get_schema(&self) -> ConfigurationSchema {
+    fn get_schema(&self) -> Vec<ParameterSchema> {
         let midi_input = self.midi_input.lock().unwrap();
-        ConfigurationSchema {
-            parameters: vec![ParameterSchema {
-                id: "device".into(),
-                name: "MIDI Input Device".into(),
-                description: None,
-                value: ValueSchema::Enum {
-                    values: midi_input
-                        .ports()
-                        .into_iter()
-                        .map(|port| -> Result<_, PortInfoError> {
-                            let name = midi_input.port_name(&port)?;
-                            Ok(EnumOption {
-                                name: name.clone(),
-                                description: None,
-                                value: name,
-                            })
+        vec![ParameterSchema {
+            id: "device".into(),
+            name: "MIDI Input Device".into(),
+            description: None,
+            value: ValueSchema::Enum {
+                values: midi_input
+                    .ports()
+                    .into_iter()
+                    .map(|port| -> Result<_, PortInfoError> {
+                        let name = midi_input.port_name(&port)?;
+                        Ok(EnumOption {
+                            name: name.clone(),
+                            description: None,
+                            value: name,
                         })
-                        .flat_map(|p| p.ok())
-                        .collect(),
-                },
-            }],
-        }
+                    })
+                    .flat_map(|p| p.ok())
+                    .collect(),
+            },
+        }]
     }
 
     fn get_parameters(&self) -> HashMap<String, ParameterValue> {
