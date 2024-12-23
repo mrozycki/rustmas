@@ -24,6 +24,7 @@ pub struct RainbowCable {
 
 impl Animation for RainbowCable {
     type Parameters = Parameters;
+    type CustomTriggers = ();
     type Wrapped = SpeedControlled<BrightnessControlled<Self>>;
 
     fn new(points: Vec<(f64, f64, f64)>) -> Self {

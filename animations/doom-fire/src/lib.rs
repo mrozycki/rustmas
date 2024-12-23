@@ -126,6 +126,7 @@ pub struct DoomFireAnimation {
 
 impl Animation for DoomFireAnimation {
     type Parameters = Parameters;
+    type CustomTriggers = ();
     type Wrapped = SpeedControlled<BrightnessControlled<Self>>;
 
     fn new(points: Vec<(f64, f64, f64)>) -> Self {

@@ -1,6 +1,4 @@
-use animation_api::schema::{
-    ConfigurationSchema, EnumOption, GetSchema, ParameterSchema, ValueSchema,
-};
+use animation_api::schema::{EnumOption, GetSchema, ParameterSchema, ValueSchema};
 use animation_api::Animation;
 use animation_utils::decorators::BrightnessControlled;
 use serde::{Deserialize, Serialize};
@@ -11,23 +9,21 @@ pub struct Parameters {
 }
 
 impl GetSchema for Parameters {
-    fn schema() -> ConfigurationSchema {
-        ConfigurationSchema {
-            parameters: vec![ParameterSchema {
-                id: "bit".to_owned(),
-                name: "Bit".to_owned(),
-                description: None,
-                value: ValueSchema::Enum {
-                    values: (0..10)
-                        .map(|i| EnumOption {
-                            name: format!("{}s", 1 << i),
-                            description: None,
-                            value: i.to_string(),
-                        })
-                        .collect(),
-                },
-            }],
-        }
+    fn schema() -> Vec<ParameterSchema> {
+        vec![ParameterSchema {
+            id: "bit".to_owned(),
+            name: "Bit".to_owned(),
+            description: None,
+            value: ValueSchema::Enum {
+                values: (0..10)
+                    .map(|i| EnumOption {
+                        name: format!("{}s", 1 << i),
+                        description: None,
+                        value: i.to_string(),
+                    })
+                    .collect(),
+            },
+        }]
     }
 }
 
@@ -39,6 +35,7 @@ pub struct Indexing {
 
 impl Animation for Indexing {
     type Parameters = Parameters;
+    type CustomTriggers = ();
     type Wrapped = BrightnessControlled<Self>;
 
     fn new(points: Vec<(f64, f64, f64)>) -> Self {

@@ -24,6 +24,7 @@ pub struct RainbowCylinder {
 
 impl Animation for RainbowCylinder {
     type Parameters = Parameters;
+    type CustomTriggers = ();
     type Wrapped = SpeedControlled<BrightnessControlled<Self>>;
 
     fn new(points: Vec<(f64, f64, f64)>) -> Self {

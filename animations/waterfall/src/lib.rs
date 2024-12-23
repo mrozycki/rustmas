@@ -36,6 +36,7 @@ pub struct RainbowWaterfall {
 
 impl Animation for RainbowWaterfall {
     type Parameters = Parameters;
+    type CustomTriggers = ();
     type Wrapped = SpeedControlled<BrightnessControlled<Self>>;
 
     fn new(points: Vec<(f64, f64, f64)>) -> Self {

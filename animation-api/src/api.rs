@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 
-use crate::schema::{ConfigurationSchema, GetSchema, ParameterValue};
+use crate::schema::{ConfigurationSchema, GetEnumOptions, GetSchema, ParameterValue};
 
 #[derive(Serialize, Deserialize, Debug, thiserror::Error)]
 #[error("animation error: {message}")]
@@ -12,6 +12,7 @@ pub struct AnimationError {
 
 pub trait Animation {
     type Parameters: GetSchema + DeserializeOwned + Serialize + Default + Clone;
+    type CustomTriggers: GetEnumOptions + DeserializeOwned + Serialize + Clone;
     type Wrapped: Animation<Parameters: GetSchema>;
 
     fn new(points: Vec<(f64, f64, f64)>) -> Self;
@@ -24,7 +25,10 @@ pub trait Animation {
     where
         Self::Parameters: GetSchema,
     {
-        Self::Parameters::schema()
+        ConfigurationSchema {
+            parameters: Self::Parameters::schema(),
+            custom_triggers: Self::CustomTriggers::enum_options(),
+        }
     }
 
     fn set_parameters(&mut self, _parameters: Self::Parameters) {}

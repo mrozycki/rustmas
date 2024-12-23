@@ -44,6 +44,7 @@ pub struct CircleBoom {
 
 impl Animation for CircleBoom {
     type Parameters = Parameters;
+    type CustomTriggers = ();
     type Wrapped = BrightnessControlled<Self>;
 
     fn new(points: Vec<(f64, f64, f64)>) -> Self {

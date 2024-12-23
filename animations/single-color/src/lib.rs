@@ -28,6 +28,7 @@ pub struct SingleColor {
 
 impl Animation for SingleColor {
     type Parameters = Parameters;
+    type CustomTriggers = ();
     type Wrapped = OffSwitch<BrightnessControlled<Self>>;
 
     fn new(points: Vec<(f64, f64, f64)>) -> Self {

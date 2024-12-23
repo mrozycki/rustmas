@@ -60,6 +60,7 @@ pub struct CircleWave {
 
 impl Animation for CircleWave {
     type Parameters = Parameters;
+    type CustomTriggers = ();
     type Wrapped = BrightnessControlled<Self>;
 
     fn new(points: Vec<(f64, f64, f64)>) -> Self {

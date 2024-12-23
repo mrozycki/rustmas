@@ -1,6 +1,6 @@
 use animation_api::{
     event::Event,
-    schema::{ConfigurationSchema, EnumOption, ParameterSchema, ParameterValue, ValueSchema},
+    schema::{EnumOption, ParameterSchema, ParameterValue, ValueSchema},
 };
 use anyhow::anyhow;
 use cpal::{
@@ -228,31 +228,29 @@ impl EventGenerator for FftEventGenerator {
             AudioStream::new(self.fps, self.event_sender.clone(), &self.parameters.device).ok();
     }
 
-    fn get_schema(&self) -> ConfigurationSchema {
+    fn get_schema(&self) -> Vec<ParameterSchema> {
         let host = cpal::default_host();
 
-        ConfigurationSchema {
-            parameters: vec![ParameterSchema {
-                id: "device".to_owned(),
-                name: "Input device".to_owned(),
-                description: None,
-                value: ValueSchema::Enum {
-                    values: host
-                        .input_devices()
-                        .unwrap()
-                        .map(|device| -> Result<EnumOption, DeviceNameError> {
-                            let name = device.name()?;
-                            Ok(EnumOption {
-                                name: name.clone(),
-                                description: None,
-                                value: name,
-                            })
+        vec![ParameterSchema {
+            id: "device".to_owned(),
+            name: "Input device".to_owned(),
+            description: None,
+            value: ValueSchema::Enum {
+                values: host
+                    .input_devices()
+                    .unwrap()
+                    .map(|device| -> Result<EnumOption, DeviceNameError> {
+                        let name = device.name()?;
+                        Ok(EnumOption {
+                            name: name.clone(),
+                            description: None,
+                            value: name,
                         })
-                        .flat_map(|d| d.ok())
-                        .collect(),
-                },
-            }],
-        }
+                    })
+                    .flat_map(|d| d.ok())
+                    .collect(),
+            },
+        }]
     }
 
     fn get_parameters(&self) -> HashMap<String, ParameterValue> {
