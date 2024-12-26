@@ -5,6 +5,12 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Copy, Debug, Serialize, Deserialize, EnumSchema, PartialEq, Eq)]
 pub enum CustomTriggers {
+    #[schema_variant(name = "Undo")]
+    Undo,
+
+    #[schema_variant(name = "Redo")]
+    Redo,
+
     #[schema_variant(name = "Clear")]
     Clear,
 }
@@ -46,6 +52,8 @@ impl Default for Parameters {
 pub struct Draw {
     points: Vec<nalgebra::Vector3<f32>>,
     canvas: Vec<Color>,
+    history: Vec<Vec<Color>>,
+    future: Vec<Vec<Color>>,
     drawing: bool,
     last_ray_origin: Option<nalgebra::Vector3<f32>>,
     last_ray_direction: Option<nalgebra::Vector3<f32>>,
@@ -65,6 +73,8 @@ impl Animation for Draw {
                 .map(|(x, y, z)| nalgebra::Vector3::new(x as f32, y as f32, z as f32))
                 .collect(),
             canvas: vec![Color::black(); len],
+            history: vec![],
+            future: vec![],
             drawing: false,
             last_ray_origin: None,
             last_ray_direction: None,
@@ -125,6 +135,8 @@ impl Animation for Draw {
             }
             Event::MouseDown => {
                 self.drawing = true;
+                self.history.push(self.canvas.clone());
+                self.future = vec![];
             }
             Event::MouseUp => {
                 self.drawing = false;
@@ -135,7 +147,21 @@ impl Animation for Draw {
                 };
 
                 match trigger {
+                    CustomTriggers::Undo => {
+                        if let Some(prev) = self.history.pop() {
+                            self.future.push(self.canvas.clone());
+                            self.canvas = prev;
+                        }
+                    }
+                    CustomTriggers::Redo => {
+                        if let Some(next) = self.future.pop() {
+                            self.history.push(self.canvas.clone());
+                            self.canvas = next;
+                        }
+                    }
                     CustomTriggers::Clear => {
+                        self.history.push(self.canvas.clone());
+                        self.future = vec![];
                         self.canvas.fill(lightfx::Color::black());
                     }
                 }
