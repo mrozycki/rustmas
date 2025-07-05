@@ -6,6 +6,8 @@ database_path = "db.sqlite"
 points_path = "lights.csv"
 # path to the [animation plugins directory](../animations/README.md)
 plugin_path = "target/animations/"
+# if you don't want to use actual lights and just want to use the visualizer define empty lights
+lights = []
 
 # you can specify multiple light endpoints
 [[controller.lights]]
