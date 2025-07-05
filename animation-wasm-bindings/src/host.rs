@@ -13,7 +13,10 @@ use wasmtime::{
     component::{bindgen, Component, Linker, ResourceAny},
     AsContextMut, Config, Engine, Store,
 };
-use wasmtime_wasi::{ResourceTable, WasiCtx, WasiCtxBuilder, WasiView};
+use wasmtime_wasi::{
+    p2::{IoView, WasiCtx, WasiCtxBuilder, WasiView},
+    ResourceTable,
+};
 
 bindgen!({
     world: "animation",
@@ -29,6 +32,8 @@ impl WasiView for State {
     fn ctx(&mut self) -> &mut WasiCtx {
         &mut self.ctx
     }
+}
+impl IoView for State {
     fn table(&mut self) -> &mut ResourceTable {
         &mut self.table
     }
@@ -66,7 +71,7 @@ impl HostedPlugin {
         let component = Component::from_binary(&engine, &data)?;
 
         let mut linker = Linker::new(&engine);
-        wasmtime_wasi::add_to_linker_async(&mut linker)?;
+        wasmtime_wasi::p2::add_to_linker_async(&mut linker)?;
 
         let mut store = Store::new(
             &engine,
