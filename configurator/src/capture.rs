@@ -167,7 +167,7 @@ impl Capturer {
     ) -> Result<Vec<WithConfidence<Point2>>, Box<dyn Error>> {
         let mut coords = Vec::new();
         let timestamp = chrono::offset::Local::now().format("%FT%X");
-        let base_dir = PathBuf::from(format!("captures/{}/", timestamp));
+        let base_dir = PathBuf::from(format!("captures/{timestamp}/"));
         let on_dir = base_dir.join("img/on/");
         let off_dir = base_dir.join("img/off/");
         let marked_dir = base_dir.join("img/marked/");
@@ -200,7 +200,7 @@ impl Capturer {
             thread::sleep(Duration::from_millis(100));
             let base_picture = self.camera.capture()?;
             if save_pictures {
-                base_picture.save_to_file(off_dir.join(format!("{:03}.jpg", i)))?;
+                base_picture.save_to_file(off_dir.join(format!("{i:03}.jpg")))?;
             }
 
             let frame = self.single_light_on(i);
@@ -214,9 +214,9 @@ impl Capturer {
 
             let found_coords = cv::find_light_from_diff(&base_picture, &led_picture)?;
             if save_pictures {
-                led_picture.save_to_file(on_dir.join(format!("{:03}.jpg", i)))?;
+                led_picture.save_to_file(on_dir.join(format!("{i:03}.jpg")))?;
                 led_picture.mark(&found_coords)?;
-                led_picture.save_to_file(marked_dir.join(format!("{:03}.jpg", i)))?;
+                led_picture.save_to_file(marked_dir.join(format!("{i:03}.jpg")))?;
             }
             coords.push(found_coords);
         }
@@ -243,7 +243,7 @@ impl Capturer {
         self.light_client
             .display_frame(&self.all_lights_on())
             .await?;
-        println!("{}", prompt);
+        println!("{prompt}");
         self.preview()?;
         Ok(())
     }

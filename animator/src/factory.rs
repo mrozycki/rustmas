@@ -76,11 +76,11 @@ impl AnimationFactory {
                 })?
         ))
         .map_err(|e| AnimationFactoryError::InternalError {
-            reason: format!("Pattern error: {}", e),
+            reason: format!("Pattern error: {e}"),
         })?
         .map(|path| {
             path.map_err(|e| AnimationFactoryError::InternalError {
-                reason: format!("Glob error: {}", e),
+                reason: format!("Glob error: {e}"),
             })
             .and_then(|path| -> Result<_, AnimationFactoryError> {
                 let path = path.parent().unwrap().to_owned();

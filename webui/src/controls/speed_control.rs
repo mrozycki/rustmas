@@ -44,7 +44,7 @@ pub fn speed_parameter_control(props: &ParameterControlProps) -> Html {
             value_display_ref
                 .cast::<HtmlInputElement>()
                 .unwrap()
-                .set_value(&format!("{:.2}x", speed));
+                .set_value(&format!("{speed:.2}x"));
             hidden_ref
                 .cast::<HtmlInputElement>()
                 .unwrap()
@@ -71,7 +71,7 @@ pub fn speed_parameter_control(props: &ParameterControlProps) -> Html {
                 <input
                     ref={value_display_ref}
                     type="text"
-                    value={format!("{:.2}x", speed)}
+                    value={format!("{speed:.2}x")}
                     disabled=true
                     class="value-display" />
                 <input

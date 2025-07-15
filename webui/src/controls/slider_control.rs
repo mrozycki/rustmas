@@ -8,7 +8,7 @@ fn display_value(value: f64, percent: bool) -> String {
     if percent {
         format!("{}%", (value * 100.0) as i32)
     } else {
-        format!("{:.2}", value)
+        format!("{value:.2}")
     }
 }
 

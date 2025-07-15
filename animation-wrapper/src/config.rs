@@ -46,7 +46,7 @@ impl PluginConfig {
         let manifest: PluginManifest =
             serde_json::from_slice(&std::fs::read(path.join("manifest.json")).map_err(|e| {
                 PluginConfigError::InvalidManifest {
-                    reason: format!("IO error: {}", e),
+                    reason: format!("IO error: {e}"),
                 }
             })?)
             .map_err(|e| PluginConfigError::InvalidManifest {

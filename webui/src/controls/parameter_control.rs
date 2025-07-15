@@ -30,11 +30,11 @@ pub fn parameter_control(props: &ParameterControlProps) -> Html {
             {
                 match props.schema.value {
                     ValueSchema::Enum {..} => html!{<SelectParameterControl schema={props.schema.clone()} value={props.value.clone()} dummy_update={props.dummy_update} />},
-                    ValueSchema::Color {..} => html!{<ColorParameterControl schema={props.schema.clone()} value={props.value.clone()} dummy_update={props.dummy_update} />},
+                    ValueSchema::Color => html!{<ColorParameterControl schema={props.schema.clone()} value={props.value.clone()} dummy_update={props.dummy_update} />},
                     ValueSchema::Number {..} | ValueSchema::Percentage => {
                         html!{<SliderParameterControl schema={props.schema.clone()} value={props.value.clone()} dummy_update={props.dummy_update} />}
                     },
-                    ValueSchema::Speed {..} => html!{<SpeedParameterControl schema={props.schema.clone()} value={props.value.clone()} dummy_update={props.dummy_update} />},
+                    ValueSchema::Speed => html!{<SpeedParameterControl schema={props.schema.clone()} value={props.value.clone()} dummy_update={props.dummy_update} />},
                 }
             }
         </div>
