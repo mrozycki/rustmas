@@ -45,7 +45,7 @@ fn build_plugin() -> std::io::Result<ExitStatus> {
 fn find_animation_id() -> std::io::Result<String> {
     std::env::current_dir()?
         .components()
-        .last()
+        .next_back()
         .ok_or_else(|| std::io::Error::new(std::io::ErrorKind::NotFound, "Invalid project path"))
         .map(|c| c.as_os_str().to_string_lossy().to_string())
         .map(|s| s.replace('-', "_"))
