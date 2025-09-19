@@ -173,29 +173,40 @@ pub fn find_light_from_diff(
     find_light_from_diff_with_output(base_picture, led_picture, None)
 }
 
+// Silly little workaround to OpenCV 4.11 adding an extra argument to the imgproc::cvt_color
+// function. If your OpenCV version is older than 4.11, enable the `opencv410` feature
+// to fix the build.
+#[cfg(not(feature = "opencv410"))]
+pub fn cvt_color(
+    src: &impl core::ToInputArray,
+    dst: &mut impl core::ToOutputArray,
+    code: i32,
+) -> opencv::Result<()> {
+    imgproc::cvt_color(src, dst, code, 0, core::AlgorithmHint::ALGO_HINT_DEFAULT)
+}
+
+#[cfg(feature = "opencv410")]
+pub fn cvt_color(
+    src: &impl core::ToInputArray,
+    dst: &mut impl core::ToOutputArray,
+    code: i32,
+) -> opencv::Result<()> {
+    imgproc::cvt_color(src, dst, code, 0)
+}
+
 pub fn find_light_from_diff_with_output(
     base_picture: &Picture,
     led_picture: &Picture,
     output_dir: Option<PathBuf>,
 ) -> Result<WithConfidence<(usize, usize)>, Box<dyn Error>> {
     let mut base_gray = Mat::default();
-    imgproc::cvt_color(
-        &base_picture.inner,
-        &mut base_gray,
-        imgproc::COLOR_BGR2GRAY,
-        0,
-    )?;
+    cvt_color(&base_picture.inner, &mut base_gray, imgproc::COLOR_BGR2GRAY)?;
     if let Some(output_dir) = &output_dir {
         Picture::from(base_gray.clone())
             .save_to_file(output_dir.with_file_name("1_base_grayscale.jpg"))?;
     }
     let mut led_gray = Mat::default();
-    imgproc::cvt_color(
-        &led_picture.inner,
-        &mut led_gray,
-        imgproc::COLOR_BGR2GRAY,
-        0,
-    )?;
+    cvt_color(&led_picture.inner, &mut led_gray, imgproc::COLOR_BGR2GRAY)?;
     if let Some(output_dir) = &output_dir {
         Picture::from(led_gray.clone())
             .save_to_file(output_dir.with_file_name("2_led_grayscale.jpg"))?;
@@ -248,7 +259,7 @@ pub fn find_light_from_diff_with_output(
     if let Some(output_dir) = &output_dir {
         // eroded image is in grayscale but we want to mark it in color, so we convert it
         let mut eroded_color = Mat::default();
-        imgproc::cvt_color(&eroded, &mut eroded_color, COLOR_GRAY2RGB, 0)?;
+        cvt_color(&eroded, &mut eroded_color, COLOR_GRAY2RGB)?;
         let mut pic = Picture::from(eroded_color);
         pic.mark(&result)?;
         pic.save_to_file(output_dir.with_file_name("5_eroded_marked.jpg"))?;

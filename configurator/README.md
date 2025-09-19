@@ -1,6 +1,10 @@
 Rustmas Configurator
 ====================
 
+> [!IMPORTANT]
+> If you're using an OpenCV version older than 4.11, you need to enable the `opencv410`
+feature when building the configurator (or running it directly through cargo).
+
 Rustmas Configurator allows you to capture light positions on your Christmas tree. This is
 a necessary step if you want to run Rustmas on actual physical lights.
 
