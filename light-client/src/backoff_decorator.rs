@@ -94,13 +94,15 @@ where
                     state.status = ConnectionStatus::IntermittentFailure;
                     warn!(
                         "Failed to send frame to remote lights, will retry in {:.2} seconds; reason: {}",
-                        state.delay.num_milliseconds() as f64 / 1000.0, reason
+                        state.delay.num_milliseconds() as f64 / 1000.0,
+                        reason
                     );
                 } else if state.status != ConnectionStatus::ProlongedFailure {
                     state.status = ConnectionStatus::ProlongedFailure;
                     warn!(
                         "Lost connection to lights, will continue retrying every {:.2} seconds; reason: {}",
-                        self.max_delay.num_milliseconds() as f64 / 1000.0, reason
+                        self.max_delay.num_milliseconds() as f64 / 1000.0,
+                        reason
                     );
                 }
                 state.delay = (state.delay * 2).min(self.max_delay);

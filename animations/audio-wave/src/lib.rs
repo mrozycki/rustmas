@@ -1,10 +1,10 @@
 use std::f64::consts::PI;
 use std::sync::{Arc, Mutex};
 
-use animation_api::event::Event;
 use animation_api::Animation;
+use animation_api::event::Event;
 use animation_utils::decorators::{BrightnessControlled, SpeedControlled};
-use animation_utils::{to_polar, EnumSchema, Schema};
+use animation_utils::{EnumSchema, Schema, to_polar};
 use lightfx::Color;
 
 use serde::{Deserialize, Serialize};

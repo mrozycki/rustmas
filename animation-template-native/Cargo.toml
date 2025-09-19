@@ -1,7 +1,7 @@
 [package]
 name = "animation-template-native"
 version = "0.1.0"
-edition = "2021"
+edition = "2024"
 
 [dependencies]
 animation-utils = { git = "https://github.com/mrozycki/rustmas", rev = "835ad9e" }

@@ -1,6 +1,6 @@
 use animation_api::Animation;
-use animation_utils::decorators::{BrightnessControlled, SpeedControlled};
 use animation_utils::Schema;
+use animation_utils::decorators::{BrightnessControlled, SpeedControlled};
 use nalgebra::{Rotation3, Vector3};
 use serde::{Deserialize, Serialize};
 

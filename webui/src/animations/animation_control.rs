@@ -1,4 +1,4 @@
-use yew::{html, Callback, Html};
+use yew::{Callback, Html, html};
 
 use crate::{animations::AnimationList, controls::ParameterControlList, window_width};
 

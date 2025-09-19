@@ -1,8 +1,8 @@
-use actix_web::{get, post, web, HttpResponse, Scope};
+use actix_web::{HttpResponse, Scope, get, post, web};
 use serde_json::json;
 use webapi_model::{GetParametersResponse, SetAnimationParametersRequest};
 
-use crate::{parameters, AnimationController};
+use crate::{AnimationController, parameters};
 
 #[get("/")]
 async fn get(controller: web::Data<AnimationController>) -> HttpResponse {

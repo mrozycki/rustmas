@@ -1,5 +1,5 @@
 use actix::{Actor, Addr};
-use actix_web::{get, web, HttpRequest, HttpResponse, Scope};
+use actix_web::{HttpRequest, HttpResponse, Scope, get, web};
 use actix_web_actors::ws;
 use tokio::sync::mpsc;
 use webapi_model::GetPointsResponse;

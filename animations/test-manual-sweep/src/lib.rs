@@ -2,7 +2,7 @@ use std::f64::consts::PI;
 
 use animation_api::Animation;
 use animation_utils::decorators::BrightnessControlled;
-use animation_utils::{to_polar, EnumSchema, Schema};
+use animation_utils::{EnumSchema, Schema, to_polar};
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Default, Serialize, Deserialize, EnumSchema)]

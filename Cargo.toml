@@ -19,4 +19,4 @@ members = [
     "events",
     "animations/*",
 ]
-resolver = "2"
+resolver = "3"

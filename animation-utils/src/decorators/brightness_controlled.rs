@@ -1,5 +1,5 @@
-use animation_api::schema::{GetEnumOptions, GetSchema, ParameterSchema, ValueSchema};
 use animation_api::Animation;
+use animation_api::schema::{GetEnumOptions, GetSchema, ParameterSchema, ValueSchema};
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 

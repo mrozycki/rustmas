@@ -1,6 +1,6 @@
 use animation_api::schema::ValueSchema;
 use web_sys::HtmlInputElement;
-use yew::{html, Callback, Html};
+use yew::{Callback, Html, html};
 
 use super::ParameterControlProps;
 

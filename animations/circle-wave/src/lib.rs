@@ -2,7 +2,7 @@ use std::f64::consts::TAU;
 
 use animation_api::Animation;
 use animation_utils::Schema;
-use animation_utils::{decorators::BrightnessControlled, EnumSchema};
+use animation_utils::{EnumSchema, decorators::BrightnessControlled};
 use lightfx::Color;
 use serde::{Deserialize, Serialize};
 

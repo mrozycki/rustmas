@@ -29,13 +29,12 @@ impl TtyLightClient {
 
 fn get_port() -> Result<String, Box<dyn Error>> {
     for port in serialport::available_ports()? {
-        if let SerialPortType::UsbPort(port_info) = port.port_type {
-            if let Some(manufacturer) = port_info.manufacturer {
-                if manufacturer == "krzmaz" {
-                    info!("Found endpoint: {}", port.port_name);
-                    return Ok(port.port_name);
-                }
-            }
+        if let SerialPortType::UsbPort(port_info) = port.port_type
+            && let Some(manufacturer) = port_info.manufacturer
+            && manufacturer == "krzmaz"
+        {
+            info!("Found endpoint: {}", port.port_name);
+            return Ok(port.port_name);
         }
     }
     Err(Box::new(LightClientError::ConnectionLost {

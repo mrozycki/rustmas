@@ -61,7 +61,7 @@ impl RandomSweep {
     fn next_hue(&self, curr: f64) -> f64 {
         (curr
             + self.parameters.hue_step
-            + (rand::thread_rng().gen::<f64>().fract() - self.parameters.hue_step_variance) / 2.0)
+            + (rand::rng().random::<f64>().fract() - self.parameters.hue_step_variance) / 2.0)
             .fract()
     }
 }
@@ -72,7 +72,7 @@ impl Animation for RandomSweep {
     type Wrapped = SpeedControlled<BrightnessControlled<Self>>;
 
     fn new(points: Vec<(f64, f64, f64)>) -> Self {
-        let initial_hue = rand::thread_rng().gen::<f64>().fract();
+        let initial_hue = rand::rng().random::<f64>().fract();
 
         Self {
             points: points

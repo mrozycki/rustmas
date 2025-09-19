@@ -18,12 +18,12 @@ use lightfx::Frame;
 use log::{info, warn};
 use rustmas_light_client as client;
 use rustmas_light_client::LightClientError;
-use tokio::sync::{mpsc, Mutex};
+use tokio::sync::{Mutex, mpsc};
 use tokio::task::JoinHandle;
 
+use crate::ControllerConfig;
 use crate::factory::AnimationFactoryError;
 use crate::plugin::{AnimationPluginError, Plugin};
-use crate::ControllerConfig;
 
 #[derive(Debug, thiserror::Error)]
 pub enum ControllerError {

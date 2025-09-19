@@ -1,5 +1,5 @@
 use midi_msg::MidiMsg;
-use serde::{de, Deserialize, Deserializer, Serialize, Serializer};
+use serde::{Deserialize, Deserializer, Serialize, Serializer, de};
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[non_exhaustive]

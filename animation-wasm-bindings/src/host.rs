@@ -10,12 +10,12 @@ use exports::guest::animation::plugin::{Color, Position};
 use itertools::Itertools;
 use tokio::sync::Mutex;
 use wasmtime::{
-    component::{bindgen, Component, Linker, ResourceAny},
     AsContextMut, Config, Engine, Store,
+    component::{Component, Linker, ResourceAny, bindgen},
 };
 use wasmtime_wasi::{
-    p2::{IoView, WasiCtx, WasiCtxBuilder, WasiView},
     ResourceTable,
+    p2::{IoView, WasiCtx, WasiCtxBuilder, WasiView},
 };
 
 bindgen!({

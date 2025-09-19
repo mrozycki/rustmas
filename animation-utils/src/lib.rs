@@ -2,7 +2,7 @@ pub mod decorators;
 
 use std::f64::consts::TAU;
 
-pub use animation_macros::{plugin, wasm_plugin, EnumSchema, Schema};
+pub use animation_macros::{EnumSchema, Schema, plugin, wasm_plugin};
 use nalgebra::{Rotation3, Unit, Vector3};
 use rand::Rng;
 
@@ -11,7 +11,7 @@ pub fn to_polar((x, y, z): (f64, f64, f64)) -> (f64, f64, f64) {
 }
 
 pub fn random_component() -> f64 {
-    rand::thread_rng().gen::<f64>().fract() * 2.0 - 1.0
+    rand::rng().random::<f64>().fract() * 2.0 - 1.0
 }
 
 pub fn random_rotation() -> Rotation3<f64> {
@@ -25,9 +25,9 @@ pub fn random_rotation() -> Rotation3<f64> {
 }
 
 pub fn random_rotation_around(axis: &Unit<Vector3<f64>>) -> Rotation3<f64> {
-    Rotation3::from_axis_angle(axis, rand::thread_rng().gen_range(0.0..TAU))
+    Rotation3::from_axis_angle(axis, rand::rng().random_range(0.0..TAU))
 }
 
 pub fn random_hue(saturation: f64, value: f64) -> lightfx::Color {
-    lightfx::Color::hsv(rand::thread_rng().gen::<f64>() % 1.0, saturation, value)
+    lightfx::Color::hsv(rand::rng().random::<f64>() % 1.0, saturation, value)
 }

@@ -4,12 +4,12 @@ use animation_api::{
 };
 use anyhow::anyhow;
 use cpal::{
-    traits::{DeviceTrait, HostTrait, StreamTrait},
     DeviceNameError, Sample, SampleFormat,
+    traits::{DeviceTrait, HostTrait, StreamTrait},
 };
 use itertools::Itertools;
 use log::{error, info};
-use rustfft::{num_complex::Complex32, FftPlanner};
+use rustfft::{FftPlanner, num_complex::Complex32};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 use tokio::sync::mpsc;
@@ -18,8 +18,8 @@ use std::{
     collections::{HashMap, VecDeque},
     error::Error,
     sync::{
-        atomic::{AtomicBool, Ordering},
         Arc, Mutex,
+        atomic::{AtomicBool, Ordering},
     },
     thread,
     time::Duration,
