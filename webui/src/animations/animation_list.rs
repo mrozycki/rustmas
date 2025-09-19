@@ -2,7 +2,7 @@ use log::error;
 use rustmas_webapi_client::{Animation, RustmasApiClient};
 use wasm_bindgen::JsCast;
 use web_sys::HtmlAnchorElement;
-use yew::{html, Callback, Html, MouseEvent};
+use yew::{Callback, Html, MouseEvent, html};
 use yew_router::prelude::Link;
 
 use crate::Route;

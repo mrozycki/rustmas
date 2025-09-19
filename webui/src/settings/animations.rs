@@ -1,6 +1,6 @@
 use log::error;
 use rustmas_webapi_client::{Animation, RustmasApiClient};
-use yew::{html, Callback, Html};
+use yew::{Callback, Html, html};
 
 #[yew::function_component(AnimationsSettings)]
 pub fn animations_settings() -> Html {

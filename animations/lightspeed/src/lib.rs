@@ -2,11 +2,11 @@ use std::f64::consts::{PI, TAU};
 
 use animation_api::Animation;
 use animation_utils::{
-    decorators::{BrightnessControlled, SpeedControlled},
     Schema,
+    decorators::{BrightnessControlled, SpeedControlled},
 };
 use lightfx::Color;
-use rand::{thread_rng, Rng};
+use rand::Rng;
 use serde::{Deserialize, Serialize};
 
 struct Particle {
@@ -36,9 +36,9 @@ impl Particle {
 
     fn new_random(parameters: &Parameters) -> Self {
         Self {
-            angle: thread_rng().gen_range(0.0..TAU),
+            angle: rand::rng().random_range(0.0..TAU),
             angle_width: parameters.angle_width / 180.0 * PI,
-            speed: thread_rng().gen_range(0.8..1.0) * parameters.max_speed,
+            speed: rand::rng().random_range(0.8..1.0) * parameters.max_speed,
             position: 0.0,
             length: parameters.tail_length,
         }
@@ -146,7 +146,9 @@ impl Animation for Lightspeed {
             return;
         }
 
-        let n = thread_rng().gen_range(0.0..2.0 * self.to_generate).floor();
+        let n = rand::rng()
+            .random_range(0.0..2.0 * self.to_generate)
+            .floor();
         for _ in 0..n as usize {
             self.particles.push(Particle::new_random(&self.parameters));
         }

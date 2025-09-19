@@ -1,10 +1,10 @@
 use animation_api::Animation;
 use animation_utils::{
-    decorators::{BrightnessControlled, SpeedControlled},
     EnumSchema, Schema,
+    decorators::{BrightnessControlled, SpeedControlled},
 };
 use lightfx::{Color, Gradient};
-use rand::{thread_rng, Rng};
+use rand::Rng;
 use serde::{Deserialize, Serialize};
 
 struct Particle {
@@ -34,7 +34,7 @@ impl Particle {
         let decay_rate = if parameters.decay_rate_spread.abs() < 0.0001 {
             parameters.decay_rate
         } else {
-            thread_rng().gen_range(
+            rand::rng().random_range(
                 parameters.decay_rate * (1.0 - parameters.decay_rate_spread)
                     ..parameters.decay_rate * (1.0 + parameters.decay_rate_spread),
             )
@@ -43,16 +43,16 @@ impl Particle {
 
         let z = match parameters.dimension {
             Dimension::Dim2D => 0.0,
-            Dimension::Dim3D => thread_rng().gen_range(-1.0..1.0),
+            Dimension::Dim3D => rand::rng().random_range(-1.0..1.0),
         };
 
         Self {
             position: (
-                thread_rng().gen_range(-1.0..1.0),
+                rand::rng().random_range(-1.0..1.0),
                 parameters.bottom_line - parameters.particle_range,
                 z,
             ),
-            speed: (0.0, thread_rng().gen_range(0.5..1.0), 0.0),
+            speed: (0.0, rand::rng().random_range(0.5..1.0), 0.0),
             decay_rate,
             power: 1.0,
         }
@@ -70,9 +70,9 @@ impl Particle {
         let wind = if wind == 0.0 {
             0.0
         } else if wind < 0.0 {
-            thread_rng().gen_range(wind * 1.1..wind / 1.1)
+            rand::rng().random_range(wind * 1.1..wind / 1.1)
         } else {
-            thread_rng().gen_range(wind / 1.1..wind * 1.1)
+            rand::rng().random_range(wind / 1.1..wind * 1.1)
         };
         let (wz, wx) = wind_direction.to_radians().sin_cos();
         self.speed = (vx + wx * wind, vy, vz + wz * wind);
@@ -184,7 +184,9 @@ impl Animation for ParticleFire {
             return;
         }
 
-        let n = thread_rng().gen_range(0.0..2.0 * self.to_generate).floor();
+        let n = rand::rng()
+            .random_range(0.0..2.0 * self.to_generate)
+            .floor();
         if n == 0.0 {
             return;
         }

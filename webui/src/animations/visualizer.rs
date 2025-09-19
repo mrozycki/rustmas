@@ -1,7 +1,7 @@
 use log::error;
 use rustmas_webapi_client::RustmasApiClient;
 use web_sys::MouseEvent;
-use yew::{html, Callback, Html};
+use yew::{Callback, Html, html};
 
 #[yew::function_component(Visualizer)]
 pub fn visualizer() -> Html {

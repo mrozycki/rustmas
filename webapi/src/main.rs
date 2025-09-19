@@ -13,9 +13,9 @@ use itertools::Itertools;
 use log::info;
 use rustmas_animator::points_from_path;
 use std::error::Error;
-use tokio::sync::{mpsc, Mutex};
+use tokio::sync::{Mutex, mpsc};
 
-use actix_web::{web, App, HttpServer};
+use actix_web::{App, HttpServer, web};
 
 type AnimationController = Mutex<rustmas_animator::Controller>;
 

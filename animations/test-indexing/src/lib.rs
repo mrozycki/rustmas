@@ -1,5 +1,5 @@
-use animation_api::schema::{EnumOption, GetSchema, ParameterSchema, ValueSchema};
 use animation_api::Animation;
+use animation_api::schema::{EnumOption, GetSchema, ParameterSchema, ValueSchema};
 use animation_utils::decorators::BrightnessControlled;
 use serde::{Deserialize, Serialize};
 

@@ -8,7 +8,7 @@ use bytes::Bytes;
 use lightfx::{Color, Frame};
 use log::info;
 
-use crate::{backoff_decorator::WithBackoff, config::ByteOrder, LightClient, LightClientError};
+use crate::{LightClient, LightClientError, backoff_decorator::WithBackoff, config::ByteOrder};
 
 pub use http::HttpLightClient;
 pub use tcp::TcpLightClient;

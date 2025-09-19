@@ -1,8 +1,8 @@
 use std::{collections::HashMap, error::Error};
 
 use animation_api::{
-    schema::{Configuration, ConfigurationSchema, ParameterValue},
     AnimationError,
+    schema::{Configuration, ConfigurationSchema, ParameterValue},
 };
 use animation_wrapper::config::PluginConfig;
 use async_trait::async_trait;
@@ -28,7 +28,7 @@ pub trait Plugin: Send + Sync {
         params: &HashMap<String, ParameterValue>,
     ) -> Result<(), AnimationPluginError>;
     async fn get_parameters(&self)
-        -> Result<HashMap<String, ParameterValue>, AnimationPluginError>;
+    -> Result<HashMap<String, ParameterValue>, AnimationPluginError>;
     async fn get_fps(&self) -> Result<f64, AnimationPluginError>;
     async fn send_event(
         &self,

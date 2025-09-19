@@ -4,13 +4,13 @@ mod cv;
 use std::{error::Error, path::PathBuf};
 
 use capture::{Capturer, WithConfidence};
-use clap::{arg, Parser, Subcommand};
+use clap::{Parser, Subcommand, arg};
 use cv::Camera;
 use itertools::Itertools;
 use log::{debug, info};
 use nalgebra::Vector3;
 use rustmas_light_client::{
-    combined::CombinedLightClient, ByteOrder, LightsConfig, LightsEndpoint, TtyLightsConfig,
+    ByteOrder, LightsConfig, LightsEndpoint, TtyLightsConfig, combined::CombinedLightClient,
 };
 use url::Url;
 

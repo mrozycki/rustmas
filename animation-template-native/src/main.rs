@@ -1,7 +1,7 @@
-use animation_api::{event::Event, Animation};
+use animation_api::{Animation, event::Event};
 use animation_utils::{
-    decorators::{BrightnessControlled, SpeedControlled},
     Schema,
+    decorators::{BrightnessControlled, SpeedControlled},
 };
 use serde::{Deserialize, Serialize};
 use serde_json::json;

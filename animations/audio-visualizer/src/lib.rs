@@ -1,10 +1,11 @@
 use std::f64::consts::PI;
 
-use animation_api::event::Event;
 use animation_api::Animation;
+use animation_api::event::Event;
 use animation_utils::{
+    EnumSchema, Schema,
     decorators::{BrightnessControlled, SpeedControlled},
-    to_polar, EnumSchema, Schema,
+    to_polar,
 };
 use lightfx::Color;
 use serde::{Deserialize, Serialize};

@@ -1,4 +1,4 @@
-use actix_web::{get, post, web, HttpResponse, Scope};
+use actix_web::{HttpResponse, Scope, get, post, web};
 use serde_json::json;
 use webapi_model::{
     GetEventGeneratorSchemaResponse, SendEventRequest, SetEventGeneratorParametersRequest,

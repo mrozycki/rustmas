@@ -1,7 +1,7 @@
 use animation_api::Animation;
 use animation_utils::{
-    decorators::{BrightnessControlled, SpeedControlled},
     Schema,
+    decorators::{BrightnessControlled, SpeedControlled},
 };
 use lightfx::{Color, Gradient};
 use nalgebra::{Rotation3, Vector3};
@@ -62,11 +62,11 @@ impl DoomFire {
     }
 
     fn tick(&mut self, parameters: &Parameters) {
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         for y in 1..self.surface.height() {
             for x in 0..self.surface.width {
                 let side_spread = if parameters.side_spread == 0 {
-                    rng.gen_range(0..parameters.side_spread) * parameters.side_spread.signum()
+                    rng.random_range(0..parameters.side_spread) * parameters.side_spread.signum()
                 } else {
                     0
                 };
@@ -76,7 +76,8 @@ impl DoomFire {
                         as usize,
                     y - 1,
                 ) {
-                    *p = (curr - rng.gen_range(0.0..1.0) * (1.0 - parameters.upward_spread) / 36.0)
+                    *p = (curr
+                        - rng.random_range(0.0..1.0) * (1.0 - parameters.upward_spread) / 36.0)
                         .clamp(0.0, 1.0);
                 }
             }

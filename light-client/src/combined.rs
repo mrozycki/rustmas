@@ -7,12 +7,12 @@ use log::{error, info};
 use url::Url;
 
 use crate::{
+    LightClient, LightClientError, LightsConfig, LightsEndpoint,
     backoff_decorator::WithBackoff,
     config::{ByteOrder, TtyLightsConfig},
     protocols::{
         HttpLightClient, ProtocolLightClient, TcpLightClient, TtyLightClient, UdpLightClient,
     },
-    LightClient, LightClientError, LightsConfig, LightsEndpoint,
 };
 
 pub struct CombinedLightClient {

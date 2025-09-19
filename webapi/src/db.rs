@@ -1,6 +1,6 @@
 use std::{str::FromStr, sync::Arc};
 
-use sqlx::{sqlite::SqliteConnectOptions, ConnectOptions, SqliteConnection};
+use sqlx::{ConnectOptions, SqliteConnection, sqlite::SqliteConnectOptions};
 use tokio::sync::{Mutex, MutexGuard};
 
 use crate::config::RustmasConfig;

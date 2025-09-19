@@ -1,8 +1,8 @@
 use std::f64::consts::PI;
 
 use animation_api::Animation;
-use animation_utils::decorators::{BrightnessControlled, OffSwitch};
 use animation_utils::Schema;
+use animation_utils::decorators::{BrightnessControlled, OffSwitch};
 use lightfx::Color;
 use serde::{Deserialize, Serialize};
 

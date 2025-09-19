@@ -1,9 +1,9 @@
-use actix_web::{get, post, web, HttpResponse, Scope};
+use actix_web::{HttpResponse, Scope, get, post, web};
 use log::error;
 use serde_json::json;
 use webapi_model::{SwitchAnimationRequest, SwitchAnimationResponse};
 
-use crate::{animations, parameters, AnimationController};
+use crate::{AnimationController, animations, parameters};
 
 #[post("/reload/")]
 async fn reload(

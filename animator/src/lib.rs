@@ -7,4 +7,4 @@ mod wasm;
 
 pub use config::ControllerConfig;
 pub use controller::{Controller, ControllerError};
-pub use factory::{points_from_path, AnimationFactory, AnimationFactoryError};
+pub use factory::{AnimationFactory, AnimationFactoryError, points_from_path};

@@ -1,8 +1,8 @@
 use std::f64::consts::FRAC_PI_2;
 
 use animation_api::Animation;
-use animation_utils::decorators::BrightnessControlled;
 use animation_utils::Schema;
+use animation_utils::decorators::BrightnessControlled;
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Serialize, Deserialize, Schema)]

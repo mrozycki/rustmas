@@ -1,5 +1,5 @@
-use animation_api::{event::Event, Animation};
-use animation_utils::{decorators::SpeedControlled, Schema};
+use animation_api::{Animation, event::Event};
+use animation_utils::{Schema, decorators::SpeedControlled};
 use itertools::Itertools;
 use midi_msg::{ChannelVoiceMsg, MidiMsg};
 use serde::{Deserialize, Serialize};

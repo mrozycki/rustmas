@@ -1,5 +1,5 @@
-use animation_api::{event::Event, Animation};
-use animation_utils::{decorators::BrightnessControlled, EnumSchema, Schema};
+use animation_api::{Animation, event::Event};
+use animation_utils::{EnumSchema, Schema, decorators::BrightnessControlled};
 use lightfx::Color;
 use serde::{Deserialize, Serialize};
 
@@ -85,16 +85,16 @@ impl Animation for Draw {
 
     fn render(&self) -> lightfx::Frame {
         let mut canvas = self.canvas.clone();
-        if self.parameters.mode != Mode::Watching {
-            if let Some((origin, direction)) = self.last_ray_origin.zip(self.last_ray_direction) {
-                light_up(
-                    &self.points,
-                    &mut canvas,
-                    origin,
-                    direction,
-                    &self.parameters,
-                )
-            }
+        if self.parameters.mode != Mode::Watching
+            && let Some((origin, direction)) = self.last_ray_origin.zip(self.last_ray_direction)
+        {
+            light_up(
+                &self.points,
+                &mut canvas,
+                origin,
+                direction,
+                &self.parameters,
+            )
         }
         lightfx::Frame::from_vec(canvas)
     }

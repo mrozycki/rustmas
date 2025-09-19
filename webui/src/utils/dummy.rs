@@ -1,4 +1,4 @@
-use yew::{html, Html};
+use yew::{Html, html};
 
 #[yew::function_component(Dummy)]
 pub fn dummy() -> Html {

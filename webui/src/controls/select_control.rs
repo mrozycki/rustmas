@@ -1,6 +1,6 @@
 use animation_api::schema::{ParameterSchema, ValueSchema};
 use web_sys::HtmlSelectElement;
-use yew::{html, Html};
+use yew::{Html, html};
 
 use super::ParameterControlProps;
 

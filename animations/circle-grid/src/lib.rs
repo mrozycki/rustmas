@@ -2,8 +2,8 @@ use std::f64::consts::TAU;
 
 use animation_api::Animation;
 use animation_utils::{
-    decorators::{BrightnessControlled, OffSwitch},
     Schema,
+    decorators::{BrightnessControlled, OffSwitch},
 };
 use lightfx::Color;
 use serde::{Deserialize, Serialize};

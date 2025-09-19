@@ -7,8 +7,8 @@ use std::{
 };
 
 use animation_api::{
-    schema::{Configuration, ConfigurationSchema, ParameterValue},
     AnimationError, JsonRpcMessage, JsonRpcMethod, JsonRpcResponse, JsonRpcResult,
+    schema::{Configuration, ConfigurationSchema, ParameterValue},
 };
 use animation_wrapper::config::PluginConfig;
 use async_trait::async_trait;

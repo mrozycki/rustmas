@@ -3,7 +3,7 @@ use ewebsock::{WsEvent, WsMessage};
 use itertools::Itertools;
 use std::{
     ops::ControlFlow,
-    sync::{mpsc, Mutex},
+    sync::{Mutex, mpsc},
 };
 use url::Url;
 

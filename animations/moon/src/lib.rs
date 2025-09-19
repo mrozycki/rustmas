@@ -1,8 +1,8 @@
 use std::f64::consts::TAU;
 
 use animation_api::Animation;
-use animation_utils::decorators::{BrightnessControlled, OffSwitch};
 use animation_utils::Schema;
+use animation_utils::decorators::{BrightnessControlled, OffSwitch};
 use lightfx::Color;
 use nalgebra::Vector3;
 use noise::{Fbm, NoiseFn, Perlin};

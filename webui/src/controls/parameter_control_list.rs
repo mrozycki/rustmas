@@ -5,7 +5,7 @@ use log::error;
 use rustmas_webapi_client::{Configuration, ParameterValue, RustmasApiClient};
 use wasm_bindgen::JsCast;
 use web_sys::{FormData, HtmlFormElement, HtmlInputElement};
-use yew::{html, Callback, Html, InputEvent, Properties, SubmitEvent};
+use yew::{Callback, Html, InputEvent, Properties, SubmitEvent, html};
 
 use crate::{
     controls::{debouncer::Debouncer, parameter_control::ParameterControl},

@@ -1,5 +1,5 @@
 use std::{
-    fs::{read_dir, File},
+    fs::{File, read_dir},
     io::{BufReader, Read},
     path::PathBuf,
     process::{Command, ExitStatus},

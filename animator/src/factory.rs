@@ -11,10 +11,10 @@ use itertools::Itertools;
 use log::{info, warn};
 
 use crate::{
+    ControllerConfig,
     jsonrpc::JsonRpcPlugin,
     plugin::{AnimationPluginError, Plugin},
     wasm::WasmPlugin,
-    ControllerConfig,
 };
 
 #[derive(Debug, thiserror::Error)]
@@ -94,7 +94,10 @@ impl AnimationFactory {
         .partition::<HashMap<_, _>, _>(|(_id, plugin)| plugin.is_executable());
 
         if !invalid_plugins.is_empty() {
-            warn!("Discovered {} plugins which are not executable. Please make sure the animations were built and have correct permissions.", invalid_plugins.len());
+            warn!(
+                "Discovered {} plugins which are not executable. Please make sure the animations were built and have correct permissions.",
+                invalid_plugins.len()
+            );
         }
 
         let crab_plugins = self

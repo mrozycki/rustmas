@@ -4,7 +4,7 @@ use animation_api::schema::ParameterSchema;
 use log::error;
 use rustmas_webapi_client::{Configuration, ParameterValue, RustmasApiClient};
 use web_sys::{Event, FormData, InputEvent};
-use yew::{html, prelude::Html, Callback};
+use yew::{Callback, html, prelude::Html};
 
 use crate::controls::ParameterControl;
 use crate::utils;

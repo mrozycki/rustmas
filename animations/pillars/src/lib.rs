@@ -2,11 +2,11 @@ use std::f64::consts::PI;
 
 use animation_api::Animation;
 use animation_utils::{
-    decorators::{BrightnessControlled, SpeedControlled},
     EnumSchema, Schema,
+    decorators::{BrightnessControlled, SpeedControlled},
 };
 use lightfx::{Color, ColorWithAlpha};
-use rand::{thread_rng, Rng};
+use rand::Rng;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug)]
@@ -36,11 +36,11 @@ impl Pillar {
     }
 
     fn new_random(parameters: &Parameters) -> Self {
-        let left_to_right = thread_rng().gen_bool(0.5);
-        let width = thread_rng().gen_range(0.5..1.0) * parameters.max_width;
+        let left_to_right = rand::rng().random_bool(0.5);
+        let width = rand::rng().random_range(0.5..1.0) * parameters.max_width;
         let max_angle = parameters.max_angle / 180.0 * PI;
-        let gradient = thread_rng().gen_range(-max_angle..max_angle).tan();
-        let alpha = thread_rng().gen_range(0.5..1.0) * parameters.max_alpha;
+        let gradient = rand::rng().random_range(-max_angle..max_angle).tan();
+        let alpha = rand::rng().random_range(0.5..1.0) * parameters.max_alpha;
         let color = match parameters.color_scheme {
             ColorScheme::Selected => parameters.color.with_alpha(alpha),
             ColorScheme::Random => animation_utils::random_hue(1.0, 1.0).with_alpha(alpha),
@@ -51,7 +51,7 @@ impl Pillar {
             } else {
                 parameters.right_boundary + gradient.abs()
             },
-            speed: thread_rng().gen_range(0.25..1.0)
+            speed: rand::rng().random_range(0.25..1.0)
                 * parameters.max_speed
                 * if left_to_right { 1.0 } else { -1.0 },
             width,
@@ -182,8 +182,8 @@ impl Animation for Pillars {
         if self.fractional_gen <= 0.0 {
             return;
         }
-        let n = thread_rng()
-            .gen_range(0.0..2.0 * self.fractional_gen)
+        let n = rand::rng()
+            .random_range(0.0..2.0 * self.fractional_gen)
             .floor();
         if n == 0.0 {
             return;
