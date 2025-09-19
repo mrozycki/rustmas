@@ -34,7 +34,7 @@ jobs:
             target/
           key: ${{ runner.os }}-${{ hashFiles('**/Cargo.lock') }}-rust-${{ steps.toolchain.outputs.cachekey }}
       - name: Clippy
-        run: cargo clippy
+        run: cargo clippy --features opencv410
       - name: Clippy WebUI with visualizer enabled
         run: cargo clippy -p rustmas-webui --features visualizer
       - name: Test
