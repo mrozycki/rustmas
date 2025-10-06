@@ -14,7 +14,7 @@ lights = []
 # URL of the pico-w-neopixel-server endpoint over HTTP
 remote = "http://192.168.0.2"
 # In case your lights expect a different byte order for color triplets,
-# you can overwrite the default RGB ordering.
+# you can overwrite the default RGB ordering. Supported values are RGB (default), GRB and BGR.
 byte_order = "GRB"
 
 [[controller.lights]]
