@@ -25,7 +25,7 @@ impl UdpLightClient {
 
     async fn connect(&self) -> Result<UdpSocket, LightClientError> {
         debug!("Connecting to remote lights via UDP");
-        let connect = UdpSocket::bind("0.0.0.0").and_then(|s| async {
+        let connect = UdpSocket::bind("0.0.0.0:1234").and_then(|s| async {
             s.connect(&self.url).await?;
             // hopefully this gets us some priority, see:
             // https://linuxreviews.org/Type_of_Service_(ToS)_and_DSCP_Values

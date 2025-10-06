@@ -9,6 +9,7 @@ pub enum ByteOrder {
     #[default]
     Rgb,
     Grb,
+    Bgr,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

@@ -42,6 +42,7 @@ where
         let to_bytes = match self.byte_order {
             ByteOrder::Rgb => |c: Color| -> [u8; 3] { [c.r, c.g, c.b] },
             ByteOrder::Grb => |c: Color| -> [u8; 3] { [c.g, c.r, c.b] },
+            ByteOrder::Bgr => |c: Color| -> [u8; 3] { [c.b, c.g, c.r] },
         };
         let pixels = frame
             .pixels_iter()
