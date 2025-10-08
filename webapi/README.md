@@ -64,12 +64,12 @@ cp db.sqlite.example db.sqlite
 
 ### Configuration file
 
-In order to run WebAPI locally, you need to create a Rustmas.toml file.
-You can find an example with options explained in the [Rustmas.example.toml](../Rustmas.example.toml)
+In order to run WebAPI locally, you need to create a Rustmas.yaml file.
+You can find an example with options explained in the [Rustmas.example.yaml](../Rustmas.example.yaml)
 file. Simply make a copy of it and adjust it however you need.
 
 ```
-cp Rustmas.example.toml Rustmas.toml
+cp Rustmas.example.yaml Rustmas.yaml
 ```
 
 ### Building animations

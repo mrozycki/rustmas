@@ -1,0 +1,31 @@
+# path to an sqlite database, for parameter storage
+database_path: db.sqlite
+
+controller:
+  # path to CSV file with light positions
+  points_path: lights.csv
+
+  # path to the [animation plugins directory](../animations/README.md)
+  plugin_path: target/animations/
+
+  # you can specify multiple light endpoints
+  # if you don't want to use actual lights and just want to use the visualizer, define empty lights
+  # lights: []
+  lights:
+    # URL of the pico-w-neopixel-server endpoint over HTTP
+    - remote: http://192.168.0.2
+      # In case your lights expect a different byte order for color triplets,
+      # you can overwrite the default RGB ordering. Supported values are RGB (default), GRB and BGR.
+      byte_order: GRB
+
+    # URL of the pico-w-neopixel-server endpoint over TCP
+    - remote: tcp://192.168.0.3
+
+    # URL of the pico-w-neopixel-server endpoint over UDP
+    - remote: udp://192.168.0.4
+
+    # to autodetect lights connected via USB
+    - tty: detect
+
+    # to specify lights connected via USB
+    - tty: /dev/usb.tty0
