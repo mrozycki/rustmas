@@ -15,7 +15,7 @@ cd animations
 
 This will build, package and gather all the starting plugins under `target/animations/`
 in the root of the Rustmas repository. You can then point your Web API to
-that directory by setting `plugin_path` in `Rustmas.toml` to `target/animations/`.
+that directory by setting `plugin_path` in `Rustmas.yaml` to `target/animations/`.
 
 
 Docker
@@ -38,7 +38,7 @@ cargo install --path animation-wrapper
 ```
 
 Running this utility will produce a `.crab` file, which then needs to be copied
-to the `plugin_path` directory specified in `Rustmas.toml`.
+to the `plugin_path` directory specified in `Rustmas.yaml`.
 
 **Note:** adding a new animation will require you to refresh animation list by going
 into *Settings* -> *Animations* in WebUI. Modifying an existing animation will 

@@ -7,6 +7,7 @@
 
 .env
 Rustmas.toml
+Rustmas.yaml
 
 webui/dist
 

@@ -12,11 +12,11 @@ the project. You can use the provided example file [`lights.csv.example`](../lig
     ```
 
 2. Rustmas configuration file. You can copy the provided 
-[`Rustmas.example.toml`](../Rustmas.example.toml) file to `Rustmas.toml` in 
+[`Rustmas.example.yaml`](../Rustmas.example.yaml) file to `Rustmas.yaml` in 
 the root directory and tweak the example settings.
 
     ```
-    cp Rustmas.example.toml Rustmas.toml
+    cp Rustmas.example.yaml Rustmas.yaml
     ```
 
 3. An empty sqlite database file. The Web API runs appropriate migrations 

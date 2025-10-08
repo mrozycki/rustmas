@@ -72,12 +72,16 @@ a Raspberry PI, you will likely only need to modify the WorkingDirectory and Exe
 point to the right place (the example file assumes the repository is located at `/home/pi/rustmas`)
 and lights URL.
 
-Create a `Rustmas.toml` file in the working directory specified in the service configuration file.
-You can copy the [`Rustmas.example.toml`](../Rustmas.example.toml) file and adjust it as needed.
+Create a `Rustmas.yaml` file in the working directory specified in the service configuration file.
+You can copy the [`Rustmas.example.yaml`](../Rustmas.example.yaml) file and adjust it as needed.
 
 ```
-cp Rustmas.example.toml Rustmas.toml
+cp Rustmas.example.yaml Rustmas.yaml
 ```
+
+> [!NOTE]
+> In previous versions of Rustmas we suggested providing the configuration in a TOML file,
+rather than a YAML file. These should still work, but the use-case is no longer actively supported.
 
 Before running the service, you will need to build the WebAPI:
 
