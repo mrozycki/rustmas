@@ -77,11 +77,15 @@ impl StreamHandler<lightfx::Frame> for FrameBroadcaster {
 
 pub struct FrameBroadcasterSession {
     server: Addr<FrameBroadcaster>,
+    ready: bool,
 }
 
 impl FrameBroadcasterSession {
     pub fn new(server: Addr<FrameBroadcaster>) -> Self {
-        Self { server }
+        Self {
+            server,
+            ready: false,
+        }
     }
 }
 
@@ -92,9 +96,11 @@ impl Actor for FrameBroadcasterSession {
         self.server.do_send(Connect {
             addr: ctx.address().recipient(),
         });
+        self.ready = true;
     }
 
     fn stopped(&mut self, ctx: &mut Self::Context) {
+        self.ready = false;
         self.server.do_send(Disconnect {
             addr: ctx.address().recipient(),
         })
@@ -105,15 +111,28 @@ impl Handler<Frame> for FrameBroadcasterSession {
     type Result = ();
 
     fn handle(&mut self, msg: Frame, ctx: &mut Self::Context) -> Self::Result {
+        if !self.ready {
+            return;
+        }
+
         let bytes: Vec<_> = msg
             .frame
             .pixels_iter()
             .flat_map(|c| [c.r, c.g, c.b])
             .collect();
         ctx.binary(bytes);
+        self.ready = false;
     }
 }
 
 impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for FrameBroadcasterSession {
-    fn handle(&mut self, _item: Result<ws::Message, ws::ProtocolError>, _ctx: &mut Self::Context) {}
+    fn handle(&mut self, item: Result<ws::Message, ws::ProtocolError>, _ctx: &mut Self::Context) {
+        let Ok(ws::Message::Binary(bytes)) = item else {
+            return;
+        };
+
+        if bytes[..] == [1] {
+            self.ready = true;
+        }
+    }
 }
