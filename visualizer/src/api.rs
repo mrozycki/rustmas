@@ -1,10 +1,8 @@
 use bevy::prelude::*;
+use bevy_tasks::AsyncComputeTaskPool;
 use ewebsock::{WsEvent, WsMessage};
 use itertools::Itertools;
-use std::{
-    ops::ControlFlow,
-    sync::{Mutex, mpsc},
-};
+use std::{ops::ControlFlow, sync::Mutex};
 use url::Url;
 
 use crate::Led;
@@ -21,33 +19,50 @@ impl WebsocketPlugin {
 
 impl Plugin for WebsocketPlugin {
     fn build(&self, app: &mut App) {
-        let (sender, receiver) = mpsc::channel();
-        ewebsock::ws_receive(
+        let (inner_sender, ws_receiver) = async_channel::unbounded();
+        let (ws_sender, inner_receiver) = async_channel::unbounded();
+
+        let mut ews_sender = ewebsock::ws_connect(
             self.endpoint.to_string(),
-            Box::new(move |event| match sender.send(event) {
+            Box::new(move |event| match inner_sender.force_send(event) {
                 Ok(_) => ControlFlow::Continue(()),
                 Err(_) => ControlFlow::Break(()),
             }),
         )
         .unwrap();
-        app.insert_resource(Receiver(Mutex::new(receiver)))
+
+        AsyncComputeTaskPool::get().spawn(async move {
+            loop {
+                let event = inner_receiver.recv().await;
+                ews_sender.send(event.unwrap());
+            }
+        });
+
+        app.insert_resource(WsConnection(Mutex::new((ws_sender, ws_receiver))))
             .add_systems(Update, listen_for_frame);
     }
 }
 
-struct Receiver(Mutex<mpsc::Receiver<WsEvent>>);
-impl Resource for Receiver {}
+struct WsConnection(
+    Mutex<(
+        async_channel::Sender<WsMessage>,
+        async_channel::Receiver<WsEvent>,
+    )>,
+);
+impl Resource for WsConnection {}
 
 fn listen_for_frame(
-    recv: Res<Receiver>,
+    recv: Res<WsConnection>,
     query: Query<(&Handle<StandardMaterial>, &Led)>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
-    let mut last_frame = None;
+    let (sender, receiver) = &mut *recv.0.lock().unwrap();
 
-    while let Ok(event) = recv.0.lock().unwrap().try_recv() {
+    let mut last_frame = None;
+    while let Ok(event) = receiver.try_recv() {
         if let WsEvent::Message(WsMessage::Binary(bytes)) = event {
             last_frame = Some(bytes);
+            break;
         }
     }
 
@@ -61,6 +76,7 @@ fn listen_for_frame(
                 materials.get_mut(material).unwrap().emissive = color.into();
             };
         }
+        let _ = sender.force_send(WsMessage::Binary(vec![1]));
     }
 }
 
