@@ -10,7 +10,10 @@ The interface for controlling lights is provided by [pico-w-neopixel-server](htt
 which is meant to be installed on a RaspberryPi Pico W. You can use local visualizer
 for testing purposes.
 
-## Demo (YouTube)
+## Web UI preview
+![Web UI Preview](./WebUI.png)
+
+## Demo (YouTube) - old version lacking newer features
 [![Demo](https://img.youtube.com/vi/UKONMvyDPdw/sddefault.jpg)](https://www.youtube.com/watch?v=UKONMvyDPdw)
 
 Local development setup
