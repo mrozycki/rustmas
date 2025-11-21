@@ -108,8 +108,17 @@ impl AnimationFactory {
             })?
             .filter_map(|d| d.ok())
             .filter(|d| d.file_name().to_str().is_some_and(|d| d.ends_with(".crab")))
-            .filter_map(|d| unwrap::unwrap_plugin(&d.path()).ok())
-            .map(|p| (p.animation_id.clone(), p));
+            .filter_map(|d| Some(d.path().to_owned()).zip(unwrap::unwrap_plugin(d.path()).ok()))
+            .map(|(path, manifest)| {
+                (
+                    manifest.id.clone(),
+                    PluginConfig {
+                        animation_id: manifest.id.clone(),
+                        manifest,
+                        path,
+                    },
+                )
+            });
 
         valid_plugins.extend(crab_plugins);
 
@@ -125,9 +134,14 @@ impl AnimationFactory {
             .and_then(|f| f.to_str())
             .is_some_and(|f| f.ends_with(".crab"))
         {
-            unwrap::unwrap_plugin(&path).map_err(|e| {
+            let manifest = unwrap::unwrap_plugin(path).map_err(|e| {
                 AnimationFactoryError::InvalidPlugin(PluginConfigError::InvalidCrab(e))
-            })?
+            })?;
+            PluginConfig {
+                animation_id: manifest.id.clone(),
+                manifest,
+                path: path.to_owned(),
+            }
         } else {
             PluginConfig::new(path).map_err(AnimationFactoryError::InvalidPlugin)?
         };
@@ -140,6 +154,20 @@ impl AnimationFactory {
                 WasmPlugin::new(config, self.points.clone()).await?,
             )),
         }
+    }
+
+    pub async fn install(&self, path: &Path) -> Result<PluginConfig, AnimationFactoryError> {
+        let manifest = unwrap::unwrap_plugin(path)
+            .map_err(|e| AnimationFactoryError::InvalidPlugin(PluginConfigError::InvalidCrab(e)))?;
+
+        let new_path = self.plugin_dir.join(format!("{}.crab", manifest.id));
+        tokio::fs::rename(path, &new_path).await?;
+
+        Ok(PluginConfig {
+            animation_id: manifest.id.clone(),
+            manifest,
+            path: new_path,
+        })
     }
 
     pub fn points(&self) -> &[(f64, f64, f64)] {

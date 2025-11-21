@@ -7,7 +7,7 @@ edition = "2024"
 lightfx = { path = "../lightfx" }
 animation-api = { path = "../animation-api" }
 rustmas-visualizer = { path = "../visualizer", optional = true }
-rustmas-webapi-client = { path = "../webapi-client" }
+rustmas-webapi-client = { path = "../webapi-client", features = ["js"] }
 
 gloo-utils = "0.1"
 instant = { version = "0.1.12", features = ["wasm-bindgen"] }

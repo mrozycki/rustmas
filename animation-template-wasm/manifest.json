@@ -1,4 +1,13 @@
 {
+    "id": "io.rustmas.template.wasm",
     "display_name": "Animation Template (Wasm)",
-    "plugin_type": "wasm"
+    "plugin_type": "wasm",
+    "author": "Mariusz Różycki <mar.rozycki@gmail.com>",
+    "api_version": "0.9",
+    "version": "1.0",
+    "tags": [
+        "2d",
+        "3d",
+        "audio"
+    ]
 }

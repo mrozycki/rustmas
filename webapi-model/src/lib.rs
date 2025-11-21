@@ -35,6 +35,11 @@ pub struct SwitchAnimationRequest {
 }
 
 #[derive(Serialize, Deserialize)]
+pub struct RemoveAnimationRequest {
+    pub animation_id: String,
+}
+
+#[derive(Serialize, Deserialize)]
 pub struct SwitchAnimationResponse {
     pub animation: Configuration,
 }

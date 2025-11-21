@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::path::Path;
 
 use log::warn;
 use rustmas_animator::{AnimationFactory, AnimationFactoryError};
@@ -103,7 +104,7 @@ impl Logic {
 
     pub async fn discover(
         &self,
-        controller: &mut rustmas_animator::Controller,
+        controller: &rustmas_animator::Controller,
     ) -> Result<ListAnimationsResponse, LogicError> {
         let animations = self
             .animation_factory
@@ -118,6 +119,37 @@ impl Logic {
                 )
             });
         }
+
+        self.list(controller).await
+    }
+
+    pub async fn install(
+        &self,
+        controller: &rustmas_animator::Controller,
+        path: &Path,
+    ) -> Result<ListAnimationsResponse, LogicError> {
+        let plugin_config = self.animation_factory.install(path).await?;
+        self.storage
+            .install(&plugin_config)
+            .await
+            .map_err(|e| LogicError::InternalError(e.to_string()))?;
+        self.list(controller).await
+    }
+
+    pub async fn remove(
+        &self,
+        controller: &rustmas_animator::Controller,
+        animation_id: &str,
+    ) -> Result<ListAnimationsResponse, LogicError> {
+        let path = self
+            .storage
+            .delete(animation_id)
+            .await
+            .map_err(|e| LogicError::InternalError(e.to_string()))?;
+
+        tokio::fs::remove_file(path)
+            .await
+            .map_err(|e| LogicError::InternalError(e.to_string()))?;
 
         self.list(controller).await
     }
