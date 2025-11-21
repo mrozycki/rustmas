@@ -4,7 +4,7 @@ use std::sync::Arc;
 
 use animation_api::event::Event;
 use animation_api::schema::{Configuration, ConfigurationSchema, ParameterValue};
-use animation_wrapper::config::PluginConfig;
+use animation_wasm_bindings::host::{AnimationPlugin, AnimationPluginError};
 use chrono::{DateTime, Duration, Utc};
 use client::combined::CombinedLightClient;
 #[cfg(feature = "audio")]
@@ -23,7 +23,6 @@ use tokio::task::JoinHandle;
 
 use crate::ControllerConfig;
 use crate::factory::AnimationFactoryError;
-use crate::plugin::{AnimationPluginError, Plugin};
 
 #[derive(Debug, thiserror::Error)]
 pub enum ControllerError {
@@ -41,7 +40,7 @@ pub enum ControllerError {
 }
 
 struct ControllerState {
-    animation: Option<Box<dyn Plugin>>,
+    animation: Option<AnimationPlugin>,
     last_frame: DateTime<Utc>,
     next_frame: DateTime<Utc>,
     fps: f64,
@@ -51,7 +50,7 @@ struct ControllerState {
 impl ControllerState {
     async fn set_animation(
         &mut self,
-        animation: Option<Box<dyn Plugin>>,
+        animation: Option<AnimationPlugin>,
     ) -> Result<(), ControllerError> {
         let now = Utc::now();
         self.fps = if let Some(animation) = &animation {
@@ -106,13 +105,13 @@ impl Controller {
         }
     }
 
-    pub async fn current_animation(&self) -> Option<PluginConfig> {
+    pub async fn current_animation_id(&self) -> Option<String> {
         self.state
             .lock()
             .await
             .animation
             .as_ref()
-            .map(|animation| animation.plugin_config().clone())
+            .map(|animation| animation.manifest().id.clone())
     }
 
     #[allow(unused_variables)]
@@ -290,7 +289,7 @@ impl Controller {
 
     pub async fn switch_animation(
         &self,
-        animation: Box<dyn Plugin>,
+        animation: AnimationPlugin,
     ) -> Result<Configuration, ControllerError> {
         let configuration = animation.configuration().await?;
         let mut state = self.state.lock().await;

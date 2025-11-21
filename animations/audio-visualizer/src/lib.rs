@@ -100,7 +100,7 @@ impl Animation for AudioVisualizer {
                     Color::black()
                 }
             })
-            .into()
+            .collect()
     }
 
     fn set_parameters(&mut self, parameters: Self::Parameters) {

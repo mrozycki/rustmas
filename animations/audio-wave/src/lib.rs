@@ -103,7 +103,7 @@ impl Animation for AudioWave {
                     Color::black()
                 }
             })
-            .into()
+            .collect()
     }
 
     fn on_event(&mut self, _event: animation_api::event::Event) {

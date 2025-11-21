@@ -61,7 +61,7 @@ where
             .render()
             .pixels_iter()
             .map(|x| x.dim(self.parameters.brightness_factor))
-            .into()
+            .collect()
     }
 
     fn set_parameters(&mut self, parameters: Self::Parameters) {

@@ -35,13 +35,10 @@ impl Frame {
     }
 }
 
-impl<T> From<T> for Frame
-where
-    T: Iterator<Item = Color>,
-{
-    fn from(iter: T) -> Self {
+impl FromIterator<Color> for Frame {
+    fn from_iter<I: IntoIterator<Item = Color>>(iter: I) -> Self {
         Self {
-            pixels: iter.collect(),
+            pixels: iter.into_iter().collect(),
         }
     }
 }

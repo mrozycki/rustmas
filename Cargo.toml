@@ -2,8 +2,7 @@
 members = [
     "animation-api",
     "animation-macros",
-    "animation-template-native",
-    "animation-template-wasm",
+    "animation-template",
     "animation-utils",
     "animation-wasm-bindings",
     "animation-wrapper",

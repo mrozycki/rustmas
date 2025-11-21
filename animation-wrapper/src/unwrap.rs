@@ -4,9 +4,8 @@ use std::{
     path::Path,
 };
 
+use animation_api::plugin_config::PluginManifest;
 use tar::Archive;
-
-use crate::config::PluginManifest;
 
 #[derive(Debug, thiserror::Error)]
 pub enum PluginUnwrapError {
@@ -47,9 +46,9 @@ pub fn unwrap_plugin<P: AsRef<Path>>(path: P) -> Result<PluginManifest, PluginUn
     manifest_from_crab(path.as_ref())
 }
 
-pub fn reader_from_crab<P: AsRef<Path>>(path: &P) -> Result<impl Read, PluginUnwrapError> {
+pub fn reader_from_crab<P: AsRef<Path>>(path: P) -> Result<impl Read, PluginUnwrapError> {
     let (start, size) = {
-        let reader = BufReader::new(File::open(path)?);
+        let reader = BufReader::new(File::open(path.as_ref())?);
         let mut archive = Archive::new(reader);
         let mut entries = archive.entries_with_seek()?;
 
@@ -65,7 +64,7 @@ pub fn reader_from_crab<P: AsRef<Path>>(path: &P) -> Result<impl Read, PluginUnw
         (wasm_entry.raw_file_position(), wasm_entry.size())
     };
 
-    let mut reader = BufReader::new(File::open(path)?);
+    let mut reader = BufReader::new(File::open(path.as_ref())?);
     reader.seek(std::io::SeekFrom::Start(start))?;
 
     Ok(LimitedReader::new(reader, size as usize))

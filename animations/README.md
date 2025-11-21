@@ -29,7 +29,7 @@ you need to do.
 Your own animations
 -------------------
 
-The recommended way to create your own animations is to make a copy of the `animation-template-wasm`
+The recommended way to create your own animations is to make a copy of the `animation-template`
 crate in the root of this project, make appropriate changes to the code and the manifest file,
 and then package it using the provided `crabwrap` utility, which you can install with:
 
@@ -37,10 +37,5 @@ and then package it using the provided `crabwrap` utility, which you can install
 cargo install --path animation-wrapper
 ```
 
-Running this utility will produce a `.crab` file, which then needs to be copied
-to the `plugin_path` directory specified in `Rustmas.yaml`.
-
-**Note:** adding a new animation will require you to refresh animation list by going
-into *Settings* -> *Animations* in WebUI. Modifying an existing animation will 
-require reloading it by either clicking *Reload* in WebUI, or switching 
-to a different animation and back.
+Running this utility will produce a `.crab` file, which can then be installed through the WebUI
+by going to Settings, Animations and uploading the file through the form at the top of the list.

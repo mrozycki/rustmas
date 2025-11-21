@@ -166,7 +166,7 @@ impl Animation for Lightspeed {
                     .apply_alpha()
                     .dim((x.powi(2) + y.powi(2)).sqrt() / self.parameters.dim_distance)
             })
-            .into()
+            .collect()
     }
 
     fn get_parameters(&self) -> Self::Parameters {

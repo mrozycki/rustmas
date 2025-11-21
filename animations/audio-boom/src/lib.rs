@@ -116,7 +116,7 @@ impl Animation for AudioBoom {
             })
             .sorted_by(|(i0, _), (i1, _)| i0.cmp(i1))
             .map(|(_, c)| c)
-            .into()
+            .collect()
     }
 
     fn set_parameters(&mut self, parameters: Self::Parameters) {

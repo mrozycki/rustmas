@@ -53,7 +53,7 @@ impl Animation for RainbowCylinder {
                     1.0,
                 )
             })
-            .into()
+            .collect()
     }
 
     fn get_parameters(&self) -> Self::Parameters {

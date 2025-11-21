@@ -225,7 +225,7 @@ impl Animation for ParticleFire {
                         .apply_alpha()
                 }
             })
-            .into()
+            .collect()
     }
 
     fn get_parameters(&self) -> Self::Parameters {

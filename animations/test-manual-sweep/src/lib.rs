@@ -124,7 +124,7 @@ impl Animation for ManualSweep {
                     lightfx::Color::black()
                 }
             })
-            .into()
+            .collect()
     }
 
     fn get_fps(&self) -> f64 {

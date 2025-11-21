@@ -1,10 +1,9 @@
-Animation template (Native)
-===========================
+Animation template
+==================
 
-This is an animation template for a native animation plugin. It will compile
-to native machine code, which will have to be recompiled for any new target
-architecture you want to run it on. While this is an older, and probably more
-stable, solution, for new animations we recommend using the Wasm plugin template.
+This is an animation template for a Wasm animation plugin. It will produce
+a cross-platform plugin, which can be compiled once and then used on any
+deployment of Rustmas WebAPI, regardless of the target machine architecture.
 
 Make a clone of this crate to create your own animation. Everything you
 need is provided for you. For a simple animation, you will need to
@@ -19,3 +18,9 @@ appropriate decorators.
 You can also handle events by providing your implementation of the `on_event`
 method.
 
+In order to build this plugin, you will have to install a `wasm32-wasip2`
+Rust target. This requires Rust version 1.82 or newer.
+
+```
+rustup target add wasm32-wasip2
+```

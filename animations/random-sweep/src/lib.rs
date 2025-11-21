@@ -120,7 +120,7 @@ impl Animation for RandomSweep {
                     lightfx::Color::black()
                 }
             })
-            .into()
+            .collect()
     }
 
     fn set_parameters(&mut self, parameters: Self::Parameters) {

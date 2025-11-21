@@ -66,7 +66,7 @@ impl Animation for RainbowWaterfall {
                     .blend(&self.parameters.color_b.with_alpha(1.0))
                     .apply_alpha()
             })
-            .into()
+            .collect()
     }
 
     fn set_parameters(&mut self, parameters: Self::Parameters) {

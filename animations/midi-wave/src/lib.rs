@@ -102,7 +102,7 @@ impl Animation for MidiWave {
             })
             .sorted_by(|(i0, _), (i1, _)| i0.cmp(i1))
             .map(|(_, c)| c)
-            .into()
+            .collect()
     }
 
     fn get_parameters(&self) -> Self::Parameters {

@@ -95,7 +95,7 @@ impl Animation for CircleWave {
                         .dim((((self.time - d) * TAU / self.parameters.radius).sin() + 1.0) / 2.0)
                 }
             })
-            .into()
+            .collect()
     }
 
     fn set_parameters(&mut self, parameters: Self::Parameters) {

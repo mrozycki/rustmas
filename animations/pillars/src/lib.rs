@@ -213,7 +213,7 @@ impl Animation for Pillars {
                     )
                     .apply_alpha()
             })
-            .into()
+            .collect()
     }
 
     fn get_parameters(&self) -> Self::Parameters {

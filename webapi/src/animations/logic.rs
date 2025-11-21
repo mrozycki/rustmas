@@ -51,9 +51,8 @@ impl Logic {
         parameters: &parameters::Logic,
     ) -> Result<Configuration, LogicError> {
         let animation_id = controller
-            .current_animation()
+            .current_animation_id()
             .await
-            .map(|a| a.animation_id)
             .ok_or(LogicError::NoAnimationSelected)?;
 
         self.switch(&animation_id, None, controller, parameters)
@@ -170,7 +169,7 @@ impl Logic {
                     name: db_plugin.manifest.display_name,
                 })
                 .collect(),
-            current_animation_id: controller.current_animation().await.map(|a| a.animation_id),
+            current_animation_id: controller.current_animation_id().await,
         })
     }
 }
