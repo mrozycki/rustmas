@@ -159,7 +159,7 @@ impl Animation for DoomFireAnimation {
             .iter()
             .map(|v| rotation * v)
             .map(|v| self.fire.sample(v.x, v.y))
-            .into()
+            .collect()
     }
 
     fn get_parameters(&self) -> Self::Parameters {

@@ -1,7 +1,6 @@
 {
-    "id": "io.rustmas.template.native",
-    "display_name": "Animation Template (Native)",
-    "plugin_type": "native",
+    "id": "io.rustmas.template",
+    "display_name": "Animation Template",
     "author": "Mariusz Różycki <mar.rozycki@gmail.com>",
     "api_version": "0.9",
     "version": "1.0",

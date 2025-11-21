@@ -1,12 +1,8 @@
-use std::{
-    collections::HashMap,
-    fs::File,
-    io::{BufReader, Read},
-    path::Path,
-};
+use std::{collections::HashMap, io::Read, path::Path};
 
-use animation_api::{event::Event, schema};
-use exports::guest::animation::plugin::{Color, Position};
+use animation_api::{event::Event, plugin_config::PluginManifest, schema};
+use animation_wrapper::unwrap::{self, PluginUnwrapError};
+use exports::guest::animation::plugin::Position;
 use itertools::Itertools;
 use tokio::sync::Mutex;
 use wasmtime::{
@@ -40,28 +36,30 @@ impl IoView for State {
 }
 
 #[derive(Debug, thiserror::Error)]
-pub enum HostedPluginError {
+pub enum AnimationPluginError {
     #[error("wasmtime returned error: {0}")]
     WasmtimeError(#[from] wasmtime::Error),
 
     #[error("cannot open plugin: {0}")]
     PluginOpenError(#[from] std::io::Error),
-}
-type Result<T> = std::result::Result<T, HostedPluginError>;
 
-pub struct HostedPlugin {
+    #[error("bundle error: {0}")]
+    BundleError(#[from] PluginUnwrapError),
+}
+type Result<T> = std::result::Result<T, AnimationPluginError>;
+
+pub struct AnimationPlugin {
     store: Mutex<Store<State>>,
     bindings: Animation,
     handle: ResourceAny,
+    manifest: PluginManifest,
 }
 
-impl HostedPlugin {
+impl AnimationPlugin {
     pub async fn new(executable_path: &Path, points: Vec<(f64, f64, f64)>) -> Result<Self> {
-        let reader = BufReader::new(File::open(executable_path)?);
-        Self::from_reader(reader, points).await
-    }
+        let manifest = unwrap::unwrap_plugin(executable_path)?;
 
-    pub async fn from_reader<R: Read>(mut reader: R, points: Vec<(f64, f64, f64)>) -> Result<Self> {
+        let mut reader = unwrap::reader_from_crab(executable_path)?;
         let mut data = Vec::new();
         reader.read_to_end(&mut data)?;
 
@@ -99,6 +97,20 @@ impl HostedPlugin {
             store: Mutex::new(store),
             bindings,
             handle,
+            manifest,
+        })
+    }
+
+    pub fn manifest(&self) -> &PluginManifest {
+        &self.manifest
+    }
+
+    pub async fn configuration(&self) -> Result<schema::Configuration> {
+        Ok(schema::Configuration {
+            id: self.manifest.id.to_owned(),
+            name: self.manifest.display_name.to_owned(),
+            schema: self.get_schema().await?,
+            values: self.get_parameters().await?,
         })
     }
 
@@ -112,7 +124,7 @@ impl HostedPlugin {
             .map_err(Into::into)
     }
 
-    pub async fn render(&self) -> Result<Vec<Color>> {
+    pub async fn render(&self) -> Result<lightfx::Frame> {
         let mut store = self.store.lock().await;
         self.bindings
             .guest_animation_plugin()
@@ -120,6 +132,12 @@ impl HostedPlugin {
             .call_render(store.as_context_mut(), self.handle)
             .await
             .map_err(Into::into)
+            .map(|pixels| {
+                pixels
+                    .into_iter()
+                    .map(|c| lightfx::Color::rgb(c.r, c.g, c.b))
+                    .collect()
+            })
     }
 
     pub async fn get_schema(&self) -> Result<schema::ConfigurationSchema> {

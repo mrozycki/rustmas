@@ -81,7 +81,7 @@ impl Animation for BarberPole {
                     )
                 }
             })
-            .into()
+            .collect()
     }
 
     fn set_parameters(&mut self, parameters: Self::Parameters) {

@@ -8,6 +8,7 @@ rustmas-animator = { path = "../animator", default-features = false }
 lightfx = { path = "../lightfx" }
 webapi-model = { path = "../webapi-model" }
 animation-wrapper = { path = "../animation-wrapper", default-features = false }
+animation-api = { path = "../animation-api" }
 
 actix-web-actors = "4.2.0"
 actix = "0.13.0"

@@ -72,7 +72,7 @@ impl Animation for RainbowHalves {
                         .clamp(0.0, 1.0),
                 )
             })
-            .into()
+            .collect()
     }
 
     fn set_parameters(&mut self, parameters: Self::Parameters) {

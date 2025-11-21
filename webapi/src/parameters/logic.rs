@@ -66,14 +66,13 @@ impl Logic {
             .await
             .map_err(|e| LogicError::InternalError(e.to_string()))?;
 
-        let animation = controller.current_animation().await;
-        let animation_id = animation
-            .as_ref()
-            .map(|a| &a.animation_id)
+        let animation_id = controller
+            .current_animation_id()
+            .await
             .ok_or(LogicError::NoAnimationSelected)?;
 
         self.storage
-            .save(animation_id, &parameter_values)
+            .save(&animation_id, &parameter_values)
             .await
             .map_err(|e| LogicError::InternalError(e.to_string()))
     }
@@ -82,12 +81,12 @@ impl Logic {
         &self,
         controller: &mut rustmas_animator::Controller,
     ) -> Result<Configuration, LogicError> {
-        let animation = controller
-            .current_animation()
+        let animation_id = controller
+            .current_animation_id()
             .await
             .ok_or(LogicError::NoAnimationSelected)?;
 
-        match self.storage.fetch(&animation.animation_id).await {
+        match self.storage.fetch(&animation_id).await {
             Ok(Some(params)) => controller
                 .set_parameters(&params)
                 .await

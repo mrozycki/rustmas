@@ -51,7 +51,7 @@ impl Animation for Indexing {
                 0 => lightfx::Color::black(),
                 _ => lightfx::Color::white(),
             })
-            .into()
+            .collect()
     }
 
     fn get_fps(&self) -> f64 {

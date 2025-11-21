@@ -1,8 +1,6 @@
-use std::collections::HashMap;
-
 use serde::{Deserialize, Serialize, de::DeserializeOwned};
 
-use crate::schema::{ConfigurationSchema, GetEnumOptions, GetSchema, ParameterValue};
+use crate::schema::{ConfigurationSchema, GetEnumOptions, GetSchema};
 
 #[derive(Serialize, Deserialize, Debug, thiserror::Error)]
 #[error("animation error: {message}")]
@@ -49,25 +47,4 @@ pub trait Animation {
     fn on_event(&mut self, _event: crate::event::Event) {}
 
     fn render(&self) -> lightfx::Frame;
-}
-
-#[derive(Serialize, Deserialize)]
-#[serde(tag = "method", content = "params")]
-pub enum JsonRpcMethod {
-    Initialize {
-        points: Vec<(f64, f64, f64)>,
-    },
-    ParameterSchema,
-    SetParameters {
-        params: HashMap<String, ParameterValue>,
-    },
-    GetParameters,
-    GetFps,
-    Update {
-        time_delta: f64,
-    },
-    OnEvent {
-        event: crate::event::Event,
-    },
-    Render,
 }

@@ -1,5 +1,5 @@
 [package]
-name = "animation-template-wasm"
+name = "animation-template"
 version = "0.1.0"
 edition = "2024"
 

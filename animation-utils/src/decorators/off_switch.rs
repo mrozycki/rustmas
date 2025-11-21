@@ -102,7 +102,7 @@ where
             .render()
             .pixels_iter()
             .map(|x| x.dim(self.energy))
-            .into()
+            .collect()
     }
 
     fn set_parameters(&mut self, parameters: Self::Parameters) {

@@ -85,7 +85,7 @@ impl Animation for Present {
                     self.parameters.color_wrap
                 }
             })
-            .into()
+            .collect()
     }
 
     fn set_parameters(&mut self, parameters: Self::Parameters) {

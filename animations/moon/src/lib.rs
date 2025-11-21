@@ -100,7 +100,7 @@ impl Animation for Moon {
                     self.parameters.color.dim(halo_strength * sun_strength)
                 }
             })
-            .into()
+            .collect()
     }
 
     fn set_parameters(&mut self, parameters: Self::Parameters) {

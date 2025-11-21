@@ -106,7 +106,7 @@ impl Animation for Beats {
                     c.dim(self.parameters.base_dim)
                 }
             })
-            .into()
+            .collect()
     }
 
     fn set_parameters(&mut self, parameters: Self::Parameters) {

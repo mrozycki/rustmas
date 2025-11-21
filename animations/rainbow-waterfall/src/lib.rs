@@ -46,7 +46,7 @@ impl Animation for RainbowWaterfall {
         self.points_height
             .iter()
             .map(|h| lightfx::Color::hsv(h * self.parameters.density + self.time, 1.0, 1.0))
-            .into()
+            .collect()
     }
 
     fn set_parameters(&mut self, parameters: Self::Parameters) {

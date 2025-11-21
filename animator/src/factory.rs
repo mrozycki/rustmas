@@ -3,19 +3,13 @@ use std::{
     path::{Path, PathBuf},
 };
 
-use animation_wrapper::{
-    config::{PluginConfig, PluginConfigError, PluginType},
-    unwrap,
-};
+use animation_api::plugin_config::PluginConfig;
+use animation_wasm_bindings::host::{AnimationPlugin, AnimationPluginError};
+use animation_wrapper::{PluginConfigError, unwrap};
 use itertools::Itertools;
-use log::{info, warn};
+use log::info;
 
-use crate::{
-    ControllerConfig,
-    jsonrpc::JsonRpcPlugin,
-    plugin::{AnimationPluginError, Plugin},
-    wasm::WasmPlugin,
-};
+use crate::ControllerConfig;
 
 #[derive(Debug, thiserror::Error)]
 pub enum AnimationFactoryError {
@@ -67,40 +61,7 @@ impl AnimationFactory {
     }
 
     pub fn discover(&self) -> Result<HashMap<String, PluginConfig>, AnimationFactoryError> {
-        let (mut valid_plugins, invalid_plugins) = glob::glob(&format!(
-            "{}/*/manifest.json",
-            self.plugin_dir
-                .to_str()
-                .ok_or(AnimationFactoryError::InternalError {
-                    reason: "Plugins directory path is not valid UTF-8".into()
-                })?
-        ))
-        .map_err(|e| AnimationFactoryError::InternalError {
-            reason: format!("Pattern error: {e}"),
-        })?
-        .map(|path| {
-            path.map_err(|e| AnimationFactoryError::InternalError {
-                reason: format!("Glob error: {e}"),
-            })
-            .and_then(|path| -> Result<_, AnimationFactoryError> {
-                let path = path.parent().unwrap().to_owned();
-                let plugin = PluginConfig::new(path)?;
-                let id = plugin.animation_id.clone();
-                Ok((id, plugin))
-            })
-        })
-        .collect::<Result<Vec<_>, _>>()?
-        .into_iter()
-        .partition::<HashMap<_, _>, _>(|(_id, plugin)| plugin.is_executable());
-
-        if !invalid_plugins.is_empty() {
-            warn!(
-                "Discovered {} plugins which are not executable. Please make sure the animations were built and have correct permissions.",
-                invalid_plugins.len()
-            );
-        }
-
-        let crab_plugins = self
+        let plugins = self
             .plugin_dir
             .read_dir()
             .map_err(|e| AnimationFactoryError::InternalError {
@@ -109,51 +70,17 @@ impl AnimationFactory {
             .filter_map(|d| d.ok())
             .filter(|d| d.file_name().to_str().is_some_and(|d| d.ends_with(".crab")))
             .filter_map(|d| Some(d.path().to_owned()).zip(unwrap::unwrap_plugin(d.path()).ok()))
-            .map(|(path, manifest)| {
-                (
-                    manifest.id.clone(),
-                    PluginConfig {
-                        animation_id: manifest.id.clone(),
-                        manifest,
-                        path,
-                    },
-                )
-            });
+            .map(|(path, manifest)| (manifest.id.clone(), PluginConfig { manifest, path }))
+            .collect();
 
-        valid_plugins.extend(crab_plugins);
-
-        Ok(valid_plugins)
+        Ok(plugins)
     }
 
     pub async fn make_from_path(
         &self,
         path: &Path,
-    ) -> Result<Box<dyn Plugin>, AnimationFactoryError> {
-        let config = if path
-            .file_name()
-            .and_then(|f| f.to_str())
-            .is_some_and(|f| f.ends_with(".crab"))
-        {
-            let manifest = unwrap::unwrap_plugin(path).map_err(|e| {
-                AnimationFactoryError::InvalidPlugin(PluginConfigError::InvalidCrab(e))
-            })?;
-            PluginConfig {
-                animation_id: manifest.id.clone(),
-                manifest,
-                path: path.to_owned(),
-            }
-        } else {
-            PluginConfig::new(path).map_err(AnimationFactoryError::InvalidPlugin)?
-        };
-
-        match config.manifest.plugin_type {
-            PluginType::Native => Ok(Box::new(
-                JsonRpcPlugin::new(config, self.points.clone()).await?,
-            )),
-            PluginType::Wasm => Ok(Box::new(
-                WasmPlugin::new(config, self.points.clone()).await?,
-            )),
-        }
+    ) -> Result<AnimationPlugin, AnimationFactoryError> {
+        Ok(AnimationPlugin::new(path, self.points.clone()).await?)
     }
 
     pub async fn install(&self, path: &Path) -> Result<PluginConfig, AnimationFactoryError> {
@@ -164,7 +91,6 @@ impl AnimationFactory {
         tokio::fs::rename(path, &new_path).await?;
 
         Ok(PluginConfig {
-            animation_id: manifest.id.clone(),
             manifest,
             path: new_path,
         })

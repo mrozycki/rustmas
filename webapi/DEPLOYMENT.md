@@ -47,15 +47,17 @@ Animation plugin setup
 ----------------------
 
 Before starting the service you will need to build animations and add your animations
-to the plugins directory. Instructions can be found in the provided example [plugins directory](../plugins/README.md).
+to the plugins directory. Instructions can be found in the [animations directory](../animations/README.md).
+
 In short, you can build the animations with:
 
 ```
-cargo build --release -p animations
+cargo install --path animation-wrapper
+cd animations
+./build_all.sh
 ```
 
-The plugin directory set up for all the built-in animations is provided 
-in the repository already.
+This script put the animations in the directory where WebAPI will be looking for them.
 
 
 WebAPI service

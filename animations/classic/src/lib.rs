@@ -99,7 +99,7 @@ impl Animation for Classic {
         base.into_iter()
             .zip(mask)
             .map(|(color, level)| color.dim(level))
-            .into()
+            .collect()
     }
 
     fn get_parameters(&self) -> Self::Parameters {

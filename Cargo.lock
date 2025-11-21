@@ -540,18 +540,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "animation-template-native"
-version = "0.1.0"
-dependencies = [
- "animation-api 0.1.0 (git+https://github.com/mrozycki/rustmas?rev=835ad9e)",
- "animation-utils 0.1.0 (git+https://github.com/mrozycki/rustmas?rev=835ad9e)",
- "lightfx 0.1.0 (git+https://github.com/mrozycki/rustmas?rev=835ad9e)",
- "serde",
- "serde_json",
-]
-
-[[package]]
-name = "animation-template-wasm"
+name = "animation-template"
 version = "0.1.0"
 dependencies = [
  "animation-api 0.1.0 (git+https://github.com/mrozycki/rustmas?rev=835ad9e)",
@@ -594,6 +583,7 @@ name = "animation-wasm-bindings"
 version = "0.1.0"
 dependencies = [
  "animation-api 0.1.0",
+ "animation-wrapper",
  "itertools 0.13.0",
  "lightfx 0.1.0",
  "log",
@@ -626,6 +616,7 @@ dependencies = [
 name = "animation-wrapper"
 version = "0.1.0"
 dependencies = [
+ "animation-api 0.1.0",
  "serde",
  "serde_json",
  "tar",
@@ -6978,6 +6969,7 @@ dependencies = [
  "actix-multipart",
  "actix-web",
  "actix-web-actors",
+ "animation-api 0.1.0",
  "animation-wrapper",
  "anyhow",
  "async-stream",

@@ -67,7 +67,7 @@ impl Animation for RainbowSphere {
         self.points_radius
             .iter()
             .map(|r| lightfx::Color::hsv(r / 2.0 * self.parameters.density + self.time, 1.0, 1.0))
-            .into()
+            .collect()
     }
 
     fn set_parameters(&mut self, parameters: Parameters) {

@@ -1,6 +1,6 @@
 use std::{path::PathBuf, str::FromStr};
 
-use animation_wrapper::config::{PluginConfig, PluginManifest};
+use animation_api::plugin_config::{PluginConfig, PluginManifest};
 use anyhow::anyhow;
 use log::warn;
 
@@ -27,7 +27,7 @@ impl Storage {
         let manifest = serde_json::to_string(&config.manifest)?;
         sqlx::query!(
             "INSERT INTO animation_plugins(id, path, manifest) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING",
-            config.animation_id,
+            config.manifest.id,
             path,
             manifest
         )

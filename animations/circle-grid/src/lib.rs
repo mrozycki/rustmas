@@ -121,7 +121,7 @@ impl Animation for CircleGrid {
                     Color::black()
                 }
             })
-            .into()
+            .collect()
     }
 
     fn set_parameters(&mut self, parameters: Self::Parameters) {
