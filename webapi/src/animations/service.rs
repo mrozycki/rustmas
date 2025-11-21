@@ -1,7 +1,8 @@
+use actix_multipart::form::{MultipartForm, tempfile::TempFile};
 use actix_web::{HttpResponse, Scope, get, post, web};
 use log::error;
 use serde_json::json;
-use webapi_model::{SwitchAnimationRequest, SwitchAnimationResponse};
+use webapi_model::{RemoveAnimationRequest, SwitchAnimationRequest, SwitchAnimationResponse};
 
 use crate::{AnimationController, animations, parameters};
 
@@ -77,8 +78,8 @@ async fn discover(
     animations: web::Data<animations::Logic>,
     controller: web::Data<AnimationController>,
 ) -> HttpResponse {
-    let mut controller = controller.lock().await;
-    match animations.discover(&mut controller).await {
+    let controller = controller.lock().await;
+    match animations.discover(&controller).await {
         Ok(animations) => HttpResponse::Ok().json(animations),
         Err(animations::LogicError::InternalError(e)) => {
             HttpResponse::InternalServerError().json(json!({"error": e}))
@@ -108,6 +109,56 @@ async fn list(
     }
 }
 
+#[derive(Debug, MultipartForm)]
+struct AnimationInstallForm {
+    #[multipart(limit = "10MB")]
+    file: TempFile,
+}
+
+#[post("/install/")]
+async fn install(
+    form: MultipartForm<AnimationInstallForm>,
+    animations: web::Data<animations::Logic>,
+    controller: web::Data<AnimationController>,
+) -> HttpResponse {
+    let controller = controller.lock().await;
+    match animations
+        .install(&controller, form.0.file.file.path())
+        .await
+    {
+        Ok(animations) => HttpResponse::Ok().json(animations),
+        Err(animations::LogicError::InvalidAnimation(e)) => {
+            HttpResponse::BadRequest().json(json!({"error": e.to_string()}))
+        }
+        Err(animations::LogicError::InternalError(e)) => {
+            HttpResponse::InternalServerError().json(json!({"error": e}))
+        }
+        Err(e) => {
+            error!("Unexpected logic error in /list/ call: {e}");
+            HttpResponse::InternalServerError().json(json!({"error": "unexpected failure"}))
+        }
+    }
+}
+
+#[post("/remove/")]
+async fn remove(
+    form: web::Json<RemoveAnimationRequest>,
+    animations: web::Data<animations::Logic>,
+    controller: web::Data<AnimationController>,
+) -> HttpResponse {
+    let controller = controller.lock().await;
+    match animations.remove(&controller, &form.0.animation_id).await {
+        Ok(animations) => HttpResponse::Ok().json(animations),
+        Err(animations::LogicError::InternalError(e)) => {
+            HttpResponse::InternalServerError().json(json!({"error": e}))
+        }
+        Err(e) => {
+            error!("Unexpected logic error in /list/ call: {e}");
+            HttpResponse::InternalServerError().json(json!({"error": "unexpected failure"}))
+        }
+    }
+}
+
 pub fn service() -> Scope {
     web::scope("/animations")
         .service(reload)
@@ -115,4 +166,6 @@ pub fn service() -> Scope {
         .service(turn_off)
         .service(discover)
         .service(list)
+        .service(install)
+        .service(remove)
 }

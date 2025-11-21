@@ -91,6 +91,10 @@ img.button {
     line-height: 2rem;
     padding: 0.5rem;
     border-bottom: 1px solid #888;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
 }
 
 .content {

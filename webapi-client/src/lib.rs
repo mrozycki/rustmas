@@ -1,14 +1,16 @@
 use std::collections::HashMap;
 
+use gloo_net::http::Request;
 use serde::{Serialize, de::DeserializeOwned};
 use url::Url;
 
+use web_sys::FormData;
 pub use webapi_model::{
     Animation, Configuration, GetEventGeneratorSchemaResponse, GetParametersResponse,
     GetPointsResponse, ListAnimationsResponse, ParameterValue, SwitchAnimationRequest,
 };
 use webapi_model::{
-    ApiResponse, Event, SendEventRequest, SetAnimationParametersRequest,
+    ApiResponse, Event, RemoveAnimationRequest, SendEventRequest, SetAnimationParametersRequest,
     SetEventGeneratorParametersRequest, SwitchAnimationResponse,
 };
 
@@ -135,6 +137,36 @@ impl RustmasApiClient {
             )
             .await?
             .animation)
+    }
+
+    pub async fn remove_animation(&self, animation_id: String) -> Result<Vec<Animation>> {
+        Ok(self
+            .post::<ListAnimationsResponse>(
+                "animations/remove/",
+                &RemoveAnimationRequest { animation_id },
+            )
+            .await?
+            .animations)
+    }
+
+    #[cfg(feature = "js")]
+    pub async fn install_animation(&self, form_data: FormData) -> Result<Vec<Animation>> {
+        Ok(Request::post(&self.url("animations/install/"))
+            .body(form_data)
+            .map_err(|e| GatewayError::InvalidRequest {
+                reason: e.to_string(),
+            })?
+            .send()
+            .await
+            .map_err(|e| GatewayError::ApiError {
+                reason: e.to_string(),
+            })?
+            .json::<ListAnimationsResponse>()
+            .await
+            .map_err(|e| GatewayError::InvalidResponse {
+                reason: e.to_string(),
+            })?
+            .animations)
     }
 
     pub async fn turn_off(&self) -> Result<()> {

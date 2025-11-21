@@ -14,18 +14,20 @@ pub fn events_settings() -> Html {
     let api = yew::use_context::<RustmasApiClient>().expect("gateway to be open");
     let schema = yew::use_state::<Option<Vec<Configuration>>, _>(|| None);
 
-    wasm_bindgen_futures::spawn_local({
-        let api = api.clone();
-        let schema = schema.clone();
-        async move {
-            match api.events_schema().await {
-                Ok(new_schema) => {
-                    schema.set(Some(new_schema));
+    if schema.is_none() {
+        wasm_bindgen_futures::spawn_local({
+            let api = api.clone();
+            let schema = schema.clone();
+            async move {
+                match api.events_schema().await {
+                    Ok(new_schema) => {
+                        schema.set(Some(new_schema));
+                    }
+                    Err(e) => error!("Could not load event generator parameter schema: {}", e),
                 }
-                Err(e) => error!("Could not load event generator parameter schema: {}", e),
             }
-        }
-    });
+        });
+    }
 
     let values_changed = {
         let api = api.clone();

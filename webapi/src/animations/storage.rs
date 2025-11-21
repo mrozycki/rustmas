@@ -63,8 +63,11 @@ impl Storage {
             .into_iter()
             .filter_map(|r| {
                 let manifest = serde_json::from_slice(&r.manifest)
-                    .inspect_err(|_| {
-                        warn!("Invalid manifest for animation with id {}, skipping", r.id)
+                    .inspect_err(|e| {
+                        warn!(
+                            "Invalid manifest for animation with id {}, skipping: {e}",
+                            r.id
+                        )
                     })
                     .ok()?;
                 Some(DbAnimation {
@@ -76,5 +79,17 @@ impl Storage {
             .collect();
 
         Ok(animations)
+    }
+
+    pub async fn delete(&self, animation_id: &str) -> anyhow::Result<String> {
+        let path = sqlx::query!(
+            "DELETE FROM animation_plugins WHERE id = $1 RETURNING path",
+            animation_id
+        )
+        .fetch_one(&mut *self.conn.lock().await)
+        .await?
+        .path;
+
+        Ok(path)
     }
 }

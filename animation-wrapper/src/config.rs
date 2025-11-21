@@ -27,11 +27,22 @@ pub enum PluginType {
     Wasm,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+pub enum PluginApiVersion {
+    #[serde(rename = "0.9")]
+    V0_9,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PluginManifest {
+    pub id: String,
     pub display_name: String,
+    pub author: String,
     #[serde(default)]
     pub plugin_type: PluginType,
+    pub api_version: PluginApiVersion,
+    pub version: String,
+    pub tags: Vec<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

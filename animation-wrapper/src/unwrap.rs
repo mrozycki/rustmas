@@ -6,7 +6,7 @@ use std::{
 
 use tar::Archive;
 
-use crate::config::{PluginConfig, PluginManifest};
+use crate::config::PluginManifest;
 
 #[derive(Debug, thiserror::Error)]
 pub enum PluginUnwrapError {
@@ -43,28 +43,8 @@ fn manifest_from_crab(path: &Path) -> Result<PluginManifest, PluginUnwrapError> 
     Ok(serde_json::from_reader(entry_reader)?)
 }
 
-fn animation_id_from_crab(path: &Path) -> Result<String, PluginUnwrapError> {
-    Ok(path
-        .file_name()
-        .ok_or(PluginUnwrapError::InvalidFilename)?
-        .to_string_lossy()
-        .trim_end_matches(".crab")
-        .to_string())
-}
-
-pub fn unwrap_plugin<P: AsRef<Path>>(path: &P) -> Result<PluginConfig, PluginUnwrapError> {
-    fn inner(path: &Path) -> Result<PluginConfig, PluginUnwrapError> {
-        let animation_id = animation_id_from_crab(path)?;
-        let manifest = manifest_from_crab(path)?;
-        let path = path.to_owned();
-
-        Ok(PluginConfig {
-            animation_id,
-            manifest,
-            path,
-        })
-    }
-    inner(path.as_ref())
+pub fn unwrap_plugin<P: AsRef<Path>>(path: P) -> Result<PluginManifest, PluginUnwrapError> {
+    manifest_from_crab(path.as_ref())
 }
 
 pub fn reader_from_crab<P: AsRef<Path>>(path: &P) -> Result<impl Read, PluginUnwrapError> {
