@@ -8,7 +8,7 @@ animation-api = { path = "../animation-api" }
 
 serde = { version = "1.0.215", features = ["derive"] }
 serde_json = "1.0.133"
-tar = "0.4.43"
+tar = "0.4.45"
 thiserror = "2.0.3"
 toml = "0.8.19"
 
